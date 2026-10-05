@@ -17,11 +17,13 @@ const config: Config = {
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/docs/',
+  trailingSlash: true,
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'impulse-proxy',
   projectName: 'docs',
+  deploymentBranch: 'gh-pages',
 
   onBrokenLinks: 'throw',
 
@@ -68,6 +70,11 @@ const config: Config = {
           sidebarId: 'docsSidebar',
           position: 'left',
           label: 'Docs',
+        },
+        {
+          href: 'https://impulse-proxy.github.io/',
+          label: 'Home',
+          position: 'right',
         },
         {
           href: 'https://github.com/impulse-proxy/impulse',
