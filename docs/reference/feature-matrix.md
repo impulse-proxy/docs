@@ -162,6 +162,6 @@ These items are not user-facing features, but they are important product foundat
 
 ## Related Pages
 
-- [Production Readiness](../operations/production-readiness.md)
-- [Limitations](limitations.md)
-- [Security Model](../concepts/security-model.md)
+- [Production Readiness](/docs/operations/production-readiness)
+- [Limitations](/docs/reference/limitations)
+- [Security Model](/docs/concepts/security-model)

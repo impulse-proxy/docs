@@ -4,10 +4,10 @@ Use this section to understand what Impulse is, where it is strong today, and ho
 
 ## Start Here
 
-- [Production Readiness](../operations/production-readiness.md) explains the current maturity level and the most important production caveats.
-- [Security Model](security-model.md) documents trust boundaries and what security features are intentionally out of scope today.
-- [Architecture Overview](../architecture/overview.md) explains the high-level data-plane and control-plane structure.
-- [Component Breakdown](../architecture/components.md) maps the project into crates and major subsystems.
+- [Production Readiness](/docs/operations/production-readiness) explains the current maturity level and the most important production caveats.
+- [Security Model](/docs/concepts/security-model) documents trust boundaries and what security features are intentionally out of scope today.
+- [Architecture Overview](/docs/architecture/overview) explains the high-level data-plane and control-plane structure.
+- [Component Breakdown](/docs/architecture/components) maps the project into crates and major subsystems.
 
 ## What This Section Covers
 

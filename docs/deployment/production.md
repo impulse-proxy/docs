@@ -1,6 +1,6 @@
 # Production Deployment
 
-> Impulse is beta software. Deploy it to production only with staged rollout, rollback readiness, and verified observability. Read [Production Readiness](../operations/production-readiness.md) first.
+> Impulse is beta software. Deploy it to production only with staged rollout, rollback readiness, and verified observability. Read [Production Readiness](/docs/operations/production-readiness) first.
 
 This guide covers the recommended production host layout, service model, security posture, rollout sequence, and change-management workflow for Impulse.
 
@@ -81,7 +81,7 @@ Before rollout, set and verify:
 - privileged-port bind strategy
 - conntrack behavior, if present
 
-Use [Host Tuning](../operations/host-tuning.md) for the tuning model.
+Use [Host Tuning](/docs/operations/host-tuning) for the tuning model.
 
 Example `sysctl` baseline:
 
@@ -289,8 +289,8 @@ Use the shipped observability package rather than inventing an unverified local 
 
 See:
 
-- [Observability Operator Bundle](../operations/observability-bundle.md)
-- [Metrics Reference](../reference/metrics-reference.md)
+- [Observability Operator Bundle](/docs/operations/observability-bundle)
+- [Metrics Reference](/docs/reference/metrics-reference)
 
 ## Rollout Procedure
 
@@ -340,8 +340,8 @@ Confirm all of the following:
 
 ## Related Pages
 
-- [Production Readiness](../operations/production-readiness.md)
-- [Reload and Drain](../operations/reload-and-drain.md)
-- [Validation](validation.md)
-- [Deployment Patterns](../operations/deployment-patterns.md)
-- [Runbook](../operations/runbook.md)
+- [Production Readiness](/docs/operations/production-readiness)
+- [Reload and Drain](/docs/operations/reload-and-drain)
+- [Validation](/docs/deployment/validation)
+- [Deployment Patterns](/docs/operations/deployment-patterns)
+- [Runbook](/docs/operations/runbook)

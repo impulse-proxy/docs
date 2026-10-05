@@ -615,6 +615,6 @@ Use audit for actor attribution, authn and authz failure history, and attempt-ve
 
 ## Related Pages
 
-- [Metrics Reference](metrics-reference.md)
-- [Control Plane](../operations/control-plane.md)
-- [Operations Runbook](../operations/runbook.md)
+- [Metrics Reference](/docs/reference/metrics-reference)
+- [Control Plane](/docs/operations/control-plane)
+- [Operations Runbook](/docs/operations/runbook)

@@ -916,6 +916,6 @@ upstream:
 
 ## Related Documentation
 
-- See [Basics](basics.md) for general configuration and deployment
+- See [Basics](/docs/user-guide/basics) for general configuration and deployment
 - Refer to Configuration Reference for complete parameter documentation
 - See Architecture Guide for internal implementation details

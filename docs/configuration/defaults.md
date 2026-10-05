@@ -17,7 +17,7 @@ Use this page when you need to answer:
 - whether a behavior is explicit or inherited by default
 - which defaults are safe enough to keep for an initial rollout
 
-Use [Configuration Reference](reference.md) when you need exact field semantics and validation rules. Use [Configuration Examples](examples.md) when you need working end-to-end templates.
+Use [Configuration Reference](/docs/configuration/reference) when you need exact field semantics and validation rules. Use [Configuration Examples](/docs/configuration/examples) when you need working end-to-end templates.
 
 ## How Defaults Work
 
@@ -352,6 +352,6 @@ These apply when a backend provides a `health_check` object and omits individual
 
 ## Related Pages
 
-- [Configuration Reference](reference.md)
-- [Configuration Examples](examples.md)
-- [Production Readiness](../operations/production-readiness.md)
+- [Configuration Reference](/docs/configuration/reference)
+- [Configuration Examples](/docs/configuration/examples)
+- [Production Readiness](/docs/operations/production-readiness)

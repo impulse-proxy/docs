@@ -4,10 +4,10 @@ This page helps you install Impulse on a host and reach the point where you can 
 
 ## Start Here
 
-- Want the fastest local success path: [Quickstart](../tutorials/quickstart.md)
-- Want a container-first path: [Docker](docker.md)
+- Want the fastest local success path: [Quickstart](/docs/tutorials/quickstart)
+- Want a container-first path: [Docker](/docs/getting-started/docker)
 - Want to install on a Linux host: continue below
-- Want the minimum safe production posture after install: [Minimum Production](minimum-production.md)
+- Want the minimum safe production posture after install: [Minimum Production](/docs/getting-started/minimum-production)
 
 ## System Requirements
 
@@ -161,7 +161,7 @@ sudo chown root:impulse /etc/impulse/certs/fullchain.pem /etc/impulse/certs/priv
 sudo chmod 640 /etc/impulse/certs/fullchain.pem /etc/impulse/certs/privkey.pem
 ```
 
-For production certificates, see [TLS Configuration](../configuration/tls.md).
+For production certificates, see [TLS Configuration](/docs/configuration/tls).
 
 ## Post-Installation Configuration
 
@@ -238,7 +238,7 @@ log:
     path: /var/log/impulse/impulse.log
 ```
 
-See [Configuration Reference](../configuration/reference.md) for all options.
+See [Configuration Reference](/docs/configuration/reference) for all options.
 
 ## First Run After Installation
 
@@ -251,9 +251,9 @@ Once the binary, certificates, and config are in place:
 
 Recommended next pages:
 
-- [Quickstart](../tutorials/quickstart.md)
-- [Minimum Production](minimum-production.md)
-- [Production Deployment](../deployment/production.md)
+- [Quickstart](/docs/tutorials/quickstart)
+- [Minimum Production](/docs/getting-started/minimum-production)
+- [Production Deployment](/docs/deployment/production)
 
 ### Log Rotation
 
@@ -391,7 +391,7 @@ openssl x509 -in /etc/impulse/certs/fullchain.pem -text -noout
 
 ## Next Steps
 
-- [Configuration Reference](../configuration/reference.md) — Complete configuration options
-- [TLS Setup Guide](../configuration/tls.md) — Production certificate management
-- [Production Deployment](../deployment/production.md) — Production deployment best practices
-- [Troubleshooting](../troubleshooting/common-issues.md) — Common issues and solutions
+- [Configuration Reference](/docs/configuration/reference) — Complete configuration options
+- [TLS Setup Guide](/docs/configuration/tls) — Production certificate management
+- [Production Deployment](/docs/deployment/production) — Production deployment best practices
+- [Troubleshooting](/docs/troubleshooting/common-issues) — Common issues and solutions

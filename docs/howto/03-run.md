@@ -2,7 +2,7 @@
 
 This guide covers running Impulse directly, as a systemd service, and in Docker — including startup validation, graceful shutdown, and health checking.
 
-For the fastest first successful request, use [Quickstart](../tutorials/quickstart.md) or [Docker Installation](../getting-started/docker.md) first. This page is the broader run-mode reference once you already have a working config.
+For the fastest first successful request, use [Quickstart](/docs/tutorials/quickstart) or [Docker Installation](/docs/getting-started/docker) first. This page is the broader run-mode reference once you already have a working config.
 
 ---
 
@@ -10,8 +10,8 @@ For the fastest first successful request, use [Quickstart](../tutorials/quicksta
 
 Before starting Impulse you need:
 
-1. A valid config file (see [02-configuration.md](02-configuration.md))
-2. TLS certificates (see [01-certificates.md](01-certificates.md))
+1. A valid config file (see [02-configuration.md](/docs/howto/02-configuration))
+2. TLS certificates (see [01-certificates.md](/docs/howto/01-certificates))
 3. The `impulse` binary — built from source or installed via package
 
 ---
@@ -319,6 +319,6 @@ curl http://127.0.0.1:9901/metrics
 | `Cannot open listen.tls.cert` | Wrong path or permissions | Check path; `chown impulse:impulse /etc/impulse/certs/*` |
 | `worker_threads > 1 requires reuseport=true` | Config mismatch | Add `reuseport: true` to performance |
 | Clients get `connection refused` on TCP | Bootstrap TLS listener failed to bind | Check logs for bootstrap bind error |
-| `curl: (35) OpenSSL SSL_connect` | Certificate mismatch or untrusted | See [01-certificates.md](01-certificates.md) |
+| `curl: (35) OpenSSL SSL_connect` | Certificate mismatch or untrusted | See [01-certificates.md](/docs/howto/01-certificates) |
 | Health check always fails | Backend unreachable or wrong health path | Verify backend is up and health path returns 200 |
 | High memory usage | `max_response_body_bytes` too high or streaming not draining | Tune body caps in performance section |

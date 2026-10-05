@@ -274,7 +274,7 @@ Use this fast path when the metrics tell you the class of problem but not the li
 
 ## Related Pages
 
-- [Observability Operator Bundle](../operations/observability-bundle.md)
-- [Metrics and Alerts](../operations/metrics-and-alerts.md)
-- [Control API Reference](control-api-reference.md)
-- [Operations Runbook](../operations/runbook.md)
+- [Observability Operator Bundle](/docs/operations/observability-bundle)
+- [Metrics and Alerts](/docs/operations/metrics-and-alerts)
+- [Control API Reference](/docs/reference/control-api-reference)
+- [Operations Runbook](/docs/operations/runbook)

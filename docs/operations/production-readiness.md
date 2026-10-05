@@ -106,8 +106,8 @@ The main gates before a broader production-grade claim are:
 
 ## Related Pages
 
-- [Production Deployment](../deployment/production.md)
-- [Reload and Drain](reload-and-drain.md)
-- [Deployment Patterns](deployment-patterns.md)
-- [Feature Matrix](../reference/feature-matrix.md)
-- [Limitations](../reference/limitations.md)
+- [Production Deployment](/docs/deployment/production)
+- [Reload and Drain](/docs/operations/reload-and-drain)
+- [Deployment Patterns](/docs/operations/deployment-patterns)
+- [Feature Matrix](/docs/reference/feature-matrix)
+- [Limitations](/docs/reference/limitations)

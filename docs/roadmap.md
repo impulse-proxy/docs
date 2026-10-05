@@ -134,6 +134,6 @@ The following are not current core strengths and should not be assumed:
 
 ## Related Pages
 
-- [Production Readiness](operations/production-readiness.md)
-- [Feature Matrix](reference/feature-matrix.md)
-- [Limitations](reference/limitations.md)
+- [Production Readiness](/docs/operations/production-readiness)
+- [Feature Matrix](/docs/reference/feature-matrix)
+- [Limitations](/docs/reference/limitations)

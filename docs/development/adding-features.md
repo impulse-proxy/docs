@@ -28,7 +28,7 @@ If the feature is configurable:
 
 - keep changes inside the narrowest responsible module
 - avoid expanding central modules unless there is no smaller boundary available
-- preserve the invariants documented in [Invariants](invariants.md)
+- preserve the invariants documented in [Invariants](/docs/development/invariants)
 
 ## 4. Add Tests
 

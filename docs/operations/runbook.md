@@ -35,7 +35,7 @@ Use this for routes, upstreams, backends, timeouts, resilience, quota, and simil
 
 ### Upstream client certificate or CA rotation
 
-Upstream mTLS client cert/key and upstream CA changes are generation-owned, not `reload-certs`-scoped. Use the runtime-managed config change workflow above (`validate` → `preview` → `activate`). See [Secret and Certificate Rotation](secret-and-cert-rotation.md) for the full flow, overlap strategy for CA transitions, and rollback caveats.
+Upstream mTLS client cert/key and upstream CA changes are generation-owned, not `reload-certs`-scoped. Use the runtime-managed config change workflow above (`validate` → `preview` → `activate`). See [Secret and Certificate Rotation](/docs/operations/secret-and-cert-rotation) for the full flow, overlap strategy for CA transitions, and rollback caveats.
 
 ### Restart-required change or binary upgrade
 

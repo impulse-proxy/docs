@@ -10,11 +10,11 @@ Use this page as the architecture entry point, then go deeper where needed:
 
 | Topic | Document |
 |---|---|
-| Product flow from ingress to response | [Request Lifecycle](request-lifecycle.md) |
-| QUIC path versus bootstrap compatibility path | [Bootstrap vs QUIC](bootstrap-vs-quic.md) |
-| Backend execution and H1/H2 transport boundary | [Transport Boundary](transport.md) |
-| Backend resolution, health, and lifecycle state | [Backend Lifecycle](backend-lifecycle.md) |
-| Runtime reload and generation ownership | [Runtime Generation Model](runtime-generation.md) |
+| Product flow from ingress to response | [Request Lifecycle](/docs/architecture/request-lifecycle) |
+| QUIC path versus bootstrap compatibility path | [Bootstrap vs QUIC](/docs/architecture/bootstrap-vs-quic) |
+| Backend execution and H1/H2 transport boundary | [Transport Boundary](/docs/architecture/transport) |
+| Backend resolution, health, and lifecycle state | [Backend Lifecycle](/docs/architecture/backend-lifecycle) |
+| Runtime reload and generation ownership | [Runtime Generation Model](/docs/architecture/runtime-generation) |
 
 ## Design Principles
 
@@ -345,7 +345,7 @@ Runtime configuration is loaded at startup and then exposed through a generation
 - generation-owned state is replaced on successful reload
 - readers observe complete runtime generations through an atomic bundle swap
 
-See [Runtime Generation Model](runtime-generation.md) for the exact ownership split.
+See [Runtime Generation Model](/docs/architecture/runtime-generation) for the exact ownership split.
 
 ## Security Considerations
 

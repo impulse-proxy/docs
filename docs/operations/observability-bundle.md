@@ -18,7 +18,7 @@ Use this page when you need to answer:
 - how to roll out or version the observability package safely
 
 The canonical observability vocabulary still lives in
-[`docs/architecture/observability-contract.md`](../architecture/observability-contract.md)
+[`docs/architecture/observability-contract.md`](/docs/architecture/observability-contract)
 and `crates/edge/src/observability/mod.rs`. This page describes the shipped
 operator experience built on top of that contract.
 
@@ -499,7 +499,7 @@ Look for:
 - audit schema version
 
 The main runtime entry points are documented in
-[Control Plane](control-plane.md).
+[Control Plane](/docs/operations/control-plane).
 
 When the runtime snapshot is open, the high-signal fields to inspect first are:
 
@@ -566,7 +566,7 @@ Typical sequence:
 1. Open `admission-overload.json`.
 2. Read `Quota Decisions`, `Quota Backend Health`, and `Top Quota Denials by Policy and Reason`.
 3. Confirm current backend mode and degraded state in the control API runtime snapshot.
-4. Use [Distributed Quota](distributed-quota.md) for fail-open, fail-closed, and fallback interpretation.
+4. Use [Distributed Quota](/docs/operations/distributed-quota) for fail-open, fail-closed, and fallback interpretation.
 
 ### TLS or certificate incident
 
@@ -628,9 +628,9 @@ contract.
 
 ## Related Pages
 
-- [Observability Contract](../architecture/observability-contract.md)
-- [Metrics and Alerts](metrics-and-alerts.md)
-- [Control Plane](control-plane.md)
-- [Distributed Quota](distributed-quota.md)
-- [Runbook](runbook.md)
+- [Observability Contract](/docs/architecture/observability-contract)
+- [Metrics and Alerts](/docs/operations/metrics-and-alerts)
+- [Control Plane](/docs/operations/control-plane)
+- [Distributed Quota](/docs/operations/distributed-quota)
+- [Runbook](/docs/operations/runbook)
 - [Impulse SLO Package](https://github.com/impulse-proxy/impulse/blob/master/deploy/observability/slo/README.md)

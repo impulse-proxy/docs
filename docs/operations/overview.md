@@ -8,17 +8,17 @@ Use it to answer where Impulse fits well today, how to prepare hosts and capacit
 
 | Goal | Document |
 |---|---|
-| Decide whether the current release is ready for your environment | [Production Readiness](production-readiness.md) |
-| Prepare a production host and service layout | [Production Deployment](../deployment/production.md) |
-| Understand safe activation, restart-required changes, drain, and rollback | [Reload and Drain](reload-and-drain.md) |
-| Plan host sizing and concurrency limits | [Sizing And Capacity](sizing-and-capacity.md) |
-| Tune the host OS and runtime environment | [Host Tuning](host-tuning.md) |
-| Choose a rollout shape | [Deployment Patterns](deployment-patterns.md) |
-| Validate before and after a change | [Validation](../deployment/validation.md) |
-| Troubleshoot incidents quickly | [Runbook](runbook.md) |
-| Interpret visible failures and status codes | [Failure Modes](failure-modes.md) |
-| Operate distributed quota safely | [Distributed Quota](distributed-quota.md) |
-| Use the shipped dashboards, alerts, and SLO views | [Observability Operator Bundle](observability-bundle.md) |
+| Decide whether the current release is ready for your environment | [Production Readiness](/docs/operations/production-readiness) |
+| Prepare a production host and service layout | [Production Deployment](/docs/deployment/production) |
+| Understand safe activation, restart-required changes, drain, and rollback | [Reload and Drain](/docs/operations/reload-and-drain) |
+| Plan host sizing and concurrency limits | [Sizing And Capacity](/docs/operations/sizing-and-capacity) |
+| Tune the host OS and runtime environment | [Host Tuning](/docs/operations/host-tuning) |
+| Choose a rollout shape | [Deployment Patterns](/docs/operations/deployment-patterns) |
+| Validate before and after a change | [Validation](/docs/deployment/validation) |
+| Troubleshoot incidents quickly | [Runbook](/docs/operations/runbook) |
+| Interpret visible failures and status codes | [Failure Modes](/docs/operations/failure-modes) |
+| Operate distributed quota safely | [Distributed Quota](/docs/operations/distributed-quota) |
+| Use the shipped dashboards, alerts, and SLO views | [Observability Operator Bundle](/docs/operations/observability-bundle) |
 
 ## Canonical Sources By Topic
 
@@ -26,11 +26,11 @@ Use this page for workflow and navigation. Use the pages below for authoritative
 
 | Topic | Canonical page |
 | --- | --- |
-| exact Control API endpoint behavior | [Control API Reference](../reference/control-api-reference.md) |
-| exact metric names and labels | [Metrics Reference](../reference/metrics-reference.md) |
-| exact configuration shape and runtime semantics | [Configuration Reference](../configuration/reference.md) |
-| symptom-driven incident diagnosis | [Troubleshooting](../troubleshooting/common-issues.md) |
-| runtime protection dashboards, alerts, and SLOs | [Observability Operator Bundle](observability-bundle.md) |
+| exact Control API endpoint behavior | [Control API Reference](/docs/reference/control-api-reference) |
+| exact metric names and labels | [Metrics Reference](/docs/reference/metrics-reference) |
+| exact configuration shape and runtime semantics | [Configuration Reference](/docs/configuration/reference) |
+| symptom-driven incident diagnosis | [Troubleshooting](/docs/troubleshooting/common-issues) |
+| runtime protection dashboards, alerts, and SLOs | [Observability Operator Bundle](/docs/operations/observability-bundle) |
 
 ## Core Operating Model
 
@@ -51,35 +51,35 @@ Do not treat all changes as restarts, and do not treat all changes as live-reloa
 
 Start with:
 
-- [Production Readiness](production-readiness.md)
-- [Production Deployment](../deployment/production.md)
-- [Host Tuning](host-tuning.md)
-- [Sizing And Capacity](sizing-and-capacity.md)
+- [Production Readiness](/docs/operations/production-readiness)
+- [Production Deployment](/docs/deployment/production)
+- [Host Tuning](/docs/operations/host-tuning)
+- [Sizing And Capacity](/docs/operations/sizing-and-capacity)
 
 ### Roll out a runtime config change
 
 Start with:
 
-- [Validation](../deployment/validation.md)
-- [Reload and Drain](reload-and-drain.md)
-- [Runbook](runbook.md)
+- [Validation](/docs/deployment/validation)
+- [Reload and Drain](/docs/operations/reload-and-drain)
+- [Runbook](/docs/operations/runbook)
 
 ### Roll out a binary upgrade or restart-required config change
 
 Start with:
 
-- [Deployment Patterns](deployment-patterns.md)
-- [Production Deployment](../deployment/production.md)
-- [Reload and Drain](reload-and-drain.md)
+- [Deployment Patterns](/docs/operations/deployment-patterns)
+- [Production Deployment](/docs/deployment/production)
+- [Reload and Drain](/docs/operations/reload-and-drain)
 
 ### Investigate production failures
 
 Start with:
 
-- [Runbook](runbook.md)
-- [Failure Modes](failure-modes.md)
-- [Observability Operator Bundle](observability-bundle.md)
-- [Troubleshooting](../troubleshooting/common-issues.md)
+- [Runbook](/docs/operations/runbook)
+- [Failure Modes](/docs/operations/failure-modes)
+- [Observability Operator Bundle](/docs/operations/observability-bundle)
+- [Troubleshooting](/docs/troubleshooting/common-issues)
 
 ## Operator Rules
 
@@ -92,7 +92,7 @@ Start with:
 
 ## Related Pages
 
-- [API Overview](../api/overview.md)
-- [Control API Reference](../reference/control-api-reference.md)
-- [Metrics Reference](../reference/metrics-reference.md)
-- [Troubleshooting](../troubleshooting/common-issues.md)
+- [API Overview](/docs/api/overview)
+- [Control API Reference](/docs/reference/control-api-reference)
+- [Metrics Reference](/docs/reference/metrics-reference)
+- [Troubleshooting](/docs/troubleshooting/common-issues)

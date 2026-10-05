@@ -2,7 +2,7 @@
 
 This page answers one question: **what is the minimum you must do to run Impulse responsibly in production?**
 
-It is not a full hardening guide — that is [Production Deployment](../deployment/production.md). This page is a focused checklist for operators who have already completed the [quickstart](../tutorials/quickstart.md) or [installation](installation.md) path and are preparing to serve real traffic for the first time.
+It is not a full hardening guide — that is [Production Deployment](/docs/deployment/production). This page is a focused checklist for operators who have already completed the [quickstart](/docs/tutorials/quickstart) or [installation](/docs/getting-started/installation) path and are preparing to serve real traffic for the first time.
 
 ---
 
@@ -91,7 +91,7 @@ observability:
     path: "/metrics"
 ```
 
-**What this config does not include:** mTLS (client certificate validation), custom QUIC performance tuning, and per-upstream overload caps. Those are optional; add them when you have a reason. See [Configuration Reference](../configuration/reference.md) for the full schema.
+**What this config does not include:** mTLS (client certificate validation), custom QUIC performance tuning, and per-upstream overload caps. Those are optional; add them when you have a reason. See [Configuration Reference](/docs/configuration/reference) for the full schema.
 
 ---
 
@@ -247,7 +247,7 @@ If the change affects restart-required settings such as listener bind/removal or
 
 ## Related Docs
 
-- [TLS Setup](../configuration/tls.md) — Certificate formats, PKCS#8 conversion, Let's Encrypt automation, and rotation procedures
-- [Production Deployment](../deployment/production.md) — Full hardening guide: HA architecture, nftables rules, AppArmor, alerting rules, and incident runbooks
-- [Troubleshooting](../troubleshooting/common-issues.md) — Diagnosis commands for common startup failures, backend connection errors, and high latency
-- [Load Balancing Guide](../user-guide/load-balancing.md) — Algorithm selection, consistent hashing key configuration, and least-connections vs. latency-aware trade-offs
+- [TLS Setup](/docs/configuration/tls) — Certificate formats, PKCS#8 conversion, Let's Encrypt automation, and rotation procedures
+- [Production Deployment](/docs/deployment/production) — Full hardening guide: HA architecture, nftables rules, AppArmor, alerting rules, and incident runbooks
+- [Troubleshooting](/docs/troubleshooting/common-issues) — Diagnosis commands for common startup failures, backend connection errors, and high latency
+- [Load Balancing Guide](/docs/user-guide/load-balancing) — Algorithm selection, consistent hashing key configuration, and least-connections vs. latency-aware trade-offs

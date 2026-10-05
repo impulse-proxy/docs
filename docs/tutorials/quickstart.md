@@ -47,7 +47,7 @@ openssl req -x509 -newkey rsa:4096 -nodes \
   -subj "/CN=localhost"
 ```
 
-Production: see [TLS Setup](../configuration/tls.md).
+Production: see [TLS Setup](/docs/configuration/tls).
 
 ## Step 3: Start a Test Backend
 
@@ -171,10 +171,10 @@ If you see this header, Impulse is correctly advertising HTTP/3 to clients that 
 
 ## Next Steps
 
-- [Docker](../getting-started/docker.md) — fastest container-based first run
-- [Installation](../getting-started/installation.md) — install Impulse on a host
-- [Configuration Reference](../configuration/reference.md) — exact config keys, defaults, and semantics
-- [Minimum Production](../getting-started/minimum-production.md) — minimum safe production posture
-- [Production Deployment](../deployment/production.md) — full deployment and hardening guide
-- [Load Balancing Guide](../user-guide/load-balancing.md) — strategy selection and routing trade-offs
-- [TLS Setup](../configuration/tls.md) — production certificates, rotation, and mTLS
+- [Docker](/docs/getting-started/docker) — fastest container-based first run
+- [Installation](/docs/getting-started/installation) — install Impulse on a host
+- [Configuration Reference](/docs/configuration/reference) — exact config keys, defaults, and semantics
+- [Minimum Production](/docs/getting-started/minimum-production) — minimum safe production posture
+- [Production Deployment](/docs/deployment/production) — full deployment and hardening guide
+- [Load Balancing Guide](/docs/user-guide/load-balancing) — strategy selection and routing trade-offs
+- [TLS Setup](/docs/configuration/tls) — production certificates, rotation, and mTLS

@@ -212,6 +212,6 @@ Impulse does not currently provide first-class:
 
 ## Related Pages
 
-- [Production Readiness](../operations/production-readiness.md)
-- [Limitations](../reference/limitations.md)
-- [TLS Setup](../configuration/tls.md)
+- [Production Readiness](/docs/operations/production-readiness)
+- [Limitations](/docs/reference/limitations)
+- [TLS Setup](/docs/configuration/tls)

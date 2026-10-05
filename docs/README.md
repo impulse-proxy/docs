@@ -19,11 +19,11 @@ Impulse is a modern edge runtime for high-trust APIs. This documentation set is 
 
 | Goal | Go to |
 | --- | --- |
-| Understand the product | [Project README](https://github.com/impulse-proxy/impulse#readme) and [Getting Started Overview](getting-started/overview.md) |
-| Install and run Impulse | [Getting Started](getting-started/overview.md) |
-| Prepare for deployment | [Operations Overview](operations/overview.md) and [Production Deployment](deployment/production.md) |
-| Troubleshoot issues | [Common Issues](troubleshooting/common-issues.md) and [Runbook](operations/runbook.md) |
-| Find exact supported behavior | [Reference Overview](reference/overview.md) |
+| Understand the product | [Project README](https://github.com/impulse-proxy/impulse#readme) and [Getting Started Overview](/docs/getting-started/overview) |
+| Install and run Impulse | [Getting Started](/docs/getting-started/overview) |
+| Prepare for deployment | [Operations Overview](/docs/operations/overview) and [Production Deployment](/docs/deployment/production) |
+| Troubleshoot issues | [Common Issues](/docs/troubleshooting/common-issues) and [Runbook](/docs/operations/runbook) |
+| Find exact supported behavior | [Reference Overview](/docs/reference/overview) |
 
 ## Documentation Paths
 
@@ -31,74 +31,74 @@ Impulse is a modern edge runtime for high-trust APIs. This documentation set is 
 
 | Document | What you'll find |
 |---|---|
-| [Installation](getting-started/installation.md) | Debian package, build from source, system requirements, TLS certificate layout |
-| [Docker](getting-started/docker.md) | Container image, Compose bootstrap, smoke-test scripts |
-| [Configuration Reference](configuration/reference.md) | Every config key, type, default, and constraint in one place |
-| [TLS Setup](configuration/tls.md) | Certificate generation, mTLS client auth, key ownership and permissions |
-| [Production Deployment](deployment/production.md) | Systemd unit, privilege drop, sysctl tuning, canary rollout guidance |
-| [Production Readiness](operations/production-readiness.md) | Canonical statement of what is production-ready today and what still blocks GA |
-| [Operations Overview](operations/overview.md) | Main entry point for deployment, rollout, observability, and failure handling |
-| [Troubleshooting](troubleshooting/common-issues.md) | Symptom-driven diagnostics and operator checks |
-| [Limitations](reference/limitations.md) | The current hard product limits, without marketing language |
+| [Installation](/docs/getting-started/installation) | Debian package, build from source, system requirements, TLS certificate layout |
+| [Docker](/docs/getting-started/docker) | Container image, Compose bootstrap, smoke-test scripts |
+| [Configuration Reference](/docs/configuration/reference) | Every config key, type, default, and constraint in one place |
+| [TLS Setup](/docs/configuration/tls) | Certificate generation, mTLS client auth, key ownership and permissions |
+| [Production Deployment](/docs/deployment/production) | Systemd unit, privilege drop, sysctl tuning, canary rollout guidance |
+| [Production Readiness](/docs/operations/production-readiness) | Canonical statement of what is production-ready today and what still blocks GA |
+| [Operations Overview](/docs/operations/overview) | Main entry point for deployment, rollout, observability, and failure handling |
+| [Troubleshooting](/docs/troubleshooting/common-issues) | Symptom-driven diagnostics and operator checks |
+| [Limitations](/docs/reference/limitations) | The current hard product limits, without marketing language |
 
 ### Architecture — understand the runtime and subsystem ownership
 
 | Document | What you'll find |
 |---|---|
-| [Architecture Overview](architecture/overview.md) | Architecture entry point, shared product flow, ingress model, and runtime boundaries |
-| [Request Lifecycle](architecture/request-lifecycle.md) | Canonical flow from intake through admission, routing, transport, and outcome recording |
-| [Bootstrap vs QUIC](architecture/bootstrap-vs-quic.md) | Exact boundary between the native HTTP/3 path and the compatibility ingress path |
-| [Transport Boundary](architecture/transport.md) | What transport owns, what edge owns, and how H1/H2 execution stays hidden behind one facade |
-| [Backend Lifecycle](architecture/backend-lifecycle.md) | Backend identity, resolution, health, membership, and operator-visible lifecycle state |
-| [Runtime Generation Model](architecture/runtime-generation.md) | How runtime reload, active generations, and shared services work |
-| [Component Breakdown](architecture/components.md) | Per-crate responsibilities, inter-crate boundaries, key types |
-| [Distributed Quota Contract](architecture/quota-policy-contract.md) | Semantic contract for quota semantics, selector composition, and distributed counter behavior |
-| [Codebase Map](development/codebase-map.md) | Current crate/module map and where major logic lives |
-| [Development Invariants](development/invariants.md) | Core runtime invariants, ownership assumptions, and rules the code depends on |
-| [Public API Surface Inventory](public-api-surface-inventory.md) | Current canonical public surfaces, hidden internals, and remaining intentional exports |
+| [Architecture Overview](/docs/architecture/overview) | Architecture entry point, shared product flow, ingress model, and runtime boundaries |
+| [Request Lifecycle](/docs/architecture/request-lifecycle) | Canonical flow from intake through admission, routing, transport, and outcome recording |
+| [Bootstrap vs QUIC](/docs/architecture/bootstrap-vs-quic) | Exact boundary between the native HTTP/3 path and the compatibility ingress path |
+| [Transport Boundary](/docs/architecture/transport) | What transport owns, what edge owns, and how H1/H2 execution stays hidden behind one facade |
+| [Backend Lifecycle](/docs/architecture/backend-lifecycle) | Backend identity, resolution, health, membership, and operator-visible lifecycle state |
+| [Runtime Generation Model](/docs/architecture/runtime-generation) | How runtime reload, active generations, and shared services work |
+| [Component Breakdown](/docs/architecture/components) | Per-crate responsibilities, inter-crate boundaries, key types |
+| [Distributed Quota Contract](/docs/architecture/quota-policy-contract) | Semantic contract for quota semantics, selector composition, and distributed counter behavior |
+| [Codebase Map](/docs/development/codebase-map) | Current crate/module map and where major logic lives |
+| [Development Invariants](/docs/development/invariants) | Core runtime invariants, ownership assumptions, and rules the code depends on |
+| [Public API Surface Inventory](/docs/public-api-surface-inventory) | Current canonical public surfaces, hidden internals, and remaining intentional exports |
 
 ### Control API and Operations — runtime control, observability, and failure handling
 
 | Document | What you'll find |
 |---|---|
-| [API Overview](api/overview.md) | Metrics endpoint and Control API surfaces at a high level |
-| [Control API Reference](reference/control-api-reference.md) | Endpoint-by-endpoint control API contract |
-| [Metrics Reference](reference/metrics-reference.md) | Metric names, labels, and exported runtime signals |
-| [Operations Overview](operations/overview.md) | Operator map for deployment, sizing, tuning, and failure handling |
-| [Distributed Quota](operations/distributed-quota.md) | Distributed quota policy examples, Redis setup, degraded-mode guidance, and operator interpretation |
-| [Runbook](operations/runbook.md) | Day-2 operational procedures and troubleshooting flow |
-| [Failure Modes](operations/failure-modes.md) | Expected degraded behaviors and what they mean operationally |
-| [Sizing and Capacity](operations/sizing-and-capacity.md) | Capacity planning and scaling guidance |
+| [API Overview](/docs/api/overview) | Metrics endpoint and Control API surfaces at a high level |
+| [Control API Reference](/docs/reference/control-api-reference) | Endpoint-by-endpoint control API contract |
+| [Metrics Reference](/docs/reference/metrics-reference) | Metric names, labels, and exported runtime signals |
+| [Operations Overview](/docs/operations/overview) | Operator map for deployment, sizing, tuning, and failure handling |
+| [Distributed Quota](/docs/operations/distributed-quota) | Distributed quota policy examples, Redis setup, degraded-mode guidance, and operator interpretation |
+| [Runbook](/docs/operations/runbook) | Day-2 operational procedures and troubleshooting flow |
+| [Failure Modes](/docs/operations/failure-modes) | Expected degraded behaviors and what they mean operationally |
+| [Sizing and Capacity](/docs/operations/sizing-and-capacity) | Capacity planning and scaling guidance |
 
 ### Protocol, traffic, and policy reference
 
 | Document | What you'll find |
 |---|---|
-| [Load Balancing](user-guide/load-balancing.md) | Current balancing strategies, selection behavior, and config examples |
-| [HTTP/3](protocols/http3.md) | HTTP/3 behavior and protocol-specific operational notes |
-| [QUIC](protocols/quic.md) | QUIC transport behavior, constraints, and terminology |
-| [Security Model](concepts/security-model.md) | Current trust boundaries, admin-plane assumptions, and missing security layers |
-| [Terminology](reference/terminology.md) | Canonical definitions for listener, upstream, backend, route, drain, and related terms |
+| [Load Balancing](/docs/user-guide/load-balancing) | Current balancing strategies, selection behavior, and config examples |
+| [HTTP/3](/docs/protocols/http3) | HTTP/3 behavior and protocol-specific operational notes |
+| [QUIC](/docs/protocols/quic) | QUIC transport behavior, constraints, and terminology |
+| [Security Model](/docs/concepts/security-model) | Current trust boundaries, admin-plane assumptions, and missing security layers |
+| [Terminology](/docs/reference/terminology) | Canonical definitions for listener, upstream, backend, route, drain, and related terms |
 
 ### Developer — contribute safely against the current architecture
 
 | Document | What you'll find |
 |---|---|
 | [Contributing Guide](https://github.com/impulse-proxy/impulse/blob/master/CONTRIBUTING.md) | Dev setup, build commands, test matrix, PR conventions |
-| [Development Overview](development/overview.md) | Contributor-oriented guide to working in the repo |
-| [Testing Strategy](development/testing-strategy.md) | Contract, regression, and parity test expectations |
-| [Benchmarking](development/benchmarking.md) | Local Criterion microbenchmarks for routing and load balancing |
-| [Adding Features](development/adding-features.md) | Expectations for new features against the current architecture |
+| [Development Overview](/docs/development/overview) | Contributor-oriented guide to working in the repo |
+| [Testing Strategy](/docs/development/testing-strategy) | Contract, regression, and parity test expectations |
+| [Benchmarking](/docs/development/benchmarking) | Local Criterion microbenchmarks for routing and load balancing |
+| [Adding Features](/docs/development/adding-features) | Expectations for new features against the current architecture |
 
 ### Reference — schema, maturity, roadmap, and release state
 
 | Document | What you'll find |
 |---|---|
-| [Reference Overview](reference/overview.md) | Main entry point for exact behavior, product limits, and authoritative reference pages |
-| [Configuration Reference](configuration/reference.md) | Authoritative schema reference for every configuration block |
-| [Feature Matrix](reference/feature-matrix.md) | Strict feature-by-feature inventory of what is done, partial, and missing |
-| [Roadmap](roadmap.md) | Planned features, GA exit criteria, known limitations |
-| [Changelog](changelog.md) | Version history with added, fixed, and changed entries |
+| [Reference Overview](/docs/reference/overview) | Main entry point for exact behavior, product limits, and authoritative reference pages |
+| [Configuration Reference](/docs/configuration/reference) | Authoritative schema reference for every configuration block |
+| [Feature Matrix](/docs/reference/feature-matrix) | Strict feature-by-feature inventory of what is done, partial, and missing |
+| [Roadmap](/docs/roadmap) | Planned features, GA exit criteria, known limitations |
+| [Changelog](/docs/changelog) | Version history with added, fixed, and changed entries |
 
 ---
 
@@ -112,7 +112,7 @@ Impulse is a modern edge runtime for high-trust APIs. This documentation set is 
 
 Beta means core proxying, routing, load balancing, and health-check features are implemented and actively validated, but the project remains pre-GA — extended soak validation and broader failure-mode hardening are still in progress.
 
-Controlled production rollout is supported. See [release-maturity.md](release-maturity.md) for operator expectations, environment guidance, and GA exit criteria.
+Controlled production rollout is supported. See [release-maturity.md](/docs/release-maturity) for operator expectations, environment guidance, and GA exit criteria.
 
 ---
 
@@ -120,18 +120,18 @@ Controlled production rollout is supported. See [release-maturity.md](release-ma
 
 If you are in a hurry:
 
-- first run: [getting-started/overview.md](getting-started/overview.md)
-- production deployment: [deployment/production.md](deployment/production.md)
-- incident response: [operations/runbook.md](operations/runbook.md)
-- troubleshooting: [troubleshooting/common-issues.md](troubleshooting/common-issues.md)
-- exact support surface: [reference/feature-matrix.md](reference/feature-matrix.md)
+- first run: [getting-started/overview.md](/docs/getting-started/overview)
+- production deployment: [deployment/production.md](/docs/deployment/production)
+- incident response: [operations/runbook.md](/docs/operations/runbook)
+- troubleshooting: [troubleshooting/common-issues.md](/docs/troubleshooting/common-issues)
+- exact support surface: [reference/feature-matrix.md](/docs/reference/feature-matrix)
 
 For the canonical examples and exact commands:
 
-- working config snippets: [configuration/examples.md](configuration/examples.md)
-- full config semantics: [configuration/reference.md](configuration/reference.md)
-- Control API and metrics examples: [api/overview.md](api/overview.md)
-- log levels and logging config: [configuration/reference.md](configuration/reference.md#logging-configuration)
+- working config snippets: [configuration/examples.md](/docs/configuration/examples)
+- full config semantics: [configuration/reference.md](/docs/configuration/reference)
+- Control API and metrics examples: [api/overview.md](/docs/api/overview)
+- log levels and logging config: [configuration/reference.md](/docs/configuration/reference#logging-configuration)
 
 ---
 

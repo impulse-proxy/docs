@@ -9,11 +9,11 @@ This is the canonical configuration document for Impulse. It should answer these
 - what runtime behavior the settings change
 - what operators should be careful about
 
-Use [Configuration Defaults](defaults.md) for the exhaustive default inventory and [Configuration Examples](examples.md) for complete deployment patterns. Use this page when you need exact schema and semantics.
+Use [Configuration Defaults](/docs/configuration/defaults) for the exhaustive default inventory and [Configuration Examples](/docs/configuration/examples) for complete deployment patterns. Use this page when you need exact schema and semantics.
 
 For distributed quota policy examples, Redis backend posture, migration from
 legacy scoped rate limiting, and operator interpretation, see
-[Distributed Quota](../operations/distributed-quota.md).
+[Distributed Quota](/docs/operations/distributed-quota).
 
 ## Scope Of This Reference
 
@@ -25,7 +25,7 @@ This page covers:
 - runtime meaning of major knobs
 - the boundary between raw YAML input and runtime-normalized policy objects
 
-Default coverage now lives on [Configuration Defaults](defaults.md) so the full inventory can stay centralized and easier to audit against the code.
+Default coverage now lives on [Configuration Defaults](/docs/configuration/defaults) so the full inventory can stay centralized and easier to audit against the code.
 
 This page does not change the current product behavior:
 
@@ -84,10 +84,10 @@ If the raw YAML is accepted, the rest of the system should not need to reinterpr
 
 ## Reading This Reference
 
-- Start with [Configuration Examples](examples.md) if you need a working template.
-- Use [Configuration Defaults](defaults.md) when you need the effective baseline for omitted fields.
-- Read [TLS Setup](tls.md) before configuring production certificates or private trust roots.
-- Read [Production Readiness](../operations/production-readiness.md) if you are deciding whether the current operational model fits your rollout requirements.
+- Start with [Configuration Examples](/docs/configuration/examples) if you need a working template.
+- Use [Configuration Defaults](/docs/configuration/defaults) when you need the effective baseline for omitted fields.
+- Read [TLS Setup](/docs/configuration/tls) before configuring production certificates or private trust roots.
+- Read [Production Readiness](/docs/operations/production-readiness) if you are deciding whether the current operational model fits your rollout requirements.
 
 ## Configuration Reading Map
 
@@ -95,11 +95,11 @@ Use this quick map before diving into field tables:
 
 | Goal | Page |
 | --- | --- |
-| Copy a working template | [Configuration Examples](examples.md) |
-| Check what happens when a field is omitted | [Configuration Defaults](defaults.md) |
+| Copy a working template | [Configuration Examples](/docs/configuration/examples) |
+| Check what happens when a field is omitted | [Configuration Defaults](/docs/configuration/defaults) |
 | Understand exact field semantics | this page |
-| Configure certificates and trust | [TLS Setup](tls.md) |
-| Understand rollout and restart implications | [Production Deployment](../deployment/production.md) and [Production Readiness](../operations/production-readiness.md) |
+| Configure certificates and trust | [TLS Setup](/docs/configuration/tls) |
+| Understand rollout and restart implications | [Production Deployment](/docs/deployment/production) and [Production Readiness](/docs/operations/production-readiness) |
 
 ## Configuration File Format
 
@@ -420,7 +420,7 @@ Treat the following settings as high-risk when changed:
 
 ## Complete Example Configurations
 
-For complete examples, use [Configuration Examples](examples.md).
+For complete examples, use [Configuration Examples](/docs/configuration/examples).
 
 ## Top-Level Configuration
 
@@ -507,7 +507,7 @@ Runtime interpretation:
 
 ## Default Values
 
-Impulse has a large number of defaults spread across helper functions and `Default` implementations. The central inventory now lives on [Configuration Defaults](defaults.md).
+Impulse has a large number of defaults spread across helper functions and `Default` implementations. The central inventory now lives on [Configuration Defaults](/docs/configuration/defaults).
 
 Use that page when you need:
 
@@ -515,7 +515,7 @@ Use that page when you need:
 - the exact value applied for omitted fields
 - the difference between `null`, empty collections, empty strings, and structured section defaults
 
-This reference page keeps the schema and semantics, while [Configuration Defaults](defaults.md) owns the exhaustive default matrix.
+This reference page keeps the schema and semantics, while [Configuration Defaults](/docs/configuration/defaults) owns the exhaustive default matrix.
 
 ## Validation Model
 

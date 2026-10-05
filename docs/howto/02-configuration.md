@@ -2,7 +2,7 @@
 
 This guide walks through building a working `config.yaml` for Impulse as a production reverse proxy, explaining every section and its trade-offs.
 
-Use [Configuration Reference](../configuration/reference.md) for the canonical field-by-field schema and [Configuration Examples](../configuration/examples.md) for complete deployment templates.
+Use [Configuration Reference](/docs/configuration/reference) for the canonical field-by-field schema and [Configuration Examples](/docs/configuration/examples) for complete deployment templates.
 
 ---
 

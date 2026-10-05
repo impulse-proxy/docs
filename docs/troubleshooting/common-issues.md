@@ -15,10 +15,10 @@ Use the same triage order for most incidents:
 
 Canonical references for the checks above:
 
-- exact admin endpoints and curl flows: [Control API Reference](../reference/control-api-reference.md)
-- exact metric names and labels: [Metrics Reference](../reference/metrics-reference.md)
-- dashboard and alert interpretation: [Observability Operator Bundle](../operations/observability-bundle.md)
-- rollout, drain, and rollback workflow: [Runbook](../operations/runbook.md) and [Reload and Drain](../operations/reload-and-drain.md)
+- exact admin endpoints and curl flows: [Control API Reference](/docs/reference/control-api-reference)
+- exact metric names and labels: [Metrics Reference](/docs/reference/metrics-reference)
+- dashboard and alert interpretation: [Observability Operator Bundle](/docs/operations/observability-bundle)
+- rollout, drain, and rollback workflow: [Runbook](/docs/operations/runbook) and [Reload and Drain](/docs/operations/reload-and-drain)
 
 ## Symptom Index
 
@@ -428,7 +428,7 @@ Canonical references for the checks above:
 ### Relevant Logs, Metrics, and Endpoints
 
 - endpoints: `/metrics`, `/admin/runtime`
-- metrics: all families in [Metrics Reference](../reference/metrics-reference.md)
+- metrics: all families in [Metrics Reference](/docs/reference/metrics-reference)
 - logs: metrics endpoint startup logs, scrape-path mismatches, observability package deployment logs
 
 ## Capture a Useful Incident Bundle
@@ -460,10 +460,10 @@ Also capture:
 
 ## Related Pages
 
-- [Operations Overview](../operations/overview.md)
-- [Runbook](../operations/runbook.md)
-- [Metrics Reference](../reference/metrics-reference.md)
-- [Control API Reference](../reference/control-api-reference.md)
-- [Control Plane](../operations/control-plane.md)
-- [Observability Operator Bundle](../operations/observability-bundle.md)
-- [Metrics and Alerts](../operations/metrics-and-alerts.md)
+- [Operations Overview](/docs/operations/overview)
+- [Runbook](/docs/operations/runbook)
+- [Metrics Reference](/docs/reference/metrics-reference)
+- [Control API Reference](/docs/reference/control-api-reference)
+- [Control Plane](/docs/operations/control-plane)
+- [Observability Operator Bundle](/docs/operations/observability-bundle)
+- [Metrics and Alerts](/docs/operations/metrics-and-alerts)

@@ -541,6 +541,6 @@ netstat -s | grep -i lost
 
 ## Next Steps
 
-- Review [Load Balancing](load-balancing.md) for detailed algorithm documentation
+- Review [Load Balancing](/docs/user-guide/load-balancing) for detailed algorithm documentation
 - Refer to Configuration Reference for complete parameter documentation
 - See Deployment Guide for production deployment best practices

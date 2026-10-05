@@ -1,6 +1,6 @@
 # Host Tuning
 
-This page groups host-level tuning guidance for production Impulse deployments. Use it together with [Production Deployment](../deployment/production.md) and [Sizing And Capacity](sizing-and-capacity.md).
+This page groups host-level tuning guidance for production Impulse deployments. Use it together with [Production Deployment](/docs/deployment/production) and [Sizing And Capacity](/docs/operations/sizing-and-capacity).
 
 ## Primary Goals
 
@@ -25,7 +25,7 @@ Validate these areas first:
 
 ## Recommended Starting Posture
 
-- start from the Linux baseline in [Production Deployment](../deployment/production.md)
+- start from the Linux baseline in [Production Deployment](/docs/deployment/production)
 - keep the metrics and Control API surfaces reachable from operations tooling but isolated from public traffic
 - isolate Impulse from unrelated batch or noisy-neighbor workloads where possible
 

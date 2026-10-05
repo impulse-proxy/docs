@@ -150,7 +150,7 @@ The current route family includes:
 - reload
 - restart
 
-Refer to [Control API Reference](../reference/control-api-reference.md) for concrete endpoints.
+Refer to [Control API Reference](/docs/reference/control-api-reference) for concrete endpoints.
 
 ### What the control API is allowed to know
 
@@ -379,8 +379,8 @@ Do not:
 
 ## Related Pages
 
-- [Observability Contract](../architecture/observability-contract.md)
-- [Observability Operator Bundle](observability-bundle.md)
-- [Reload and Drain](reload-and-drain.md)
-- [Metrics and Alerts](metrics-and-alerts.md)
-- [Control API Reference](../reference/control-api-reference.md)
+- [Observability Contract](/docs/architecture/observability-contract)
+- [Observability Operator Bundle](/docs/operations/observability-bundle)
+- [Reload and Drain](/docs/operations/reload-and-drain)
+- [Metrics and Alerts](/docs/operations/metrics-and-alerts)
+- [Control API Reference](/docs/reference/control-api-reference)

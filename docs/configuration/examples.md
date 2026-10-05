@@ -1,9 +1,9 @@
 # Configuration Examples
 
-This page collects complete deployment-oriented examples. Use it together with the [Configuration Reference](reference.md), which remains the canonical schema and semantics document.
+This page collects complete deployment-oriented examples. Use it together with the [Configuration Reference](/docs/configuration/reference), which remains the canonical schema and semantics document.
 
 For distributed quota examples and migration guidance, see
-[Distributed Quota](../operations/distributed-quota.md).
+[Distributed Quota](/docs/operations/distributed-quota).
 
 ## How To Use These Examples
 
@@ -401,6 +401,6 @@ Impulse supports generation-based validation, preview, activation, rollback, and
 
 ## Related Pages
 
-- [Configuration Reference](reference.md)
-- [TLS Setup](tls.md)
-- [Production Readiness](../operations/production-readiness.md)
+- [Configuration Reference](/docs/configuration/reference)
+- [TLS Setup](/docs/configuration/tls)
+- [Production Readiness](/docs/operations/production-readiness)

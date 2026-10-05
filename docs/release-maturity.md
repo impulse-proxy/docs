@@ -72,7 +72,7 @@ The most important maturity gates before a broader GA-style claim are:
 
 ## Related Docs
 
-- [Production Readiness](operations/production-readiness.md)
-- [Feature Matrix](reference/feature-matrix.md)
-- [Limitations](reference/limitations.md)
-- [Roadmap](roadmap.md)
+- [Production Readiness](/docs/operations/production-readiness)
+- [Feature Matrix](/docs/reference/feature-matrix)
+- [Limitations](/docs/reference/limitations)
+- [Roadmap](/docs/roadmap)

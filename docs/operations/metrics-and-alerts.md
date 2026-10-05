@@ -4,9 +4,9 @@ This document explains which Impulse metrics matter most in production and how o
 
 ## Read This With
 
-- [Metrics Reference](../reference/metrics-reference.md) for exact series names
-- [Observability Operator Bundle](observability-bundle.md) for the packaged dashboards, recording rules, alerts, and SLOs
-- [Control API Reference](../reference/control-api-reference.md) when you need current runtime state rather than trend
+- [Metrics Reference](/docs/reference/metrics-reference) for exact series names
+- [Observability Operator Bundle](/docs/operations/observability-bundle) for the packaged dashboards, recording rules, alerts, and SLOs
+- [Control API Reference](/docs/reference/control-api-reference) when you need current runtime state rather than trend
 
 ## Purpose
 
@@ -19,10 +19,10 @@ Impulse exposes many counters, gauges, and labeled request families. Operators s
 - are retries and hedges increasing
 - is the runtime generation and control plane behaving normally
 
-For the full catalog, see [Metrics Reference](../reference/metrics-reference.md).
+For the full catalog, see [Metrics Reference](/docs/reference/metrics-reference).
 
 Distributed quota-specific interpretation lives in
-[Distributed Quota](distributed-quota.md). Use that page when you need to
+[Distributed Quota](/docs/operations/distributed-quota). Use that page when you need to
 distinguish quota exhaustion, quota backend degradation, and overload shedding.
 
 ## Primary Production Domains
@@ -272,11 +272,11 @@ If a dashboard requires reading implementation-specific logs to interpret a core
 
 ## Related Pages
 
-- [Observability Operator Bundle](observability-bundle.md)
-- [Control Plane](control-plane.md)
-- [Control API Reference](../reference/control-api-reference.md)
+- [Observability Operator Bundle](/docs/operations/observability-bundle)
+- [Control Plane](/docs/operations/control-plane)
+- [Control API Reference](/docs/reference/control-api-reference)
 
-- [Metrics Reference](../reference/metrics-reference.md)
-- [Observability Contract](../architecture/observability-contract.md)
-- [Control Plane](control-plane.md)
-- [Reload and Drain](reload-and-drain.md)
+- [Metrics Reference](/docs/reference/metrics-reference)
+- [Observability Contract](/docs/architecture/observability-contract)
+- [Control Plane](/docs/operations/control-plane)
+- [Reload and Drain](/docs/operations/reload-and-drain)

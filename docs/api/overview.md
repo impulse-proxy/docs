@@ -24,21 +24,21 @@ Core options:
 
 | Surface | Protocol | Main use | Canonical page |
 | --- | --- | --- | --- |
-| metrics endpoint | HTTP `GET` | scrape, dashboarding, alerting, trend analysis | [Metrics Reference](../reference/metrics-reference.md) |
-| Control API | HTTP/1.1 over TLS | runtime state, staged activation, rollback, cert reload, restart | [Control API Reference](../reference/control-api-reference.md) |
-| config file | YAML | runtime configuration input | [Configuration Reference](../configuration/reference.md) |
+| metrics endpoint | HTTP `GET` | scrape, dashboarding, alerting, trend analysis | [Metrics Reference](/docs/reference/metrics-reference) |
+| Control API | HTTP/1.1 over TLS | runtime state, staged activation, rollback, cert reload, restart | [Control API Reference](/docs/reference/control-api-reference) |
+| config file | YAML | runtime configuration input | [Configuration Reference](/docs/configuration/reference) |
 
 ## Common Entry Points
 
 | Task | Start here |
 | --- | --- |
-| check process liveness and readiness | `GET /health` and `GET /ready` in [Control API Reference](../reference/control-api-reference.md) |
-| inspect active runtime state | `GET /admin/runtime` in [Control API Reference](../reference/control-api-reference.md) |
-| validate, preview, activate, or roll back runtime config | [Control API Reference](../reference/control-api-reference.md) |
-| understand metric names and labels | [Metrics Reference](../reference/metrics-reference.md) |
-| use dashboards, alerts, and SLO views | [Observability Operator Bundle](../operations/observability-bundle.md) |
-| understand reload, drain, and restart boundaries | [Reload and Drain](../operations/reload-and-drain.md) |
-| understand exact config shape and examples | [Configuration Reference](../configuration/reference.md) and [Configuration Examples](../configuration/examples.md) |
+| check process liveness and readiness | `GET /health` and `GET /ready` in [Control API Reference](/docs/reference/control-api-reference) |
+| inspect active runtime state | `GET /admin/runtime` in [Control API Reference](/docs/reference/control-api-reference) |
+| validate, preview, activate, or roll back runtime config | [Control API Reference](/docs/reference/control-api-reference) |
+| understand metric names and labels | [Metrics Reference](/docs/reference/metrics-reference) |
+| use dashboards, alerts, and SLO views | [Observability Operator Bundle](/docs/operations/observability-bundle) |
+| understand reload, drain, and restart boundaries | [Reload and Drain](/docs/operations/reload-and-drain) |
+| understand exact config shape and examples | [Configuration Reference](/docs/configuration/reference) and [Configuration Examples](/docs/configuration/examples) |
 
 ## Scope Note
 
@@ -51,14 +51,14 @@ For the canonical behavior of:
 - authn, authz, and mTLS behavior
 - response status and failure semantics
 
-use [Control API Reference](../reference/control-api-reference.md).
+use [Control API Reference](/docs/reference/control-api-reference).
 
-For runtime-managed versus restart-required configuration boundaries, use [Reload and Drain](../operations/reload-and-drain.md).
+For runtime-managed versus restart-required configuration boundaries, use [Reload and Drain](/docs/operations/reload-and-drain).
 
 ## Related Pages
 
-- [Control API Reference](../reference/control-api-reference.md)
-- [Metrics Reference](../reference/metrics-reference.md)
-- [Configuration Reference](../configuration/reference.md)
-- [Observability Operator Bundle](../operations/observability-bundle.md)
-- [Operations Runbook](../operations/runbook.md)
+- [Control API Reference](/docs/reference/control-api-reference)
+- [Metrics Reference](/docs/reference/metrics-reference)
+- [Configuration Reference](/docs/configuration/reference)
+- [Observability Operator Bundle](/docs/operations/observability-bundle)
+- [Operations Runbook](/docs/operations/runbook)

@@ -12,7 +12,7 @@ The runtime now ships:
 - explicit fail-open or fail-closed backend behavior
 - bounded local fallback when it is configured explicitly
 
-Use [Distributed Quota](../operations/distributed-quota.md) for production
+Use [Distributed Quota](/docs/operations/distributed-quota) for production
 configuration, rollout guidance, and operator interpretation. This page remains
 the semantic contract that config, admission behavior, metrics, and control API
 output must continue to follow.

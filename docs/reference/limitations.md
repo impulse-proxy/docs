@@ -72,6 +72,6 @@ Use this page for current hard product limits and non-goals.
 
 ## Related Pages
 
-- [Feature Matrix](feature-matrix.md)
-- [Production Readiness](../operations/production-readiness.md)
-- [Roadmap](../roadmap.md)
+- [Feature Matrix](/docs/reference/feature-matrix)
+- [Production Readiness](/docs/operations/production-readiness)
+- [Roadmap](/docs/roadmap)

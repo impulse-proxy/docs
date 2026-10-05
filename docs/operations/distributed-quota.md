@@ -5,13 +5,13 @@ distributed quota layer.
 
 Use this together with:
 
-- [Configuration Reference](../configuration/reference.md) for the canonical
+- [Configuration Reference](/docs/configuration/reference) for the canonical
   schema
-- [Configuration Defaults](../configuration/defaults.md) for omitted-field
+- [Configuration Defaults](/docs/configuration/defaults) for omitted-field
   behavior
-- [Distributed Quota Contract](../architecture/quota-policy-contract.md) for
+- [Distributed Quota Contract](/docs/architecture/quota-policy-contract) for
   the locked semantics behind selectors, deny reasons, and backend behavior
-- [Metrics Reference](../reference/metrics-reference.md) for the exported
+- [Metrics Reference](/docs/reference/metrics-reference) for the exported
   metric families
 
 ## What Distributed Quota Is For
@@ -422,8 +422,8 @@ Interpretation:
 
 ## Related Pages
 
-- [Distributed Quota Contract](../architecture/quota-policy-contract.md)
-- [Configuration Reference](../configuration/reference.md)
-- [Configuration Defaults](../configuration/defaults.md)
-- [Metrics and Alerts](metrics-and-alerts.md)
-- [Failure Modes](failure-modes.md)
+- [Distributed Quota Contract](/docs/architecture/quota-policy-contract)
+- [Configuration Reference](/docs/configuration/reference)
+- [Configuration Defaults](/docs/configuration/defaults)
+- [Metrics and Alerts](/docs/operations/metrics-and-alerts)
+- [Failure Modes](/docs/operations/failure-modes)

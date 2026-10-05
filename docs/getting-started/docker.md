@@ -11,7 +11,7 @@ This page is the fastest way to run Impulse in containers and verify startup and
 
 - Want the fastest container evaluation path: use the provided Compose stack plus a small demo backend
 - Want to run only the Impulse container: use the single-container commands later in this page
-- Want full host and production guidance: use [Production Deployment](../deployment/production.md)
+- Want full host and production guidance: use [Production Deployment](/docs/deployment/production)
 
 ## Quick Start with Docker Compose
 
@@ -32,7 +32,7 @@ cd impulse
 
 The packaged Compose file already mounts `certs/proxy-cert.pem` and `certs/proxy-key-pkcs8.pem` from the repository.
 
-For real deployments, replace them with your own certificate material and follow [TLS Setup](../configuration/tls.md).
+For real deployments, replace them with your own certificate material and follow [TLS Setup](/docs/configuration/tls).
 
 **3. Start a small demo backend:**
 
@@ -209,7 +209,7 @@ docker run -d ...   # same run command as before
 
 ## What to Read Next
 
-- [Quickstart](../tutorials/quickstart.md) - fastest local non-container first run
-- [Installation](installation.md) - install Impulse directly on a host
-- [Minimum Production](minimum-production.md) - minimum safe production posture
-- [Production Deployment](../deployment/production.md) - full deployment guidance
+- [Quickstart](/docs/tutorials/quickstart) - fastest local non-container first run
+- [Installation](/docs/getting-started/installation) - install Impulse directly on a host
+- [Minimum Production](/docs/getting-started/minimum-production) - minimum safe production posture
+- [Production Deployment](/docs/deployment/production) - full deployment guidance

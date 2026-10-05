@@ -11,11 +11,11 @@ Use this section when you need to answer:
 
 ## Start Here
 
-- Want the shortest first-run path: [Quickstart](../tutorials/quickstart.md)
-- Need installation and runtime requirements: [Installation](installation.md)
-- Want a container-based setup: [Docker](docker.md)
-- Want the smallest production checklist: [Minimum Production](minimum-production.md)
-- Need exact config keys and defaults: [Configuration Reference](../configuration/reference.md)
+- Want the shortest first-run path: [Quickstart](/docs/tutorials/quickstart)
+- Need installation and runtime requirements: [Installation](/docs/getting-started/installation)
+- Want a container-based setup: [Docker](/docs/getting-started/docker)
+- Want the smallest production checklist: [Minimum Production](/docs/getting-started/minimum-production)
+- Need exact config keys and defaults: [Configuration Reference](/docs/configuration/reference)
 
 ## What Impulse Is
 
@@ -165,13 +165,13 @@ Currently working:
 - Active health checking with automatic recovery
 - Path, host, and method-aware routing with named upstreams
 
-See [Release Maturity](../release-maturity.md) for beta scope and GA promotion criteria.
+See [Release Maturity](/docs/release-maturity) for beta scope and GA promotion criteria.
 
 ## Next Steps
 
-- [Installation Guide](installation.md) - complete installation instructions
-- [Configuration Reference](../configuration/reference.md) - exact configuration schema and defaults
-- [TLS Setup](../configuration/tls.md) - certificate generation and trust configuration
-- [Production Deployment](../deployment/production.md) - deployment and rollout guidance
-- [Operations Overview](../operations/overview.md) - where to go once you are ready to operate Impulse
-- [Troubleshooting](../troubleshooting/common-issues.md) - common failure signatures and checks
+- [Installation Guide](/docs/getting-started/installation) - complete installation instructions
+- [Configuration Reference](/docs/configuration/reference) - exact configuration schema and defaults
+- [TLS Setup](/docs/configuration/tls) - certificate generation and trust configuration
+- [Production Deployment](/docs/deployment/production) - deployment and rollout guidance
+- [Operations Overview](/docs/operations/overview) - where to go once you are ready to operate Impulse
+- [Troubleshooting](/docs/troubleshooting/common-issues) - common failure signatures and checks

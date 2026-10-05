@@ -2,7 +2,7 @@
 
 This page is the operator runbook for rotating listener certificates, upstream client certificates, and upstream CA trust material, and for reasoning about secret-backed config in general.
 
-Read [Reload and Drain](reload-and-drain.md) first if you have not already — this page assumes you understand the generation model and the difference between `reload-certs` and generation activation.
+Read [Reload and Drain](/docs/operations/reload-and-drain) first if you have not already — this page assumes you understand the generation model and the difference between `reload-certs` and generation activation.
 
 ## Which Path Applies
 
@@ -144,8 +144,8 @@ None of the control-plane JSON, audit events, or metrics expose secret contents,
 
 ## Related Pages
 
-- [Reload and Drain](reload-and-drain.md)
-- [Runbook](runbook.md)
-- [Control API Reference](../reference/control-api-reference.md)
-- [TLS Configuration](../configuration/tls.md)
-- [Metrics Reference](../reference/metrics-reference.md)
+- [Reload and Drain](/docs/operations/reload-and-drain)
+- [Runbook](/docs/operations/runbook)
+- [Control API Reference](/docs/reference/control-api-reference)
+- [TLS Configuration](/docs/configuration/tls)
+- [Metrics Reference](/docs/reference/metrics-reference)
