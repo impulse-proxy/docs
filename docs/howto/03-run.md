@@ -10,8 +10,8 @@ For the fastest first successful request, use [Quickstart](/docs/tutorials/quick
 
 Before starting Impulse you need:
 
-1. A valid config file (see [02-configuration.md](/docs/howto/02-configuration))
-2. TLS certificates (see [01-certificates.md](/docs/howto/01-certificates))
+1. A valid config file (see [Configuration](/docs/howto/configuration))
+2. TLS certificates (see [Certificates](/docs/howto/certificates))
 3. The `impulse` binary — built from source or installed via package
 
 ---
@@ -319,6 +319,6 @@ curl http://127.0.0.1:9901/metrics
 | `Cannot open listen.tls.cert` | Wrong path or permissions | Check path; `chown impulse:impulse /etc/impulse/certs/*` |
 | `worker_threads > 1 requires reuseport=true` | Config mismatch | Add `reuseport: true` to performance |
 | Clients get `connection refused` on TCP | Bootstrap TLS listener failed to bind | Check logs for bootstrap bind error |
-| `curl: (35) OpenSSL SSL_connect` | Certificate mismatch or untrusted | See [01-certificates.md](/docs/howto/01-certificates) |
+| `curl: (35) OpenSSL SSL_connect` | Certificate mismatch or untrusted | See [Certificates](/docs/howto/certificates) |
 | Health check always fails | Backend unreachable or wrong health path | Verify backend is up and health path returns 200 |
 | High memory usage | `max_response_body_bytes` too high or streaming not draining | Tune body caps in performance section |
