@@ -75,11 +75,13 @@ const config: Config = {
           href: 'https://impulse-proxy.github.io/',
           label: 'Home',
           position: 'right',
+          className: 'navbar-link--text-only',
         },
         {
           href: 'https://github.com/impulse-proxy/impulse',
           label: 'GitHub',
           position: 'right',
+          className: 'navbar-link--text-only',
         },
       ],
     },

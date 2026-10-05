@@ -144,6 +144,10 @@
   --docusaurus-highlighted-code-line-bg: var(--accent);
 }
 
+html {
+  font-size: 90%;
+}
+
 html,
 body {
   background: var(--background);
@@ -166,6 +170,41 @@ body {
 
 .navbar__title,
 .navbar__link--active {
+  color: var(--foreground);
+}
+
+.navbar__items--right {
+  gap: 0.5rem;
+}
+
+.navbar-link--text-only svg {
+  display: none;
+}
+
+.navbar-link--text-only {
+  background: var(--foreground);
+  border: 1px solid var(--foreground);
+  border-radius: var(--radius-md);
+  color: var(--background) !important;
+  font-weight: 600;
+  padding: 0.4rem 0.75rem;
+}
+
+.navbar-link--text-only:hover {
+  background: var(--foreground);
+  color: var(--background) !important;
+  opacity: 0.82;
+  text-decoration: none;
+}
+
+.navbar button[aria-label^='Switch between dark and light mode'] {
+  background: transparent !important;
+  border: none;
+  color: var(--foreground);
+}
+
+.navbar button[aria-label^='Switch between dark and light mode']:hover {
+  background: transparent !important;
   color: var(--foreground);
 }
 
