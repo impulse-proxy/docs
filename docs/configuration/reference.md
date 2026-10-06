@@ -38,7 +38,7 @@ is omitted, it attempts `/etc/impulse/config.yaml`.
 | `upstream` | map of objects | Yes | — | Named upstream pools. The map must contain at least one entry. |
 | `load_balancing` | object or `null` | No | `null` | Accepted and validated, but not applied as a v0.6 runtime fallback; configure each upstream instead. |
 | `upstream_tls` | object | No | `{}` | Global TLS policy inherited by upstreams that omit `tls`. |
-| `secrets` | object | No | `{}` | Secret-provider configuration. |
+| `secrets` | object | No | `{}` | Literal and file-backed secret-provider configuration. See [Authentication and Secrets](/docs/configuration/authentication-and-secrets). |
 | `log` | object | No | `{}` | Logging level and output configuration. |
 | `performance` | object | No | `{}` | Timeouts, limits, worker settings, buffers, and backend DNS refresh. |
 | `observability` | object | No | `{}` | Metrics, tracing, Control API, and runtime-view endpoints. |
@@ -135,6 +135,21 @@ request-key, strategy-alias, and weight semantics are consolidated in
 [Routing and Upstreams](/docs/configuration/routing-and-upstreams). Use
 [Load Balancing](/docs/user-guide/load-balancing) for strategy-selection
 guidance.
+
+## Authentication and Secrets
+
+Downstream request authentication is configured per upstream under
+`upstream.<name>.auth`. It supports API keys, local JWT verification with
+static or JWKS keys, and HTTP or OIDC-introspection external authorization.
+The top-level `secrets` object configures file-backed secret resolution used by
+supported `*_ref` fields.
+
+Exact fields, defaults, validation rules, failure behavior, examples, and
+reload semantics are consolidated in
+[Authentication and Secrets](/docs/configuration/authentication-and-secrets).
+Control API authentication is a separate admin-plane policy; its endpoint and
+role contract is documented in the
+[Control API Reference](/docs/reference/control-api-reference).
 
 ## Logging Configuration
 
@@ -546,13 +561,19 @@ Key fields:
 
 Key fields:
 
-- `observability.control_api.auth_token`: bearer token required for runtime, reload, reload-certs, and restart endpoints (`Authorization: Bearer <token>`).
+- `observability.control_api.auth_token` / `auth_token_ref`: legacy admin-scoped bearer credential.
+- `observability.control_api.auth.bearer_tokens`: role-bearing Control API credentials with optional actor IDs.
+- `observability.control_api.tls.client_auth`: optional or required admin-plane mTLS. When the Control API is enabled, authentication must use a bearer credential or required mTLS; optional mTLS cannot be the only mechanism.
 - `observability.control_api.reload_path` (default: `/admin/runtime/reload`): authenticated POST endpoint that re-reads the config file and applies the full configuration via an atomic runtime swap (routes, upstreams, backends, timeouts, limits, resilience policies). Startup-owned settings and listener bind/removal changes are rejected and still require a restart.
 - `observability.control_api.reload_certs_path`: authenticated POST endpoint that reloads listener certificate and client-auth CA material for new handshakes.
 - `observability.control_api.max_connections` (default: `256`): concurrent connection cap.
 - `observability.control_api.connection_timeout_ms` (default: `30000`): per-connection lifetime timeout.
 
-If `observability.control_api.address` is non-loopback, `observability.control_api.auth_token` is required.
+These credentials protect the admin plane only. They do not satisfy
+`upstream.<name>.auth`, and downstream API keys or JWTs do not authorize
+Control API requests. See the
+[Control API Reference](/docs/reference/control-api-reference) for the complete
+endpoint, role, mTLS, and source-address contract.
 
 ### Routing Transparency
 

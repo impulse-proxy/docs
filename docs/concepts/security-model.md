@@ -153,31 +153,25 @@ These features are part of the project’s security posture because they reduce 
 
 ## Request Authentication And Authorization Model
 
-Impulse supports per-upstream request authentication, checked in this order:
+Per-upstream request authentication is part of the downstream data plane. It
+runs before backend dispatch and supports local API-key checks, local JWT
+verification, or one external authorization provider. Local policies fail
+closed. External policy defaults to fail-closed and may be made fail-open only
+as an explicit availability tradeoff.
 
-- **API key**: a configured header is compared against a static key list. Local, synchronous, no network call.
-- **JWT**: local signature and claim validation (issuer, audience, clock skew), plus optional scope/role checks against token claims. Supports `HS256` with a shared secret, and `RS256`/`ES256` against static PEM/JWK public keys or a remote JWKS endpoint. Always local and synchronous on the request path — JWKS keys are served from an in-memory cache refreshed in the background, never fetched during request validation.
-- **External auth**: an async HTTP subrequest (generic HTTP or OIDC-shaped) sent to a configured auth endpoint, gated before upstream admission so the request never reaches the backend while auth is pending. Only one external auth provider is supported per upstream, and it cannot be combined with API key or JWT in the current version.
+The trust boundary is strict:
 
-External auth details:
+- request authentication lives under `upstream.<name>.auth`
+- Control API authentication lives under `observability.control_api`
+- identities, roles, credentials, failures, and audit events from one plane do
+  not grant access in the other
+- JWKS and OIDC endpoints are separate dependencies: JWKS supplies public keys
+  for local JWT verification, while OIDC external auth performs discovery and
+  token introspection
 
-- The auth call runs on a dedicated HTTP client, isolated from upstream backend transport, inflight accounting, and health state — an auth outage cannot degrade backend routing.
-- A decision maps to `Allow`, `Deny`, `Redirect`, or `Challenge`; only headers on an explicit allowlist are copied from the auth server's response into the response sent to the client.
-- Failure mode (fail-open or fail-closed) is configured per provider. The default is fail-closed: a timeout or transport error denies the request rather than silently admitting it.
-- OIDC mode uses discovery and token introspection to validate bearer tokens. It does not cache the discovery document (refetched per request) and does not implement interactive login or session-cookie flows. For local signature validation against an issuer's published keys, use JWT auth with `jwks_url` instead.
-
-JWT signature verification details:
-
-- The algorithm allowlist is explicit policy, not inferred from configured key material. A token whose `alg` header is absent from `allowed_algorithms` is rejected before any key is resolved, and `alg: none` never maps to a verification mode.
-- Key type is re-checked at verification time, so an asymmetric public key can never satisfy an `HS256` token and vice versa.
-- RSA keys below 2048 bits are rejected, whether configured statically or published via JWKS.
-- Refresh failures never widen access: the last known-good key set keeps validating until the staleness window expires, after which requests are rejected rather than admitted.
-
-Boundary rule:
-
-- request-path auth lives under upstream routing / forwarding policy
-- admin-plane auth lives only under control-plane modules
-- credentials, failures, and audit events from one plane must not be confused with the other
+The exact fields, algorithms, claim behavior, external-auth response contract,
+secret references, and reload semantics are documented in
+[Authentication and Secrets](/docs/configuration/authentication-and-secrets).
 
 ## What Impulse Does Not Currently Provide
 
@@ -214,4 +208,6 @@ Impulse does not currently provide first-class:
 
 - [Production Readiness](/docs/operations/production-readiness)
 - [Limitations](/docs/reference/limitations)
+- [Authentication and Secrets](/docs/configuration/authentication-and-secrets)
+- [Control API Reference](/docs/reference/control-api-reference)
 - [TLS Setup](/docs/configuration/tls)

@@ -31,14 +31,14 @@ upstream:
   payments:
     tls:
       client_certificate_ref:
-        ref: "file:///etc/impulse/secrets/upstream/payments-client.crt"
+        ref: "file://upstream/payments-client.crt"
       client_key_ref:
-        ref: "file:///etc/impulse/secrets/upstream/payments-client.key"
+        ref: "file://upstream/payments-client.key"
 ```
 
 A `_ref` field and its plaintext sibling (`client_certificate` / `client_certificate_ref`, `client_key` / `client_key_ref`, `secret` / `secret_ref`, `client_secret` / `client_secret_ref`, `auth_token` / `auth_token_ref`, `token` / `token_ref`) are mutually exclusive — setting both fails validation. Supported ref schemes are `literal:<value>` and `file://<path>`.
 
-Secret references resolve **eagerly during activation**, not lazily on first request. A missing file, unreadable file, empty file, or malformed PEM fails `validate`/`activate` before the candidate generation goes live — it never reaches request-serving code.
+Secret references resolve **eagerly while a runtime candidate is prepared**, not lazily on first request. A missing file, unreadable file, empty file, or malformed PEM fails `validate`, `preview`, or `activate` before the candidate generation goes live — it never reaches request-serving code.
 
 ## Downstream Listener Certificate Rotation
 
@@ -65,6 +65,10 @@ This does not rebuild the runtime generation, mutate route/policy state, or affe
    curl -k --http1.1 -X POST https://127.0.0.1:9902/admin/runtime/validate \
      -H "Authorization: Bearer <token>" -H "content-type: application/json" \
      -d '{"requested_by":"ops","reason":"rotate payments client cert"}'
+
+   curl -k --http1.1 -X POST https://127.0.0.1:9902/admin/runtime/preview \
+     -H "Authorization: Bearer <token>" -H "content-type: application/json" \
+     -d '{"requested_by":"ops","reason":"preview payments client cert rotation"}'
 
    curl -k --http1.1 -X POST https://127.0.0.1:9902/admin/runtime/activate \
      -H "Authorization: Bearer <token>" -H "content-type: application/json" \
@@ -103,21 +107,23 @@ install -m 0640 payments-client.crt.new /etc/impulse/secrets/upstream/payments-c
 
 ## Rollback Expectations
 
-Runtime rollback (`POST /admin/runtime/rollback`) restores a previously retained **runtime generation view** — the resolved policy state Impulse held for that generation. It does not, and cannot, restore external secret files.
+Runtime rollback (`POST /admin/runtime/rollback`) restores a retained **runtime generation view**, including the secret bytes that were already resolved for that generation. It does not re-read or restore external secret files.
 
 Concretely:
 
-- if you roll back to a generation that referenced `file:///etc/impulse/secrets/upstream/payments-client.crt`, and that file has since been deleted or overwritten, the rollback will re-resolve the reference against whatever is on disk **now**, not what was on disk when that generation was originally active.
-- a rollback that re-reads a now-missing or now-different secret file can fail activation, or silently activate with different material than the original generation had, if the fingerprint at rollback time doesn't match what was recorded historically.
-- do not treat retained runtime history as a backup of secret material. If you need to guarantee exact secret-content recovery, that is a secret-file backup/versioning problem, separate from runtime generation retention.
+- deleting or overwriting a referenced file after activation does not alter a retained generation's resolved material
+- rollback succeeds only while that complete generation remains in the bounded in-memory history; process restart loses that retained runtime bundle
+- do not treat runtime history as durable secret backup or versioning; restore the intended file content before the next activation or process restart
 
-Before relying on rollback as your recovery path for a bad secret rotation, confirm the previous secret file content is still present and unchanged on disk.
+Before relying on rollback as your recovery path, confirm the target generation
+is still retained. Restore the previous file content as well if a later restart
+or fresh activation may be required.
 
 ## Failure Handling
 
 When a secret or cert rotation does not behave as expected, inspect in this order:
 
-1. **`GET /admin/runtime`** — check `tls.listeners`, `tls.upstreams`, and `secrets.material` for the affected scope. Each material item reports `source_kind`, a sanitized `reference`, `fingerprint`, `last_loaded_at_unix_ms`, `last_reload_status`, and (for certificates) `expiry_not_after_unix_seconds`. None of these ever include raw secret bytes.
+1. **`GET /admin/runtime`** — check `tls.listeners`, `tls.upstreams`, and `secrets.material` for the affected scope. Secret material reports `scope`, `source_kind`, `last_loaded_at_unix_ms`, `last_reload_status`, and, for certificates, `expiry_not_after_unix_seconds`. References, provider base directories, fingerprints, and raw bytes are omitted.
 2. **`GET /admin/runtime/history`** — confirm whether the activation attempt succeeded, and read the `rejected_changes` detail if it did not. A rejected activation leaves the active generation unchanged.
 3. **Audit logs** — look for these action values:
 
@@ -140,11 +146,12 @@ When a secret or cert rotation does not behave as expected, inspect in this orde
    | `impulse_upstream_client_certificate_days_remaining{upstream}` | days-remaining gauge for alerting ahead of expiry |
    | `impulse_control_plane_cert_reload_total{result,reason}` | listener cert reload outcomes |
 
-None of the control-plane JSON, audit events, or metrics expose secret contents, private key bytes, or full provider URIs that could leak credentials — only sanitized scope, source kind, fingerprint, and timing/status metadata.
+None of the control-plane JSON, audit events, or metrics expose secret contents, private key bytes, secret references, provider base directories, or JWKS endpoint URLs.
 
 ## Related Pages
 
 - [Reload and Drain](/docs/operations/reload-and-drain)
+- [Authentication and Secrets](/docs/configuration/authentication-and-secrets)
 - [Runbook](/docs/operations/runbook)
 - [Control API Reference](/docs/reference/control-api-reference)
 - [TLS Configuration](/docs/configuration/tls)

@@ -16,7 +16,7 @@ name used by routing, metrics, runtime views, and policies such as brownout
 | `route` | object | Yes | — | Request matcher for this upstream. |
 | `backends` | array of objects | Yes | — | Non-empty backend pool. |
 | `load_balancing` | object | No | `{ type: round-robin, key: null }` | Backend-selection policy for this upstream. |
-| `auth` | object | No | `{}` | API-key, JWT, external-auth, scope, and role policy for this route. |
+| `auth` | object | No | `{}` | API-key, JWT, external-auth, scope, and role policy for this route. See [Authentication and Secrets](/docs/configuration/authentication-and-secrets). |
 | `host_policy` | object | No | `{ mode: pass_through, host: null }` | Upstream `Host`/`:authority` selection. |
 | `forwarded_headers` | object | No | `{ mode: overwrite }` | `Forwarded` and `X-Forwarded-*` handling. |
 | `tls` | object or `null` | No | `null` | Complete per-upstream TLS override. `null` inherits `upstream_tls`. |

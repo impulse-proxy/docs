@@ -61,6 +61,7 @@ workflows. Neither redefines the contracts owned by the references above.
 | [Docker](/docs/getting-started/docker) | Container image, Compose bootstrap, smoke-test scripts |
 | [Configuration Reference](/docs/configuration/reference) | Configuration schema entry point, with links to focused domain references |
 | [Routing and Upstreams](/docs/configuration/routing-and-upstreams) | Exact route matching, upstream, backend, request-key, and load-balancing behavior |
+| [Authentication and Secrets](/docs/configuration/authentication-and-secrets) | Downstream API-key, JWT, external-auth, OIDC, and secret-provider configuration |
 | [TLS Setup](/docs/configuration/tls) | Certificate generation, mTLS client auth, key ownership and permissions |
 | [Production Deployment](/docs/deployment/production) | Systemd unit, privilege drop, sysctl tuning, canary rollout guidance |
 | [Production Readiness](/docs/operations/production-readiness) | Rollout assessment and operating guidance for the current beta release |

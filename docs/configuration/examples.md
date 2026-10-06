@@ -276,8 +276,8 @@ Use this when:
 
 ## Example 7: Static RS256 And ES256 JWT Keys
 
-Pin verification to public keys you manage yourself. `secret` stays empty because
-`HS256` is not in the allowlist — configuring both is rejected at startup.
+Pin verification to public keys you manage yourself. Do not set `secret` when
+`HS256` is absent from the allowlist; configuring both is rejected at startup.
 
 ```yaml
 version: 1
@@ -296,7 +296,6 @@ upstream:
       path_prefix: "/"
     auth:
       jwt:
-        secret: ""
         issuer: "https://issuer.example.com/"
         audience: "payments-api"
         allowed_algorithms: ["RS256", "ES256"]
@@ -348,7 +347,6 @@ upstream:
       path_prefix: "/"
     auth:
       jwt:
-        secret: ""
         issuers:
           - "https://issuer.example.com/"
           - "https://issuer-eu.example.com/"

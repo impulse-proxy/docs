@@ -398,7 +398,7 @@ observability:
     enabled: true
     address: "127.0.0.1"
     port: 9902
-    auth_token: "replace-with-strong-token"   # required when enabled
+    auth_token: "replace-with-strong-token"   # one admin auth mechanism is required; this example uses the legacy token
     health_path: "/health"
     ready_path:  "/ready"
     runtime_path: "/admin/runtime"

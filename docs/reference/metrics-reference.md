@@ -225,11 +225,12 @@ Use these to separate:
 | `impulse_jwks_last_refresh_attempt_seconds{jwks_source_id}` | gauge | Unix timestamp of the last refresh attempt |
 | `impulse_jwks_last_refresh_success_seconds{jwks_source_id}` | gauge | Unix timestamp of the last successful refresh |
 
-JWKS series are labelled by `jwks_source_id`, an opaque per-source identifier —
-the configured endpoint URL is never used as a label value, so query strings and
-embedded credentials cannot leak into the metrics endpoint. Map a source id back
-to its endpoint through `jwks.sources[]` in the `/admin/runtime` snapshot, which
-reports both `jwks_source_id` and a sanitized `jwks_endpoint`.
+JWKS series are labelled by `jwks_source_id`, an opaque per-source identifier.
+The configured endpoint URL is never used as a label value, and the
+`/admin/runtime` snapshot also omits it, so query strings and embedded
+credentials cannot leak through either surface. Correlate the ID with local
+configuration; the runtime snapshot reports cache state, algorithms, startup
+behavior, and key counts for that ID.
 
 `impulse_jwks_state` reports one of `never_fetched`, `fresh`, `stale`,
 `refresh_failed_retained`, `quarantined_retained`, or `empty_unusable`. Only the

@@ -46,7 +46,7 @@ done/partial/missing status for individual capabilities.
 
 - JWT validation is local and per-upstream, covering `HS256`, `RS256`, and `ES256`. Other JOSE algorithms (`RS384`/`RS512`, `PS*`, `EdDSA`, ECDSA curves other than P-256) are not supported.
 - JWKS support is direct-URL only; there is no discovery-document-based JWKS resolution, and the JWKS cache is process-local rather than shared across instances.
-- A JWKS source removed or repointed by a config reload is not evicted from the in-memory key cache for the remaining process lifetime.
+- Active JWKS sources are reconciled on runtime generation changes; a removed or repointed source is removed from the active in-memory cache.
 - When both static asymmetric keys and a `jwks_url` are configured and a token matches a key in each, the request is rejected as ambiguous rather than resolved by precedence.
 - Request-path RBAC is limited to scope/role checks against JWT claims; there is no generic policy engine.
 - Admin-plane RBAC is a fixed three-tier model (`viewer`, `operator`, `admin`) with per-route minimums; custom roles and per-route policy expressions are not supported.
@@ -56,7 +56,7 @@ done/partial/missing status for individual capabilities.
 - The admin audit stream is per-process and local; there is no fleet-wide aggregation, delivery guarantee, or tamper-evidence.
 - `ip_allowlist.trust_proxy_headers` uses forwarded client addresses only when the raw peer matches `ip_allowlist.trusted_proxy_cidrs`; configure that list for the proxy network before enabling header trust.
 - External auth (HTTP subrequest and OIDC) is implemented as a non-blocking async check per upstream, with configurable fail-open/fail-closed behavior; there is no interactive login or session-cookie flow.
-- OIDC external auth covers discovery and token introspection only, and the discovery document is refetched on every request rather than cached. Local signature validation against an issuer's keys is available through JWT auth with `jwks_url`, not through the OIDC provider.
+- OIDC external auth covers discovery and token introspection only. Discovery metadata is process-local, cached for up to five minutes, and refreshed after one minute; there is no shared cache across instances. Local signature validation against an issuer's keys is available through JWT auth with `jwks_url`, not through the OIDC provider.
 - No WAF or advanced request-inspection layer.
 
 ## Platform And Ecosystem Limits

@@ -22,5 +22,6 @@ be corrected.
 
 - [API Overview](/docs/api/overview) is the short entry point for metrics and the Control API.
 - [Operations Overview](/docs/operations/overview) is the main deployment, rollout, and recovery entry point.
+- [Authentication and Secrets](/docs/configuration/authentication-and-secrets) provides the focused downstream-auth and secret-provider schema governed by the Configuration Reference.
 - [TLS Setup](/docs/configuration/tls) provides task-oriented certificate and trust guidance governed by the Configuration Reference.
 - [Troubleshooting](/docs/troubleshooting/common-issues) is the symptom-driven diagnosis guide.
