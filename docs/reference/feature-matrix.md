@@ -60,7 +60,7 @@ These items are not user-facing features, but they are important product foundat
 | --- | --- | --- |
 | Host routing | `Done` | Exact and wildcard matching |
 | Path-prefix routing | `Done` | Longest-prefix semantics |
-| Method-aware routing | `Done` | Deterministic tie-breaking |
+| Method-aware routing | `Done` | Configured methods are trimmed and normalized to uppercase, matched case-insensitively, and preferred over otherwise equivalent method-agnostic routes |
 | Deterministic route selection | `Done` | Explicitly defended in implementation and tests |
 | Header-based routing | `Missing` | Not a route matcher today |
 | Query-based routing | `Missing` | Not a route matcher today |

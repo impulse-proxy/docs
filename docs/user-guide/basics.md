@@ -168,7 +168,37 @@ upstream:
 
 Matches requests to `api.example.com/v2/*`.
 
-**Note**: The `route.method` field exists in the config schema but is not yet implemented. Setting it has no effect — method-based routing is reserved for a future release.
+### Method-Aware Routing
+
+Set `route.method` to restrict a route to one HTTP method. Impulse trims the
+configured value and normalizes it to uppercase, so values such as `post` and
+`POST` have the same behavior. Request-method matching is case-insensitive.
+
+```yaml
+upstream:
+  read_api:
+    route:
+      host: "api.example.com"
+      path_prefix: "/v1/items"
+      method: GET
+    backends:
+      - id: "read-api-1"
+        address: "10.0.1.10:8080"
+
+  write_api:
+    route:
+      host: "api.example.com"
+      path_prefix: "/v1/items"
+      method: POST
+    backends:
+      - id: "write-api-1"
+        address: "10.0.1.11:8080"
+```
+
+The first route accepts `GET` requests and the second accepts `POST` requests
+for the same host and path prefix. A request does not match a route configured
+for a different method. When otherwise equivalent method-specific and
+method-agnostic routes both match, the method-specific route wins.
 
 ## Backend Configuration
 

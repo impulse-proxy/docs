@@ -725,7 +725,7 @@ Route matching determines which upstream handles a request. Routes are evaluated
 |----------|------|----------|---------|-------------|
 | `host` | string | No | - | Host matcher. Supports exact hosts (`api.example.com`) and leading-wildcard suffix patterns (`*.example.com`) |
 | `path_prefix` | string | No | - | Path prefix to match (e.g., `/api`) |
-| `method` | string | No | - | HTTP method to match (case-insensitive, e.g. `GET`, `POST`) |
+| `method` | string | No | - | HTTP method to match. The configured value is trimmed and normalized to uppercase; matching is case-insensitive (for example, `GET` or `POST`). An empty value is treated as no method restriction. |
 
 Route matching rules:
 
@@ -733,9 +733,10 @@ Route matching rules:
    - Exact form: request Host must match exactly (case-insensitive after normalization)
    - Wildcard form: `*.example.com` matches subdomains like `api.example.com`, but not the bare apex `example.com`
 2. If `path_prefix` is specified, the request path must start with the prefix
-3. If both are specified, both conditions must match
-4. Routes are evaluated by longest-prefix matching - the route with the most specific (longest) path prefix is selected
-5. For equal-length prefixes, ties are deterministic:
+3. If `method` is specified, the request method must match it; a request with a different method does not match that route
+4. When multiple matchers are specified, all of their conditions must match
+5. Routes are evaluated by longest-prefix matching - the route with the most specific (longest) path prefix is selected
+6. For equal-length prefixes, ties are deterministic:
    - host-specific routes win over host-agnostic routes
    - exact-host matches win over wildcard-host matches
    - among wildcard matches, longer suffixes win (`*.a.example.com` beats `*.example.com`)
@@ -795,7 +796,27 @@ upstream:
       host: "api.example.com"
       path_prefix: "/v1"
     backends: [...]
+
+# Method-aware routing
+upstream:
+  read_pool:
+    route:
+      path_prefix: "/items"
+      method: GET
+    backends: [...]
+
+  write_pool:
+    route:
+      path_prefix: "/items"
+      method: POST
+    backends: [...]
 ```
+
+In the method-aware example, `GET /items/42` selects `read_pool` and
+`POST /items/42` selects `write_pool`. A method-specific route is eligible only
+for its configured method. If an otherwise equivalent route omits `method`, it
+acts as the fallback for other methods and loses the tie when the specific
+method matches.
 
 ### Backend Configuration
 
