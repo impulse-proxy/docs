@@ -73,7 +73,7 @@ listen:
     key:  /etc/impulse/certs/privkey.pem
 ```
 
-Impulse also automatically starts a **bootstrap TLS listener** on the same address/port for HTTP/1.1 and HTTP/2 clients. This is how browsers connect before they learn about HTTP/3 via the `Alt-Svc` header. You do not configure it separately — it shares the same cert/key.
+Impulse also automatically starts a **bootstrap listener** on the same address/port for HTTP/1.1 and HTTP/2 clients. This is how browsers connect before they learn about HTTP/3 via the `Alt-Svc` header. You do not configure it separately — it shares the same cert/key.
 
 Protocol boundary:
 - native ingress is HTTP/3 only
@@ -125,7 +125,7 @@ listeners:
       key:  /etc/impulse/certs/internal-privkey.pem
 ```
 
-When `listeners` is set, the top-level `listen` block is ignored. Each listener gets its own worker group and bootstrap TLS listener. All listeners share the same upstream routing table.
+When `listeners` is set, the top-level `listen` block is ignored. Each listener gets its own native QUIC worker group and bootstrap listener. All listeners share the same upstream routing table.
 
 ---
 

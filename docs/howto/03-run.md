@@ -250,7 +250,7 @@ When Impulse starts, it follows this order:
 4. Checks if root is required (port `< 1024`)
 5. Builds shared runtime state (route index, connection pools)
 6. Binds UDP sockets (one per worker, or SO_REUSEPORT group)
-7. Starts the bootstrap TLS listener (HTTP/1.1 + HTTP/2 compatibility)
+7. Starts the bootstrap listener (HTTP/1.1 + HTTP/2 compatibility)
 8. Drops privileges if running as root and `security.privileges.enabled=true`
 9. Spawns worker threads (data plane)
 10. Spawns control-plane tasks (health checks, metrics)
@@ -304,7 +304,7 @@ curl --http3-only -k https://localhost:9889/
 curl --http3-only -k https://api.example.com/health
 ```
 
-### Test HTTP/2 (bootstrap TLS listener)
+### Test HTTP/2 (bootstrap listener)
 
 ```bash
 curl --http2 -k https://localhost:9889/
@@ -332,7 +332,7 @@ curl http://127.0.0.1:9901/metrics
 | `Failed to bind UDP socket: Permission denied` | Port `< 1024` without root or CAP_NET_BIND_SERVICE | Use `sudo` or `setcap` |
 | `Cannot open listen.tls.cert` | Wrong path or permissions | Check path; `chown impulse:impulse /etc/impulse/certs/*` |
 | `worker_threads > 1 requires reuseport=true` | Config mismatch | Add `reuseport: true` to performance |
-| Clients get `connection refused` on TCP | Bootstrap TLS listener failed to bind | Check logs for bootstrap bind error |
+| Clients get `connection refused` on TCP | Bootstrap listener failed to bind | Check logs for bootstrap bind error |
 | `curl: (35) OpenSSL SSL_connect` | Certificate mismatch or untrusted | See [Certificates](/docs/howto/certificates) |
 | Health check always fails | Backend unreachable or wrong health path | Verify backend is up and health path returns 200 |
 | High memory usage | `max_response_body_bytes` too high or streaming not draining | Tune body caps in performance section |

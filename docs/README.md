@@ -15,6 +15,32 @@ Impulse is a modern edge runtime for high-trust APIs. This documentation set is 
 
 ---
 
+## Documentation Version
+
+This documentation describes the Impulse v0.6 release family. Unless a page
+explicitly labels historical or planned behavior, its statements apply to the
+v0.6 configuration and runtime surfaces. Documentation for another release
+family may differ.
+
+## Documentation Authority
+
+When a guide, example, overview, or runbook conflicts with a reference page,
+use the assigned reference below and correct the conflicting page:
+
+| Surface | Authoritative page |
+| --- | --- |
+| configuration keys, types, defaults, validation, and runtime meaning | [Configuration Reference](/docs/configuration/reference) |
+| Control API endpoints, roles, requests, responses, and status semantics | [Control API Reference](/docs/reference/control-api-reference) |
+| exported metric names, types, labels, and meanings | [Metrics Reference](/docs/reference/metrics-reference) |
+| whether a capability is done, partial, or missing | [Feature Matrix](/docs/reference/feature-matrix) |
+| hard product boundaries and non-goals | [Limitations](/docs/reference/limitations) |
+| reader-facing product vocabulary | [Terminology](/docs/reference/terminology) |
+
+Examples demonstrate valid deployment shapes, and operational pages explain
+workflows. Neither redefines the contracts owned by the references above.
+
+---
+
 ## Start Here
 
 | Goal | Go to |
@@ -36,7 +62,7 @@ Impulse is a modern edge runtime for high-trust APIs. This documentation set is 
 | [Configuration Reference](/docs/configuration/reference) | Every config key, type, default, and constraint in one place |
 | [TLS Setup](/docs/configuration/tls) | Certificate generation, mTLS client auth, key ownership and permissions |
 | [Production Deployment](/docs/deployment/production) | Systemd unit, privilege drop, sysctl tuning, canary rollout guidance |
-| [Production Readiness](/docs/operations/production-readiness) | Canonical statement of what is production-ready today and what still blocks GA |
+| [Production Readiness](/docs/operations/production-readiness) | Rollout assessment and operating guidance for the current beta release |
 | [Operations Overview](/docs/operations/overview) | Main entry point for deployment, rollout, observability, and failure handling |
 | [Troubleshooting](/docs/troubleshooting/common-issues) | Symptom-driven diagnostics and operator checks |
 | [Limitations](/docs/reference/limitations) | The current hard product limits, without marketing language |
@@ -46,16 +72,16 @@ Impulse is a modern edge runtime for high-trust APIs. This documentation set is 
 | Document | What you'll find |
 |---|---|
 | [Architecture Overview](/docs/architecture/overview) | Architecture entry point, shared product flow, ingress model, and runtime boundaries |
-| [Request Lifecycle](/docs/architecture/request-lifecycle) | Canonical flow from intake through admission, routing, transport, and outcome recording |
-| [Bootstrap vs QUIC](/docs/architecture/bootstrap-vs-quic) | Exact boundary between the native HTTP/3 path and the compatibility ingress path |
+| [Request Lifecycle](/docs/architecture/request-lifecycle) | End-to-end flow from intake through admission, routing, transport, and outcome recording |
+| [Native QUIC vs Bootstrap](/docs/architecture/bootstrap-vs-quic) | Boundary between the native QUIC listener and the bootstrap listener |
 | [Transport Boundary](/docs/architecture/transport) | What transport owns, what edge owns, and how H1/H2 execution stays hidden behind one facade |
 | [Backend Lifecycle](/docs/architecture/backend-lifecycle) | Backend identity, resolution, health, membership, and operator-visible lifecycle state |
-| [Runtime Generation Model](/docs/architecture/runtime-generation) | How runtime reload, active generations, and shared services work |
+| [Runtime Generation Model](/docs/architecture/runtime-generation) | How runtime activation, active generations, and shared services work |
 | [Component Breakdown](/docs/architecture/components) | Per-crate responsibilities, inter-crate boundaries, key types |
 | [Distributed Quota Contract](/docs/architecture/quota-policy-contract) | Semantic contract for quota semantics, selector composition, and distributed counter behavior |
 | [Codebase Map](/docs/development/codebase-map) | Current crate/module map and where major logic lives |
 | [Development Invariants](/docs/development/invariants) | Core runtime invariants, ownership assumptions, and rules the code depends on |
-| [Public API Surface Inventory](/docs/public-api-surface-inventory) | Current canonical public surfaces, hidden internals, and remaining intentional exports |
+| [Public API Surface Inventory](/docs/public-api-surface-inventory) | Current public surfaces, hidden internals, and remaining intentional exports |
 
 ### Control API and Operations — runtime control, observability, and failure handling
 
@@ -78,7 +104,7 @@ Impulse is a modern edge runtime for high-trust APIs. This documentation set is 
 | [HTTP/3](/docs/protocols/http3) | HTTP/3 behavior and protocol-specific operational notes |
 | [QUIC](/docs/protocols/quic) | QUIC transport behavior, constraints, and terminology |
 | [Security Model](/docs/concepts/security-model) | Current trust boundaries, admin-plane assumptions, and missing security layers |
-| [Terminology](/docs/reference/terminology) | Canonical definitions for listener, upstream, backend, route, drain, and related terms |
+| [Terminology](/docs/reference/terminology) | Preferred definitions for listener, route, upstream, backend, runtime generation, and lifecycle operations |
 
 ### Developer — contribute safely against the current architecture
 
@@ -94,9 +120,9 @@ Impulse is a modern edge runtime for high-trust APIs. This documentation set is 
 
 | Document | What you'll find |
 |---|---|
-| [Reference Overview](/docs/reference/overview) | Main entry point for exact behavior, product limits, and authoritative reference pages |
-| [Configuration Reference](/docs/configuration/reference) | Authoritative schema reference for every configuration block |
-| [Feature Matrix](/docs/reference/feature-matrix) | Strict feature-by-feature inventory of what is done, partial, and missing |
+| [Reference Overview](/docs/reference/overview) | Map of exact behavior, product limits, and reference ownership |
+| [Configuration Reference](/docs/configuration/reference) | Configuration schema authority for every configuration block |
+| [Feature Matrix](/docs/reference/feature-matrix) | Feature-status authority for what is done, partial, and missing |
 | [Roadmap](/docs/roadmap) | Planned features, GA exit criteria, known limitations |
 | [Changelog](/docs/changelog) | Version history with added, fixed, and changed entries |
 
@@ -106,8 +132,8 @@ Impulse is a modern edge runtime for high-trust APIs. This documentation set is 
 
 | Field | Value |
 |---|---|
-| Version | v0.6.0-beta |
-| Maturity | Beta |
+| Documentation target | Impulse v0.6 |
+| Release maturity | Beta |
 | License | GPLv3 |
 
 Beta means core proxying, routing, load balancing, and health-check features are implemented and actively validated, but the project remains pre-GA — extended soak validation and broader failure-mode hardening are still in progress.
@@ -126,7 +152,7 @@ If you are in a hurry:
 - troubleshooting: [troubleshooting/common-issues.md](/docs/troubleshooting/common-issues)
 - exact support surface: [reference/feature-matrix.md](/docs/reference/feature-matrix)
 
-For the canonical examples and exact commands:
+For starting examples and exact commands:
 
 - working config snippets: [configuration/examples.md](/docs/configuration/examples)
 - full config semantics: [configuration/reference.md](/docs/configuration/reference)

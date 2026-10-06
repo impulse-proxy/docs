@@ -2,7 +2,10 @@
 
 ## Introduction
 
-Impulse is a Rust edge runtime for API traffic. It accepts HTTP/3 over QUIC as the primary downstream path, exposes a bootstrap HTTP/1.1 and HTTP/2 compatibility path for clients that are not using native HTTP/3, applies shared policy and routing decisions, and forwards requests to upstream backends over runtime-selected HTTP/1.1 or HTTP/2 transport.
+Impulse is a Rust edge runtime for API traffic. Its native QUIC listener accepts
+HTTP/3 over QUIC, while its bootstrap listener accepts HTTP/1.1 and HTTP/2
+compatibility traffic. Both use shared policy and routing decisions and forward
+requests to upstream backends over runtime-selected HTTP/1.1 or HTTP/2 transport.
 
 ## Read This Section
 
@@ -11,10 +14,10 @@ Use this page as the architecture entry point, then go deeper where needed:
 | Topic | Document |
 |---|---|
 | Product flow from ingress to response | [Request Lifecycle](/docs/architecture/request-lifecycle) |
-| QUIC path versus bootstrap compatibility path | [Bootstrap vs QUIC](/docs/architecture/bootstrap-vs-quic) |
+| Native QUIC listener versus bootstrap listener | [Native QUIC vs Bootstrap](/docs/architecture/bootstrap-vs-quic) |
 | Backend execution and H1/H2 transport boundary | [Transport Boundary](/docs/architecture/transport) |
 | Backend resolution, health, and lifecycle state | [Backend Lifecycle](/docs/architecture/backend-lifecycle) |
-| Runtime reload and generation ownership | [Runtime Generation Model](/docs/architecture/runtime-generation) |
+| Runtime activation and generation ownership | [Runtime Generation Model](/docs/architecture/runtime-generation) |
 
 ## Design Principles
 
@@ -38,7 +41,7 @@ Simple to deploy and operate:
 - Single binary deployment
 - YAML-based configuration with validation
 - Graceful shutdown with connection draining
-- Generation-based runtime reload, staged activation, and rollback for runtime-managed settings
+- Generation-based validation, activation, and rollback for runtime-managed settings
 - Comprehensive metrics and logging
 
 ### Modularity
@@ -245,7 +248,7 @@ Shared state is managed carefully:
 - `RwLock<T>` for mutable shared state (upstreams and backend lifecycle state)
 - `AtomicU64` for lock-free counters (metrics)
 - A `RuntimeBundleHandle` provides an atomically swappable snapshot of runtime state, enabling
-  config hot reload without restarting the process
+  config activation without restarting the process
 
 ### Task Structure
 
@@ -342,7 +345,7 @@ Configuration validation occurs before runtime:
 Runtime configuration is loaded at startup and then exposed through a generation-based runtime bundle:
 
 - startup-owned state stays fixed until restart
-- generation-owned state is replaced on successful reload
+- generation-owned state is replaced on successful activation
 - readers observe complete runtime generations through an atomic bundle swap
 
 See [Runtime Generation Model](/docs/architecture/runtime-generation) for the exact ownership split.
@@ -377,7 +380,7 @@ See [Runtime Generation Model](/docs/architecture/runtime-generation) for the ex
 Structured logging via Rust's log crate:
 - Levels: trace, debug, info, warn, error
 - Context includes: connection ID, stream ID, backend, duration
-- Configurable log level, adjustable live via config reload (no restart)
+- Configurable log level, adjustable live through config activation (no restart)
 
 ### Metrics
 
@@ -432,7 +435,7 @@ Distributed tracing via OpenTelemetry (shipped).
 
 _Already shipped (previously listed here as planned): active HTTP health-check probes, per-client
 scoped rate limiting, per-backend circuit breakers, and the admin/control API for runtime
-inspection and hot reload._
+inspection and live activation._
 
 ### Architectural Improvements
 

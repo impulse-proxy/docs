@@ -1,6 +1,8 @@
 # Limitations
 
-Use this page for current hard product limits and non-goals.
+This page is the authority for hard product limits and non-goals in Impulse
+v0.6. The [Feature Matrix](/docs/reference/feature-matrix) owns the compact
+done/partial/missing status for individual capabilities.
 
 ## Quick Lookup
 

@@ -22,7 +22,7 @@ Core options:
 
 ## Surface Map
 
-| Surface | Protocol | Main use | Canonical page |
+| Surface | Protocol | Main use | Authoritative page |
 | --- | --- | --- | --- |
 | metrics endpoint | HTTP `GET` | scrape, dashboarding, alerting, trend analysis | [Metrics Reference](/docs/reference/metrics-reference) |
 | Control API | HTTP/1.1 over TLS | runtime state, staged activation, rollback, cert reload, restart | [Control API Reference](/docs/reference/control-api-reference) |

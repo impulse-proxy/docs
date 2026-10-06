@@ -1,6 +1,7 @@
 # Control API Reference
 
-Use this page to look up control-plane endpoints, roles, request fields, and response semantics.
+This page is the authority for Impulse v0.6 Control API endpoints, roles,
+request fields, response fields, and HTTP status semantics.
 
 ## Open These First
 

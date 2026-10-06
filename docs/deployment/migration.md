@@ -16,7 +16,7 @@ This guide is for platform and SRE engineers who already operate NGINX or Envoy 
 
 ## Pattern A: Impulse as HTTP/3 Ingress in Front of Your Existing Proxy
 
-In this pattern, your existing NGINX or Envoy instance stays up and continues doing exactly what it does today. Impulse sits in front of it on the same host (or on a dedicated edge host) and accepts HTTP/3 connections from modern clients, then forwards all traffic to your existing proxy over HTTP/2 or HTTP/1.1. Clients that do not support QUIC connect to Impulse's TCP bootstrap listener and their traffic is forwarded the same way.
+In this pattern, your existing NGINX or Envoy instance stays up and continues doing exactly what it does today. Impulse sits in front of it on the same host (or on a dedicated edge host) and accepts HTTP/3 connections from modern clients, then forwards all traffic to your existing proxy over HTTP/2 or HTTP/1.1. Clients that do not support QUIC connect to Impulse's bootstrap listener and their traffic is forwarded the same way.
 
 **Step 1: Leave your existing proxy untouched.**
 
@@ -31,8 +31,8 @@ The following is a complete working config for Pattern A, assuming your existing
 ```yaml
 # /etc/impulse/config.yaml — Pattern A: Impulse as HTTP/3 ingress in front of NGINX/Envoy
 
-# A single `listen` block defines the QUIC/HTTP-3 listener. Impulse automatically starts a
-# TCP+TLS bootstrap listener on the SAME address/port for HTTP/1.1 and HTTP/2 clients and
+# A single `listen` block defines the native QUIC listener. Impulse automatically starts a
+# Bootstrap listener on the SAME address/port for HTTP/1.1 and HTTP/2 clients and
 # advertises `Alt-Svc: h3` so they upgrade to HTTP/3 — there is no separate TCP listener entry.
 listen:
   protocol: http3           # the only valid value; QUIC (UDP) + auto TCP bootstrap
@@ -121,7 +121,7 @@ The key principle is that every request must have a destination. Model your exis
 ```yaml
 # /etc/impulse/config.yaml — Pattern B: incremental route migration
 
-# Single QUIC/HTTP-3 listener; the TCP bootstrap listener is started automatically on the
+# Single native QUIC listener; the bootstrap listener is started automatically on the
 # same address/port (see Pattern A note above).
 listen:
   protocol: http3

@@ -1,11 +1,12 @@
-# Bootstrap vs QUIC
+# Native QUIC Listener vs Bootstrap Listener
 
-This document explains the two ingress paths in `impulse-edge` and the intended boundary between them.
+This document explains the native QUIC listener and bootstrap listener in
+`impulse-edge` and the intended boundary between their ingress paths.
 
 ## Short Version
 
-- QUIC is the main data-plane ingress path.
-- Bootstrap is a compatibility ingress path for HTTP/1.1 and HTTP/2.
+- The native QUIC listener is the main data-plane ingress for HTTP/3.
+- The bootstrap listener is the compatibility ingress for HTTP/1.1 and HTTP/2.
 - Both paths should share the same policy, routing, transport, and observability layers.
 - They should differ mainly in ingress and egress mechanics.
 
@@ -13,17 +14,17 @@ This document explains the two ingress paths in `impulse-edge` and the intended 
 
 Impulse is built around QUIC and HTTP/3 at the edge, but operators still need a compatibility path for environments that cannot enter over QUIC immediately.
 
-The bootstrap path exists so Impulse can:
+The bootstrap listener exists so Impulse can:
 
 - accept HTTP/1.1 or HTTP/2 traffic where needed
 - support compatibility migration scenarios
 - preserve shared policy behavior while using different wire protocols at ingress
 
-Bootstrap is not meant to be a second independent runtime architecture.
+The bootstrap listener is not a second independent runtime architecture.
 
 ## Boundary At a Glance
 
-| Concern | QUIC path | Bootstrap path | Should semantic policy differ? |
+| Concern | Native QUIC listener | Bootstrap listener | Should semantic policy differ? |
 |---|---|---|---|
 | Downstream protocol | HTTP/3 over QUIC | HTTP/1.1 or HTTP/2 | No |
 | Intake mechanics | UDP, QUIC, HTTP/3 streams | HTTP server request intake | No |
@@ -31,9 +32,9 @@ Bootstrap is not meant to be a second independent runtime architecture.
 | Response writeback | HTTP/3 stream emission | HTTP/1.1 or HTTP/2 response emission | No |
 | Routing, auth, quota, overload, transport, observability | Shared | Shared | No |
 
-## QUIC Path
+## Native QUIC Listener
 
-The QUIC path is the primary ingress model.
+The native QUIC listener is the primary ingress model.
 
 It owns:
 
@@ -45,9 +46,9 @@ It owns:
 
 Most of this logic lives under `crates/edge/src/quic_listener/` and its forwarding/runtime modules.
 
-## Bootstrap Path
+## Bootstrap Listener
 
-The bootstrap path is the compatibility ingress model.
+The bootstrap listener is the compatibility ingress model.
 
 It owns:
 
@@ -139,6 +140,6 @@ Add code to transport when the concern is backend protocol execution, not ingres
 
 ## Design Rule
 
-QUIC is the main data-plane path.
+The native QUIC listener is the main data-plane ingress.
 
 Bootstrap should be treated as a compatibility wrapper around the same internal policy and execution model, not as an alternate architecture with its own independent decisions.

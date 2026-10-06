@@ -78,7 +78,7 @@ Impulse supports:
 
 Important scope note:
 
-- current client-auth coverage is centered on the bootstrap TLS listener path
+- current client-auth coverage is centered on the bootstrap listener path
 - operators should verify whether their exact ingress shape requires stronger mTLS guarantees on every downstream path before broad rollout
 
 ## Admin-Plane Authentication And Authorization Model

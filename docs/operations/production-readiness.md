@@ -1,6 +1,9 @@
 # Production Readiness
 
-This page is the canonical statement of what Impulse supports in production today, what requires extra rollout discipline, and what still remains outside the safe default operating envelope.
+This page provides rollout assessment and operating guidance for Impulse v0.6.
+The [Feature Matrix](/docs/reference/feature-matrix) owns implementation status,
+and [Limitations](/docs/reference/limitations) owns hard product boundaries and
+non-goals.
 
 ## Current Assessment
 

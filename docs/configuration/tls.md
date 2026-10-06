@@ -247,7 +247,7 @@ Selection order:
 
 Fallback behavior details:
 
-- Both the native QUIC/HTTP/3 listener and the bootstrap TLS listener use the same selection order.
+- Both the native QUIC listener and the bootstrap listener use the same selection order.
 - `server_name` matching is exact after hostname normalization. There is no wildcard SNI certificate lookup here; wildcard behavior must come from the certificate SANs themselves, not from the listener map.
 - If the client sends no SNI, Impulse always serves the default identity.
 - If the client sends an SNI hostname that is not present in `listen.tls.certificates`, Impulse serves the default identity rather than rejecting the handshake.

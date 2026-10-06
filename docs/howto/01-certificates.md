@@ -4,7 +4,7 @@ slug: /howto/certificates
 
 # How to Set Up TLS Certificates
 
-Impulse requires TLS certificates for both the QUIC/HTTP3 listener and the HTTP/1.1+HTTP/2 bootstrap TLS listener.
+Impulse requires TLS certificates for both the native QUIC listener and the HTTP/1.1+HTTP/2 bootstrap listener.
 
 - **Certificate format:** PEM X.509 (`-----BEGIN CERTIFICATE-----`)
 - **Key format:** PEM private key — both PKCS#8 (`-----BEGIN PRIVATE KEY-----`) and PKCS#1 (`-----BEGIN RSA PRIVATE KEY-----`) are accepted

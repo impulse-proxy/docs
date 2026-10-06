@@ -1,6 +1,8 @@
 # Feature Matrix
 
-Use this page to check whether a feature is implemented, partially implemented, or missing.
+This page is the authority for whether an Impulse v0.6 capability is
+implemented, partially implemented, or missing. It does not replace the
+[Limitations](/docs/reference/limitations) reference for detailed boundaries.
 
 Status legend:
 
@@ -44,9 +46,9 @@ These items are not user-facing features, but they are important product foundat
 
 | Area | Status | Notes |
 | --- | --- | --- |
-| Downstream HTTP/3 | `Done` | Native QUIC/H3 ingress path |
-| Downstream HTTP/1.1 | `Done` | Via bootstrap TLS listener |
-| Downstream HTTP/2 | `Done` | Via bootstrap TLS listener |
+| Downstream HTTP/3 | `Done` | Via the native QUIC listener |
+| Downstream HTTP/1.1 | `Done` | Via the bootstrap listener |
+| Downstream HTTP/2 | `Done` | Via the bootstrap listener |
 | Upstream HTTP/2 | `Done` | Used for `https://` backends |
 | Upstream HTTP/1.1 | `Done` | Used for `http://` backends; mixed H1/H2 pools supported |
 | Upstream HTTP/3 | `Missing` | Not implemented |

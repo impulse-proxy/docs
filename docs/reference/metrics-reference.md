@@ -1,6 +1,7 @@
 # Metrics Reference
 
-Use this page to look up exported metric families, labels, and meanings.
+This page is the authority for metric families exported by Impulse v0.6,
+including their types, labels, units, and meanings.
 
 ## Quick Lookup
 

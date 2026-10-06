@@ -20,30 +20,28 @@ Use it to answer where Impulse fits well today, how to prepare hosts and capacit
 | Operate distributed quota safely | [Distributed Quota](/docs/operations/distributed-quota) |
 | Use the shipped dashboards, alerts, and SLO views | [Observability Operator Bundle](/docs/operations/observability-bundle) |
 
-## Canonical Sources By Topic
+## Reference Ownership
 
-Use this page for workflow and navigation. Use the pages below for authoritative detail:
-
-| Topic | Canonical page |
-| --- | --- |
-| exact Control API endpoint behavior | [Control API Reference](/docs/reference/control-api-reference) |
-| exact metric names and labels | [Metrics Reference](/docs/reference/metrics-reference) |
-| exact configuration shape and runtime semantics | [Configuration Reference](/docs/configuration/reference) |
-| symptom-driven incident diagnosis | [Troubleshooting](/docs/troubleshooting/common-issues) |
-| runtime protection dashboards, alerts, and SLOs | [Observability Operator Bundle](/docs/operations/observability-bundle) |
+This page owns operational navigation and workflow guidance; it does not redefine
+configuration, API, metrics, feature-status, or limitation contracts. Use the
+[Reference Overview](/docs/reference/overview) for the authority assigned to
+each product surface. Use [Troubleshooting](/docs/troubleshooting/common-issues)
+for symptom-driven diagnosis and the
+[Observability Operator Bundle](/docs/operations/observability-bundle) for
+dashboard, alert, and SLO guidance.
 
 ## Core Operating Model
 
 Impulse has three distinct change paths:
 
 1. Runtime-managed config changes
-   Use the Control API staged flow: `validate`, `preview`, then `activate`. This is the normal path for routes, upstreams, backends, timeouts, resilience policy, and other live-reloadable runtime state.
+   Use the Control API staged flow: `validate`, `preview`, then `activate`. This is the normal path for routes, upstreams, backends, timeouts, resilience policy, and other state eligible for live activation.
 2. Certificate-only changes
    Use `POST /admin/runtime/reload-certs`. This updates listener TLS material for new handshakes only.
 3. Restart-required changes
    Use a drain-aware restart or instance replacement workflow when the change affects startup-owned state such as listener bind changes, control-plane bind changes, tracing startup settings, or logging sink configuration.
 
-Do not treat all changes as restarts, and do not treat all changes as live-reloadable.
+Do not treat all changes as restarts, and do not assume every change is eligible for live activation.
 
 ## Common Workflows
 

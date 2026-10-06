@@ -1,6 +1,8 @@
 # Configuration Reference
 
-This is the canonical configuration document for Impulse. It should answer these questions for every major configuration area:
+This page is the authority for the Impulse v0.6 configuration schema and its
+runtime semantics. It answers these questions for every major configuration
+area:
 
 - what the section is for
 - what fields exist
@@ -408,7 +410,7 @@ The configuration model is intentionally safe-by-default in several important ar
 - native ingress defaults to HTTP/3
 - HTTPS upstreams verify certificates by default
 - upstream SNI is enabled by default
-- bootstrap listener TLS is always tied to configured listener identity
+- bootstrap listener TLS is always tied to the configured listener identity
 - request and response paths are bounded by explicit timeout and size controls
 
 Treat the following settings as high-risk when changed:
@@ -448,7 +450,7 @@ Runtime interpretation:
 
 ### listeners
 
-Optional multi-listener array. When set, overrides the top-level `listen` block. Each entry is an independent listener with its own address, port, and TLS identity. Impulse spawns a separate QUIC worker group and bootstrap TLS listener per entry.
+Optional multi-listener array. When set, overrides the top-level `listen` block. Each entry is an independent listener with its own address, port, and TLS identity. Impulse spawns a separate native QUIC worker group and bootstrap listener per entry.
 
 Runtime interpretation:
 
@@ -560,7 +562,7 @@ Use this section when you need to decide:
 
 - `http3`: HTTP/3 over QUIC (recommended)
 
-Impulse also exposes a TLS bootstrap ingress for HTTP/1.1 and HTTP/2 clients. This compatibility path is primarily used for browser interoperability and advertising `Alt-Svc` so clients can upgrade to HTTP/3. Backend selection on the bootstrap path uses the same route-resolution, load-balancing strategy, and health-aware eligibility rules as the native QUIC ingress.
+Impulse also exposes a bootstrap listener for HTTP/1.1 and HTTP/2 clients. This compatibility ingress is primarily used for browser interoperability and advertising `Alt-Svc` so clients can upgrade to HTTP/3. Backend selection on the bootstrap listener uses the same route-resolution, load-balancing strategy, and health-aware eligibility rules as the native QUIC listener.
 
 ### TLS Configuration
 
