@@ -59,7 +59,8 @@ workflows. Neither redefines the contracts owned by the references above.
 |---|---|
 | [Installation](/docs/getting-started/installation) | Debian package, build from source, system requirements, TLS certificate layout |
 | [Docker](/docs/getting-started/docker) | Container image, Compose bootstrap, smoke-test scripts |
-| [Configuration Reference](/docs/configuration/reference) | Every config key, type, default, and constraint in one place |
+| [Configuration Reference](/docs/configuration/reference) | Configuration schema entry point, with links to focused domain references |
+| [Routing and Upstreams](/docs/configuration/routing-and-upstreams) | Exact route matching, upstream, backend, request-key, and load-balancing behavior |
 | [TLS Setup](/docs/configuration/tls) | Certificate generation, mTLS client auth, key ownership and permissions |
 | [Production Deployment](/docs/deployment/production) | Systemd unit, privilege drop, sysctl tuning, canary rollout guidance |
 | [Production Readiness](/docs/operations/production-readiness) | Rollout assessment and operating guidance for the current beta release |
@@ -100,7 +101,8 @@ workflows. Neither redefines the contracts owned by the references above.
 
 | Document | What you'll find |
 |---|---|
-| [Load Balancing](/docs/user-guide/load-balancing) | Current balancing strategies, selection behavior, and config examples |
+| [Routing and Upstreams](/docs/configuration/routing-and-upstreams) | Exact route precedence, backend selection, key extraction, and weight support |
+| [Load Balancing](/docs/user-guide/load-balancing) | Operator guidance for choosing a balancing strategy |
 | [HTTP/3](/docs/protocols/http3) | HTTP/3 behavior and protocol-specific operational notes |
 | [QUIC](/docs/protocols/quic) | QUIC transport behavior, constraints, and terminology |
 | [Security Model](/docs/concepts/security-model) | Current trust boundaries, admin-plane assumptions, and missing security layers |
