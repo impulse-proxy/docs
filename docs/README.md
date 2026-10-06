@@ -79,12 +79,9 @@ workflows. Neither redefines the contracts owned by the references above.
 | Document | What you'll find |
 |---|---|
 | [Architecture Overview](/docs/architecture/overview) | Architecture entry point, shared product flow, ingress model, and runtime boundaries |
-| [Request Lifecycle](/docs/architecture/request-lifecycle) | End-to-end flow from intake through admission, routing, transport, and outcome recording |
-| [Native QUIC vs Bootstrap](/docs/architecture/bootstrap-vs-quic) | Boundary between the native QUIC listener and the bootstrap listener |
-| [Transport Boundary](/docs/architecture/transport) | What transport owns, what edge owns, and how H1/H2 execution stays hidden behind one facade |
-| [Backend Lifecycle](/docs/architecture/backend-lifecycle) | Backend identity, resolution, health, membership, and operator-visible lifecycle state |
-| [Runtime Generation Model](/docs/architecture/runtime-generation) | How runtime activation, active generations, and shared services work |
-| [Component Breakdown](/docs/architecture/components) | Per-crate responsibilities, inter-crate boundaries, key types |
+| [Request Lifecycle](/docs/architecture/request-lifecycle) | Ownership from ingress validation through admission, routing, selection, transport, and outcome recording |
+| [Runtime Generation and Configuration Lifecycle](/docs/architecture/runtime-generation) | Startup validation, staged activation, atomic generations, rollback, and shared-service ownership |
+| [Transport and Backend Lifecycle](/docs/architecture/transport-and-backend-lifecycle) | Exact H1/H2 backend behavior, transport ownership, DNS, health, membership, and request feedback |
 | [Distributed Quota Contract](/docs/architecture/quota-policy-contract) | Semantic contract for quota semantics, selector composition, and distributed counter behavior |
 | [Codebase Map](/docs/development/codebase-map) | Current crate/module map and where major logic lives |
 | [Development Invariants](/docs/development/invariants) | Core runtime invariants, ownership assumptions, and rules the code depends on |
