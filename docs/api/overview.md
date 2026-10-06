@@ -36,7 +36,7 @@ Core options:
 | inspect active runtime state | `GET /admin/runtime` in [Control API Reference](/docs/reference/control-api-reference) |
 | validate, preview, activate, or roll back runtime config | [Control API Reference](/docs/reference/control-api-reference) |
 | understand metric names and labels | [Metrics Reference](/docs/reference/metrics-reference) |
-| use dashboards, alerts, and SLO views | [Observability Operator Bundle](/docs/operations/observability-bundle) |
+| use dashboards, alerts, and SLO views | [Observability Operations](/docs/operations/observability) |
 | understand reload, drain, and restart boundaries | [Reload and Drain](/docs/operations/reload-and-drain) |
 | understand exact config shape and examples | [Configuration Reference](/docs/configuration/reference) and [Configuration Examples](/docs/configuration/examples) |
 
@@ -60,5 +60,5 @@ For runtime-managed versus restart-required configuration boundaries, use [Reloa
 - [Control API Reference](/docs/reference/control-api-reference)
 - [Metrics Reference](/docs/reference/metrics-reference)
 - [Configuration Reference](/docs/configuration/reference)
-- [Observability Operator Bundle](/docs/operations/observability-bundle)
+- [Observability Operations](/docs/operations/observability)
 - [Operations Runbook](/docs/operations/runbook)

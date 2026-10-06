@@ -18,7 +18,7 @@ Use it to answer where Impulse fits well today, how to prepare hosts and capacit
 | Troubleshoot incidents quickly | [Runbook](/docs/operations/runbook) |
 | Interpret visible failures and status codes | [Failure Modes](/docs/operations/failure-modes) |
 | Operate distributed quota safely | [Distributed Quota](/docs/operations/distributed-quota) |
-| Use the shipped dashboards, alerts, and SLO views | [Observability Operator Bundle](/docs/operations/observability-bundle) |
+| Use the shipped dashboards, alerts, and SLO views | [Observability Operations](/docs/operations/observability) |
 
 ## Reference Ownership
 
@@ -27,7 +27,7 @@ configuration, API, metrics, feature-status, or limitation contracts. Use the
 [Reference Overview](/docs/reference/overview) for the authority assigned to
 each product surface. Use [Troubleshooting](/docs/troubleshooting/common-issues)
 for symptom-driven diagnosis and the
-[Observability Operator Bundle](/docs/operations/observability-bundle) for
+[Observability Operations](/docs/operations/observability) for
 dashboard, alert, and SLO guidance.
 
 ## Core Operating Model
@@ -76,7 +76,7 @@ Start with:
 
 - [Runbook](/docs/operations/runbook)
 - [Failure Modes](/docs/operations/failure-modes)
-- [Observability Operator Bundle](/docs/operations/observability-bundle)
+- [Observability Operations](/docs/operations/observability)
 - [Troubleshooting](/docs/troubleshooting/common-issues)
 
 ## Operator Rules

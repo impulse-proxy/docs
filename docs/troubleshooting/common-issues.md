@@ -17,7 +17,7 @@ Canonical references for the checks above:
 
 - exact admin endpoints and curl flows: [Control API Reference](/docs/reference/control-api-reference)
 - exact metric names and labels: [Metrics Reference](/docs/reference/metrics-reference)
-- dashboard and alert interpretation: [Observability Operator Bundle](/docs/operations/observability-bundle)
+- dashboard and alert interpretation: [Observability Operations](/docs/operations/observability)
 - rollout, drain, and rollback workflow: [Runbook](/docs/operations/runbook) and [Reload and Drain](/docs/operations/reload-and-drain)
 
 ## Symptom Index
@@ -465,5 +465,4 @@ Also capture:
 - [Metrics Reference](/docs/reference/metrics-reference)
 - [Control API Reference](/docs/reference/control-api-reference)
 - [Control Plane](/docs/operations/control-plane)
-- [Observability Operator Bundle](/docs/operations/observability-bundle)
-- [Metrics and Alerts](/docs/operations/metrics-and-alerts)
+- [Observability Operations](/docs/operations/observability)

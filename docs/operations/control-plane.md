@@ -309,9 +309,7 @@ Do not:
 
 ## Related Pages
 
-- [Observability Contract](/docs/architecture/observability-contract)
-- [Observability Operator Bundle](/docs/operations/observability-bundle)
+- [Observability Operations](/docs/operations/observability)
 - [Reload and Drain](/docs/operations/reload-and-drain)
-- [Metrics and Alerts](/docs/operations/metrics-and-alerts)
 - [Control API Reference](/docs/reference/control-api-reference)
 - [Observability and Control Configuration](/docs/configuration/observability-and-control)

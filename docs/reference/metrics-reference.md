@@ -317,6 +317,5 @@ separate mTLS counter.
 ## Related Pages
 
 - [Observability and Control Configuration](/docs/configuration/observability-and-control)
-- [Observability Contract](/docs/architecture/observability-contract)
-- [Metrics and Alerts](/docs/operations/metrics-and-alerts)
+- [Observability Operations](/docs/operations/observability)
 - [Control API Reference](/docs/reference/control-api-reference)

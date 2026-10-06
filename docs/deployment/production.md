@@ -289,7 +289,7 @@ Use the shipped observability package rather than inventing an unverified local 
 
 See:
 
-- [Observability Operator Bundle](/docs/operations/observability-bundle)
+- [Observability Operations](/docs/operations/observability)
 - [Metrics Reference](/docs/reference/metrics-reference)
 
 ## Rollout Procedure
