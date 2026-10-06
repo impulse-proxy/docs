@@ -82,9 +82,6 @@ workflows. Neither redefines the contracts owned by the references above.
 | [Runtime Generation and Configuration Lifecycle](/docs/architecture/runtime-generation) | Startup validation, staged activation, atomic generations, rollback, and shared-service ownership |
 | [Transport and Backend Lifecycle](/docs/architecture/transport-and-backend-lifecycle) | Exact H1/H2 backend behavior, transport ownership, DNS, health, membership, and request feedback |
 | [Distributed Quota Contract](/docs/architecture/quota-policy-contract) | Semantic contract for quota semantics, selector composition, and distributed counter behavior |
-| [Codebase Map](/docs/development/codebase-map) | Current crate/module map and where major logic lives |
-| [Development Invariants](/docs/development/invariants) | Core runtime invariants, ownership assumptions, and rules the code depends on |
-| [Public API Surface Inventory](/docs/public-api-surface-inventory) | Current public surfaces, hidden internals, and remaining intentional exports |
 
 ### Control API and Operations — runtime control, observability, and failure handling
 
@@ -114,10 +111,7 @@ workflows. Neither redefines the contracts owned by the references above.
 | Document | What you'll find |
 |---|---|
 | [Contributing Guide](https://github.com/impulse-proxy/impulse/blob/master/CONTRIBUTING.md) | Dev setup, build commands, test matrix, PR conventions |
-| [Development Overview](/docs/development/overview) | Contributor-oriented guide to working in the repo |
-| [Testing Strategy](/docs/development/testing-strategy) | Contract, regression, and parity test expectations |
-| [Benchmarking](/docs/development/benchmarking) | Local Criterion microbenchmarks for routing and load balancing |
-| [Adding Features](/docs/development/adding-features) | Expectations for new features against the current architecture |
+| [Contributor Guide](/docs/development/overview) | Repository boundary, crate map, invariants, test and benchmark policy, and feature checklist |
 
 ### Reference — schema, maturity, roadmap, and release state
 

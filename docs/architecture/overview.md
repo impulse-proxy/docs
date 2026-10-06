@@ -125,5 +125,3 @@ and process services have explicit generation or process ownership described in
 
 - [Configuration Reference](/docs/configuration/reference)
 - [Control API Reference](/docs/reference/control-api-reference)
-- [Codebase Map](/docs/development/codebase-map)
-- [Development Invariants](/docs/development/invariants)

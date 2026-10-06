@@ -1,5 +1,5 @@
 {
-  "label": "Development",
+  "label": "Contributing",
   "position": 14,
-  "link": {"type": "generated-index"}
+  "link": {"type": "doc", "id": "development/overview"}
 }

@@ -7,7 +7,8 @@ Use it when you need to answer two questions quickly:
 - which fields may be omitted from the YAML
 - what value or behavior Impulse applies when they are omitted
 
-This page reflects the defaults defined in `crates/config/src/default.rs` and the `Default`-backed config structs in `crates/config/src/config.rs`.
+This page reflects the helper functions and `Default` implementations under
+`crates/config/src/config/` in the Impulse repository.
 
 ## When To Use This Page
 
