@@ -32,8 +32,8 @@ done/partial/missing status for individual capabilities.
 ## Protocol Limits
 
 - Upstream HTTP/3 forwarding is not implemented.
-- CONNECT support exists only as a constrained policy feature, not as a broad proxy capability.
-- WebSocket and upgrade handling are limited and are not yet a full-feature parity surface.
+- CONNECT support exists only as a constrained policy feature, not as a broad proxy capability; see [Protocol Support](/docs/protocols/support).
+- WebSocket and upgrade handling depend on the downstream/backend protocol pair and are not yet a full-feature parity surface.
 
 ## Traffic-Management Limits
 

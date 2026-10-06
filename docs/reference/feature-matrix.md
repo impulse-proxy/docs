@@ -53,7 +53,7 @@ These items are not user-facing features, but they are important product foundat
 | Upstream HTTP/1.1 | `Done` | Used for `http://` backends; mixed H1/H2 pools supported |
 | Upstream HTTP/3 | `Missing` | Not implemented |
 | gRPC trailers | `Done` | Integration coverage exists |
-| Broad WebSocket support | `Partial` | Limited bootstrap-side behavior only |
+| Broad WebSocket support | `Partial` | HTTP/1.1 bootstrap upgrades and HTTP/3 extended CONNECT exist, but support depends on the downstream/backend protocol pair |
 | General CONNECT proxying | `Partial` | Policy exists, not a broad general-purpose CONNECT platform |
 
 ## Routing

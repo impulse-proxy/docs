@@ -107,8 +107,7 @@ workflows. Neither redefines the contracts owned by the references above.
 |---|---|
 | [Routing and Upstreams](/docs/configuration/routing-and-upstreams) | Exact route precedence, backend selection, key extraction, and weight support |
 | [Load Balancing](/docs/user-guide/load-balancing) | Operator guidance for choosing a balancing strategy |
-| [HTTP/3](/docs/protocols/http3) | HTTP/3 behavior and protocol-specific operational notes |
-| [QUIC](/docs/protocols/quic) | QUIC transport behavior, constraints, and terminology |
+| [Protocol Support](/docs/protocols/support) | Supported ingress and backend protocols, ALPN, limits, early data, CONNECT/WebSocket boundaries, and unsupported features |
 | [Security Model](/docs/concepts/security-model) | Current trust boundaries, admin-plane assumptions, and missing security layers |
 | [Terminology](/docs/reference/terminology) | Preferred definitions for listener, route, upstream, backend, runtime generation, and lifecycle operations |
 
