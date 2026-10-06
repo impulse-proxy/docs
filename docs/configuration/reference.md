@@ -13,9 +13,10 @@ area:
 
 Use [Configuration Defaults](/docs/configuration/defaults) for the exhaustive default inventory and [Configuration Examples](/docs/configuration/examples) for complete deployment patterns. Use this page when you need exact schema and semantics.
 
-For distributed quota policy examples, Redis backend posture, migration from
-legacy scoped rate limiting, and operator interpretation, see
-[Distributed Quota](/docs/operations/distributed-quota).
+For resilience, scoped rate-limit, and quota fields, see
+[Resilience, Rate Limits, and Quota](/docs/configuration/resilience). Redis
+deployment, rollout, and incident guidance is in
+[Distributed Quota Operations](/docs/operations/distributed-quota).
 
 ## Scope
 
@@ -365,225 +366,27 @@ performance:
 
 ## Resilience Configuration
 
-Controls retry budgets, circuit breaking, hedging, adaptive admission, brownout shedding, route queuing, protocol policy, and the worker watchdog. All fields are optional and fall back to production-tuned defaults.
-
-Use this section when you need to decide:
-
-- how Impulse protects itself and its backends under pressure
-- which retry and hedge behaviors are allowed
-- what request-shape rules are enforced before backend execution
-
-### adaptive_admission
-
-Dynamically adjusts the global in-flight request limit based on observed backend latency.
+`resilience` contains local overload protection, retry/hedge behavior, scoped
+rate limits, distributed quota, protocol policy, and the worker watchdog.
 
 | **Field** | **Type** | **Required** | **Default** | **Meaning** |
 | --------- | -------- | ------------ | ----------- | ----------- |
-| `enabled` | bool | No | `true` | Enable adaptive admission control |
-| `min_limit` | integer | No | `64` | Floor for the dynamic in-flight limit; must be > 0 |
-| `max_limit` | integer | No | `performance.global_inflight_limit` | Optional ceiling for the adaptive in-flight limit; must be `>= min_limit` and `<= performance.global_inflight_limit` |
-| `decrease_step` | integer | No | `16` | Amount to subtract from the limit on high-latency observation |
-| `increase_step` | integer | No | `16` | Amount to add to the limit on healthy-latency observation |
-| `high_latency_ms` | integer | No | `500` | Latency threshold (ms) above which the limit is decreased |
+| `adaptive_admission` | object | No | object defaults | Dynamic local inflight ceiling. |
+| `route_queue` | object | No | object defaults | Per-upstream and global concurrent admission caps. |
+| `scoped_rate_limits` | array | No | `[]` | Per-instance token-bucket rules. |
+| `quota` | object | No | object defaults | In-memory or Redis-backed quota contracts. |
+| `protocol` | object | No | object defaults | Request-shape, early-data, and CONNECT policy. |
+| `circuit_breaker` | object | No | object defaults | Per-backend failure isolation. |
+| `hedging` | object | No | object defaults | Delayed speculative requests. |
+| `retry_budget` | object | No | object defaults | Retry-amplification limits. |
+| `brownout` | object | No | object defaults | Pressure-triggered non-core shedding. |
+| `watchdog` | object | No | object defaults | Worker-health and restart policy. |
 
-### circuit_breaker
-
-Tracks consecutive failures per backend and opens the circuit to stop sending requests to a failing backend.
-
-| **Field** | **Type** | **Required** | **Default** | **Meaning** |
-| --------- | -------- | ------------ | ----------- | ----------- |
-| `enabled` | bool | No | `true` | Enable per-backend circuit breakers |
-| `failure_threshold` | integer | No | `3` | Consecutive failures before opening the circuit |
-| `open_ms` | integer | No | `30000` | How long (ms) the circuit stays open before probing |
-| `half_open_max_probes` | integer | No | `1` | Probe requests allowed during half-open state |
-
-### retry_budget
-
-Limits retried requests as a fraction of primary requests to prevent retry amplification.
-
-| **Field** | **Type** | **Required** | **Default** | **Meaning** |
-| --------- | -------- | ------------ | ----------- | ----------- |
-| `enabled` | bool | No | `true` | Enable retry budget enforcement |
-| `ratio_percent` | integer | No | `10` | Max retries as a percentage of primary requests (0–100) |
-| `per_route_ratio_percent` | map | No | `{}` | Per-route overrides: `{ "/api": 5 }` |
-
-### hedging
-
-Fires a speculative second request to an alternate backend when the primary is slow.
-
-| **Field** | **Type** | **Required** | **Default** | **Meaning** |
-| --------- | -------- | ------------ | ----------- | ----------- |
-| `enabled` | bool | No | `false` | Enable request hedging |
-| `delay_ms` | integer | No | `100` | Delay (ms) before firing the hedge; must be > 0 when `enabled` is true |
-| `safe_methods` | list | No | `["GET","HEAD"]` | HTTP methods eligible for hedging |
-| `route_allowlist` | list | No | `[]` | Routes eligible for hedging; empty means all routes |
-
-### brownout
-
-Brownout is a load-shedding mode that activates when the proxy is near capacity. When active, every incoming request whose upstream pool is **not** in `core_routes` is immediately rejected with `503 Service Unavailable` and a `Retry-After` header. Requests on core routes continue to be processed normally.
-
-**How it works**
-
-1. After each request is routed, Impulse samples the current global in-flight percent (active requests ÷ global limit × 100).
-2. If the sample reaches `trigger_inflight_percent`, brownout activates.
-3. Brownout stays active until the sample falls to or below `recover_inflight_percent`. The gap between the two thresholds is **hysteresis** — it prevents rapid oscillation when load is right at the boundary.
-4. While active, `impulse_brownout_active` gauge is `1` and `impulse_overload_shed_by_reason_total{reason="brownout"}` increments for every shed request.
-
-**Choosing `core_routes`**
-
-`core_routes` is a list of pool names: the keys directly under the top-level
-`upstream` map. It does not use backend `id` values. Routes whose selected
-upstream name is absent from this list are shed during brownout.
-
-- If `core_routes` is empty (the default), **all routes** are shed during brownout. This is safe but means brownout effectively becomes a full-stop — no requests get through.
-- List only the routes that must keep working during a partial outage: authentication, payments, health checks. Avoid listing high-volume non-critical routes or you defeat the purpose of shedding.
-- A route shed during brownout receives a `503` with the body `brownout active, non-core route shed` and a `Retry-After` hint. Clients that respect `Retry-After` will back off automatically.
-
-**Interaction with other overload mechanisms**
-
-Brownout runs after routing but before adaptive admission and circuit breakers. The order is:
-
-1. **Brownout** — shed non-core routes immediately (no backend resource consumed)
-2. **Adaptive admission** — dynamically cap total in-flight based on observed latency
-3. **Per-upstream / per-backend inflight limits** — static caps per pool and backend
-4. **Circuit breaker** — stop sending to a specific failing backend
-
-If brownout is active and shedding load, adaptive admission will also begin to recover (inflight drops → limit rises). Once the in-flight percent falls to `recover_inflight_percent`, brownout deactivates and full traffic resumes. Set `recover_inflight_percent` at least 20–30 points below `trigger_inflight_percent` to give the system time to recover before re-admitting full traffic.
-
-**Alerting**
-
-Alert on `impulse_brownout_active == 1` for more than a brief window — sustained brownout means backends are under-provisioned or a downstream dependency is slow:
-
-```yaml
-- alert: ImpulseBrownoutActive
-  expr: impulse_brownout_active == 1
-  for: 30s
-  labels:
-    severity: warning
-  annotations:
-    summary: "Impulse brownout active on {{ $labels.instance }}"
-    description: "Non-core routes are being shed. Check backend latency and inflight metrics."
-```
-
-| **Field** | **Type** | **Required** | **Default** | **Meaning** |
-| --------- | -------- | ------------ | ----------- | ----------- |
-| `enabled` | bool | No | `true` | Enable brownout shedding |
-| `trigger_inflight_percent` | integer | No | `90` | Inflight % at which brownout activates (0–100) |
-| `recover_inflight_percent` | integer | No | `60` | Inflight % at which brownout deactivates; must be `< trigger_inflight_percent` |
-| `core_routes` | list | No | `[]` | Keys from the top-level `upstream` map that are exempt from shedding; empty means all routes are shed. |
-
-### route_queue
-
-Per-route and global caps on queued (waiting) requests.
-
-| **Field** | **Type** | **Required** | **Default** | **Meaning** |
-| --------- | -------- | ------------ | ----------- | ----------- |
-| `default_cap` | integer | No | `512` | Per-route queue depth cap |
-| `global_cap` | integer | No | `2048` | Total queue depth cap across all routes |
-| `shed_retry_after_seconds` | integer | No | `1` | `Retry-After` header value (seconds) sent with 503 queue-shed responses |
-| `caps` | map | No | `{}` | Per-route overrides: `{ "/api": 128 }` |
-
-### protocol
-
-Request validation and early-data policy.
-
-| **Field** | **Type** | **Required** | **Default** | **Meaning** |
-| --------- | -------- | ------------ | ----------- | ----------- |
-| `allow_0rtt` | bool | No | `false` | Accept 0-RTT early data |
-| `early_data_safe_methods` | list | No | `["GET","HEAD"]` | Methods permitted in 0-RTT early data |
-| `max_headers_count` | integer | No | `128` | Maximum number of request headers |
-| `max_headers_bytes` | integer | No | `16384` | Maximum total size of request headers (bytes) |
-| `enforce_authority_host_match` | bool | No | `true` | Reject requests where `:authority` differs from `Host` |
-| `allow_connect` | bool | No | `false` | Enable CONNECT proxy tunneling |
-| `connect_allowed_ports` | list | No | `[]` | Optional CONNECT target port allowlist |
-| `connect_allowed_authorities` | list | No | `[]` | Optional exact CONNECT `host:port` allowlist |
-| `allowed_methods` | list | No | `[]` | Allowed HTTP methods; empty means all methods allowed |
-| `denied_path_prefixes` | list | No | `[]` | Path prefixes that are always rejected with 403 |
-
-Request-shape rules enforced by the runtime:
-
-- HTTP/3 requests are rejected when `:authority` and `Host` differ and `enforce_authority_host_match` is enabled.
-- `CONNECT` requires `:authority`/`Host` in `host:port` form and must also satisfy the CONNECT allowlists when enabled.
-- Native HTTP/3 ingress rejects `Upgrade` / `Connection: upgrade` style requests. WebSocket-style upgrades are only supported on the bootstrap HTTP/1.1 compatibility path, not on native H3.
-- `HEAD` responses terminate after headers even if the upstream attempted to send a body.
-
-### watchdog
-
-Monitors worker health and triggers a restart command when error rates or stall conditions exceed thresholds.
-
-| **Field** | **Type** | **Required** | **Default** | **Meaning** |
-| --------- | -------- | ------------ | ----------- | ----------- |
-| `enabled` | bool | No | `false` | Enable the worker watchdog |
-| `check_interval_ms` | integer | No | `1000` | How often (ms) the watchdog evaluates metrics |
-| `poll_stall_timeout_ms` | integer | No | `5000` | Declare a stall if the event loop hasn't polled within this window |
-| `timeout_error_rate_percent` | integer | No | `60` | Trigger if timeout errors exceed this % of requests in a window |
-| `min_requests_per_window` | integer | No | `20` | Minimum requests in a window before error-rate check applies |
-| `overload_inflight_percent` | integer | No | `95` | Trigger if in-flight % exceeds this threshold |
-| `unhealthy_consecutive_windows` | integer | No | `3` | Consecutive unhealthy windows before invoking the restart command |
-| `drain_grace_ms` | integer | No | `8000` | Grace period (ms) to drain connections before restarting |
-| `restart_cooldown_ms` | integer | No | `120000` | Minimum time (ms) between restart command invocations |
-| `restart_command` | list of strings | No | `[]` | Command invoked on restart trigger; first element is the executable, the rest are args. Avoids shell evaluation. |
-| `restart_hook` | string | No | `null` | **Deprecated and rejected at startup** — setting it is a hard config error. Use `restart_command` instead. |
-
-### Startup Validation Errors
-
-The following resilience configurations are rejected at startup with a descriptive error:
-
-| Condition | Error |
-|-----------|-------|
-| `recover_inflight_percent >= trigger_inflight_percent` | brownout hysteresis inverted |
-| `adaptive_admission.min_limit == 0` | min_limit must be > 0 |
-| `adaptive_admission.max_limit == 0` | max_limit must be > 0 when provided |
-| `adaptive_admission.max_limit < adaptive_admission.min_limit` | max_limit must be >= min_limit |
-| `adaptive_admission.max_limit > performance.global_inflight_limit` | max_limit must be `<= global_inflight_limit` |
-| `retry_budget.ratio_percent > 100` | ratio_percent must be 0–100 |
-| `hedging.enabled && delay_ms == 0` | delay_ms must be > 0 when hedging is enabled |
-
-### Example
-
-```yaml
-resilience:
-  adaptive_admission:
-    enabled: true
-    min_limit: 64
-    max_limit: 4096
-    high_latency_ms: 500
-
-  circuit_breaker:
-    enabled: true
-    failure_threshold: 3
-    open_ms: 30000
-    half_open_max_probes: 1
-
-  retry_budget:
-    enabled: true
-    ratio_percent: 10
-
-  hedging:
-    enabled: false
-    delay_ms: 100
-
-  brownout:
-    enabled: true
-    trigger_inflight_percent: 90
-    recover_inflight_percent: 60
-    core_routes:
-      - "auth_pool"
-      - "payments_pool"
-```
-
-### Operational Implications
-
-- `adaptive_admission`, `brownout`, `route_queue`, and inflight caps interact as one overload-control surface.
-- retry, hedging, and circuit breaking can protect latency or amplify backend pressure depending on how they are tuned.
-- quota and scoped rate limiting are policy-contract features; they should not be interpreted as overload behavior.
-
-### Common Mistakes
-
-- leaving `brownout.core_routes` empty and unintentionally shedding all routes during brownout
-- enabling hedging without understanding replay safety and backend amplification
-- treating retry budgets as a substitute for backend reliability work
-- mixing quota expectations with overload tuning
+The exact fields, defaults, constraints, retry behavior, selector matrix,
+quota failure semantics, and complete example are in
+[Resilience, Rate Limits, and Quota](/docs/configuration/resilience). Redis
+deployment and incident guidance is intentionally separate in
+[Distributed Quota Operations](/docs/operations/distributed-quota).
 
 ## Observability Endpoint Hardening
 

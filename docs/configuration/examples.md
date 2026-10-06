@@ -2,8 +2,10 @@
 
 This page collects complete deployment-oriented examples. Use it together with the [Configuration Reference](/docs/configuration/reference), which remains the canonical schema and semantics document.
 
-For distributed quota examples and migration guidance, see
-[Distributed Quota](/docs/operations/distributed-quota).
+For distributed quota schema and a complete example, see
+[Resilience, Rate Limits, and Quota](/docs/configuration/resilience#distributed-quota-schema).
+For Redis rollout and migration guidance, see
+[Distributed Quota Operations](/docs/operations/distributed-quota).
 
 ## How To Use These Examples
 

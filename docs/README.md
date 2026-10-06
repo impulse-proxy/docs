@@ -63,6 +63,7 @@ workflows. Neither redefines the contracts owned by the references above.
 | [Routing and Upstreams](/docs/configuration/routing-and-upstreams) | Exact route matching, upstream, backend, request-key, and load-balancing behavior |
 | [Authentication and Secrets](/docs/configuration/authentication-and-secrets) | Downstream API-key, JWT, external-auth, OIDC, and secret-provider configuration |
 | [TLS Setup](/docs/configuration/tls) | Certificate generation, mTLS client auth, key ownership and permissions |
+| [Resilience, Rate Limits, and Quota](/docs/configuration/resilience) | Exact retry, hedge, circuit-breaker, admission, rate-limit, and quota configuration |
 | [Production Deployment](/docs/deployment/production) | Systemd unit, privilege drop, sysctl tuning, canary rollout guidance |
 | [Production Readiness](/docs/operations/production-readiness) | Rollout assessment and operating guidance for the current beta release |
 | [Operations Overview](/docs/operations/overview) | Main entry point for deployment, rollout, observability, and failure handling |
@@ -93,7 +94,7 @@ workflows. Neither redefines the contracts owned by the references above.
 | [Control API Reference](/docs/reference/control-api-reference) | Endpoint-by-endpoint control API contract |
 | [Metrics Reference](/docs/reference/metrics-reference) | Metric names, labels, and exported runtime signals |
 | [Operations Overview](/docs/operations/overview) | Operator map for deployment, sizing, tuning, and failure handling |
-| [Distributed Quota](/docs/operations/distributed-quota) | Distributed quota policy examples, Redis setup, degraded-mode guidance, and operator interpretation |
+| [Distributed Quota Operations](/docs/operations/distributed-quota) | Redis deployment, rollout, degraded-mode guidance, and incident interpretation |
 | [Runbook](/docs/operations/runbook) | Day-2 operational procedures and troubleshooting flow |
 | [Failure Modes](/docs/operations/failure-modes) | Expected degraded behaviors and what they mean operationally |
 | [Sizing and Capacity](/docs/operations/sizing-and-capacity) | Capacity planning and scaling guidance |

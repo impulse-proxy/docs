@@ -208,10 +208,19 @@ These apply when a backend provides a `health_check` object and omits individual
 
 | Field | Default | Notes |
 | --- | --- | --- |
-| `resilience.route_queue.default_cap` | `512` | Default per-route queue size |
-| `resilience.route_queue.global_cap` | `2048` | Global route-queue cap |
+| `resilience.route_queue.default_cap` | `512` | Default per-upstream concurrent permit cap |
+| `resilience.route_queue.global_cap` | `2048` | Global concurrent permit cap |
 | `resilience.route_queue.shed_retry_after_seconds` | `1` | Retry-After hint on shed responses |
 | `resilience.route_queue.caps` | `{}` | No per-route overrides by default |
+
+### Scoped Rate Limits
+
+| Field | Default | Notes |
+| --- | --- | --- |
+| `resilience.scoped_rate_limits` | `[]` | No per-instance token-bucket rules |
+| `resilience.scoped_rate_limits[].key` | `null` | Scope-specific validation or defaults apply |
+| `resilience.scoped_rate_limits[].route_allowlist` | `[]` | Empty means every upstream pool |
+| `resilience.scoped_rate_limits[].idle_ttl_secs` | `300` | Idle local bucket lifetime |
 
 ### Protocol Policy
 
@@ -278,6 +287,7 @@ These apply when a backend provides a `health_check` object and omits individual
 | `resilience.quota.backend.max_inflight` | `1024` | Redis only |
 | `resilience.quota.local_fallback` | `null` | No degraded local fallback unless configured explicitly |
 | `resilience.quota.local_fallback.key_prefix` | `"impulse:quota:fallback"` | Default fallback key prefix when fallback is enabled |
+| `resilience.quota.local_fallback.max_entries` | no default | Required when local fallback is configured |
 | `resilience.quota.policies` | `[]` | Quota stays inert until explicit policies are configured |
 
 ### Watchdog
