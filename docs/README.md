@@ -98,7 +98,7 @@ workflows. Neither redefines the contracts owned by the references above.
 | [Distributed Quota Operations](/docs/operations/distributed-quota) | Redis deployment, rollout, degraded-mode guidance, and incident interpretation |
 | [Runbook](/docs/operations/runbook) | Day-2 operational procedures and troubleshooting flow |
 | [Failure Modes](/docs/operations/failure-modes) | Expected degraded behaviors and what they mean operationally |
-| [Sizing and Capacity](/docs/operations/sizing-and-capacity) | Capacity planning and scaling guidance |
+| [Capacity Planning and Host Tuning](/docs/operations/sizing-and-capacity) | File descriptors, socket buffers, workers, limits, memory pressure, queues, metrics, and testing methodology |
 
 ### Protocol, traffic, and policy reference
 

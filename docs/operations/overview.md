@@ -10,8 +10,7 @@ Use it to answer where Impulse fits well today, how to prepare hosts and capacit
 |---|---|
 | Assess readiness and prepare a production deployment | [Production Deployment](/docs/deployment/production) |
 | Understand safe activation, restart-required changes, drain, and rollback | [Reload and Drain](/docs/operations/reload-and-drain) |
-| Plan host sizing and concurrency limits | [Sizing And Capacity](/docs/operations/sizing-and-capacity) |
-| Tune the host OS and runtime environment | [Host Tuning](/docs/operations/host-tuning) |
+| Plan capacity and tune the host runtime | [Capacity Planning and Host Tuning](/docs/operations/sizing-and-capacity) |
 | Choose, validate, and execute a rollout | [Rollout and Validation](/docs/deployment/production#rollout-and-validation) |
 | Troubleshoot incidents quickly | [Runbook](/docs/operations/runbook) |
 | Interpret visible failures and status codes | [Failure Modes](/docs/operations/failure-modes) |
@@ -48,8 +47,7 @@ Do not treat all changes as restarts, and do not assume every change is eligible
 Start with:
 
 - [Production Deployment](/docs/deployment/production)
-- [Host Tuning](/docs/operations/host-tuning)
-- [Sizing And Capacity](/docs/operations/sizing-and-capacity)
+- [Capacity Planning and Host Tuning](/docs/operations/sizing-and-capacity)
 
 ### Roll out a runtime config change
 

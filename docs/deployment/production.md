@@ -52,8 +52,8 @@ baseline.
 
 Use Linux for production. Size CPU, memory, socket buffers, queues, and file
 descriptors from measured traffic rather than treating a generic host shape as
-a capacity guarantee. See [Sizing and Capacity](/docs/operations/sizing-and-capacity)
-and [Host Tuning](/docs/operations/host-tuning).
+a capacity guarantee. See
+[Capacity Planning and Host Tuning](/docs/operations/sizing-and-capacity).
 
 Recommended paths and ownership:
 
@@ -335,7 +335,6 @@ continuing rollout.
 - [Installation](/docs/getting-started/installation)
 - [Protocol Support](/docs/protocols/support)
 - [Reload and Drain](/docs/operations/reload-and-drain)
-- [Host Tuning](/docs/operations/host-tuning)
-- [Sizing and Capacity](/docs/operations/sizing-and-capacity)
+- [Capacity Planning and Host Tuning](/docs/operations/sizing-and-capacity)
 - [Observability Operations](/docs/operations/observability)
 - [Operations Runbook](/docs/operations/runbook)
