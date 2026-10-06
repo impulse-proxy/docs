@@ -1,3 +1,7 @@
+---
+slug: /howto/run
+---
+
 # How to Run Impulse
 
 This guide covers running Impulse directly, as a systemd service, and in Docker — including startup validation, graceful shutdown, and health checking.

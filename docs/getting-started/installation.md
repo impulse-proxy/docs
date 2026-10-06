@@ -33,9 +33,11 @@ This page helps you install Impulse on a host and reach the point where you can 
 Download and install the `.deb` from [GitHub Releases](https://github.com/impulse-proxy/impulse/releases):
 
 ```bash
-wget https://github.com/impulse-proxy/impulse/releases/download/v0.6.0-beta/impulse_0.6.0-beta_amd64.deb
-sudo dpkg -i impulse_0.6.0-beta_amd64.deb
+wget "https://github.com/impulse-proxy/impulse/releases/download/v<version>/impulse_<version>_amd64.deb"
+sudo dpkg -i "impulse_<version>_amd64.deb"
 ```
+
+Replace `<version>` with the release version shown on the GitHub Releases page.
 
 The package installs:
 - Binary: `/usr/bin/impulse`
@@ -56,7 +58,7 @@ To build a `.deb` package from source in this repository:
 
 ```bash
 ./packaging/deb/make-deb.sh
-sudo dpkg -i impulse_0.1.1-beta_amd64.deb
+sudo dpkg -i "impulse_<version>_amd64.deb"
 ```
 
 ### Build from Source
@@ -375,7 +377,7 @@ can use HTTP `200` while still reporting rejected changes.
 **`/etc/impulse/config.yaml` missing after `dpkg -i`:**
 The package install may have been interrupted. Reinstall or manually restore the file:
 ```bash
-sudo dpkg -i impulse_0.1.1-beta_amd64.deb
+sudo dpkg -i "impulse_<version>_amd64.deb"
 # or:
 sudo install -m 0640 -o impulse -g impulse packaging/deb/debian/config.yaml /etc/impulse/config.yaml
 ```

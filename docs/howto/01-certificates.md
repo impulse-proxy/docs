@@ -1,3 +1,7 @@
+---
+slug: /howto/certificates
+---
+
 # How to Set Up TLS Certificates
 
 Impulse requires TLS certificates for both the QUIC/HTTP3 listener and the HTTP/1.1+HTTP/2 bootstrap TLS listener.

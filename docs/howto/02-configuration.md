@@ -1,3 +1,7 @@
+---
+slug: /howto/configuration
+---
+
 # How to Configure Impulse as a Reverse Proxy
 
 This guide walks through building a working `config.yaml` for Impulse as a production reverse proxy, explaining every section and its trade-offs.
