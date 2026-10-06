@@ -2,9 +2,8 @@
 
 Impulse v0.6 is beta software intended for controlled production rollout. This
 guide owns the production host, service, validation, rollout, and readiness
-workflow. Exact feature status and product boundaries remain in the
-[Feature Matrix](/docs/reference/feature-matrix) and
-[Limitations](/docs/reference/limitations).
+workflow. Exact maturity, capability status, and product boundaries remain in
+[Status and Limitations](/docs/reference/status-and-limitations).
 
 Day-two diagnosis and recovery belong in the
 [Operations Runbook](/docs/operations/runbook), not in this deployment guide.

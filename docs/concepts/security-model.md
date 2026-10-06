@@ -27,7 +27,7 @@ inherited from their network location.
 Impulse is not a web application firewall, malware scanner, general policy
 engine, identity provider, secret manager, or service-mesh control plane. The
 authoritative list of missing and partial protections is in
-[Limitations](/docs/reference/limitations#security-and-policy-limits).
+[Status and Limitations](/docs/reference/status-and-limitations#security-and-policy-limits).
 
 ## Trust-Boundary Map
 
@@ -229,8 +229,8 @@ in the [Production Checklist](/docs/deployment/production#production-checklist).
 | Control API TLS, bearer identities, RBAC, source policy, audit, metrics/probes, and privilege drop | [Observability and Control Configuration](/docs/configuration/observability-and-control) |
 | Control API methods, access results, and payloads | [Control API Reference](/docs/reference/control-api-reference) |
 | Admission, rate limits, quota, CONNECT constraints, and body/header limits | [Resilience, Rate Limits, and Quota](/docs/configuration/resilience) |
-| Current security feature status | [Feature Matrix](/docs/reference/feature-matrix#policy-security-and-platform-features) |
-| Unsupported and partial security behavior | [Limitations](/docs/reference/limitations#security-and-policy-limits) |
+| Current and partial security feature status | [Status and Limitations](/docs/reference/status-and-limitations#resilience-security-and-policy) |
+| Unsupported security behavior | [Status and Limitations](/docs/reference/status-and-limitations#security-and-policy-limits) |
 
 ## Related Pages
 

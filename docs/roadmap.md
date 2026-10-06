@@ -1,51 +1,26 @@
 # Roadmap
 
-This roadmap is intentionally practical. It is organized around what most increases production trust and product value, not around speculative breadth.
-
-## Current Position
-
-Impulse is strongest today as:
-
-- an HTTP/3-first edge proxy
-- a deterministic H3-to-H2 routing and balancing layer
-- a proxy with strong resource-bound, teardown, and overload behavior
-
-Impulse is not yet strongest today as:
-
-- a dynamic control-plane-driven fleet proxy
-- a broad protocol-compatibility proxy
-- a full API gateway
-- an extensible filter platform
+This roadmap is intentionally practical. It describes possible future
+direction, not shipped behavior or a release commitment. Use
+[Status and Limitations](/docs/reference/status-and-limitations) as the
+authority for current maturity, capability support, limitations, and GA
+blockers.
 
 ## Near-Term Priorities
 
 These are the highest-value areas for the next phase of maturity.
 
-### 1. Complete Configuration Hot Reload
-
-Full config hot reload is **shipped** (`POST /admin/runtime/activate`, or the legacy
-`POST /admin/runtime/reload` shortcut): routes, upstreams, backends, timeouts and limits,
-resilience policies, and observability endpoint changes apply live via an atomic runtime swap.
-The remaining work is to close the restart-only gaps:
+### 1. Close Restart-Only Configuration Gaps
 
 - listener removal and bind-address changes (listener *addition* is already live)
 - startup-owned settings: log file/format, tracing config, control-plane thread counts
   (`log.level` already reloads live)
 
-### 2. Dynamic Config Safety
+### 2. Strengthen Dynamic Configuration Safety
 
-The staged control-plane model is **shipped**:
-
-- validation before apply (`POST /admin/runtime/validate`)
-- dry-run support (`POST /admin/runtime/preview`)
-- config diff visibility (returned by validate, preview, and activate)
-- atomic activation (`POST /admin/runtime/activate`)
-- rollback to a known-good generation (`POST /admin/runtime/rollback`, with retained
-  rollback-eligible generations listed by `GET /admin/runtime/history`)
-
-Retained generations are capped at a fixed bound, so rollback reaches recent generations rather
-than arbitrarily old ones. Remaining work is operational hardening rather than new surface:
-configurable retention, and automatic rollback on post-activation health regression.
+- configurable generation retention
+- automatic rollback policy for post-activation health regression
+- stronger fleet-level coordination and change attribution
 
 ### 3. Edge Runtime Refactor
 
@@ -75,9 +50,9 @@ These areas make Impulse far more competitive as a general production reverse pr
 
 ### 5. Broader Upstream Compatibility
 
-- first-class upstream HTTP/1.1 support (shipped in v0.3.0-beta)
 - better CONNECT handling
 - broader WebSocket and upgrade support
+- upstream HTTP/3 if it becomes part of the intended product contract
 
 ### 6. Traffic-Management Depth
 
@@ -88,19 +63,15 @@ These areas make Impulse far more competitive as a general production reverse pr
 
 ### 7. Operator Features
 
-- distributed / cross-instance rate limiting (scoped per-instance rate limiting already ships)
-- stronger capacity guidance
-- more complete runbooks and alerts
-- better runtime visibility for why requests were shed, retried, or rerouted
+- stronger fleet-level quota and state operations
+- broader capacity evidence across representative workloads
+- deeper runtime attribution for why requests were shed, retried, or rerouted
+- safer automated remediation for known failure classes
 
 ### 8. Auth And Policy Features
 
 - broader JOSE algorithm coverage (`RS384`/`RS512`, additional ECDSA curves) and discovery-based JWKS resolution
 - stronger route-level policy controls and layered/chained auth providers
-
-_Already shipped (previously listed here as future): scoped rate limiting (route/client/tenant/token),
-local `HS256`/`RS256`/`ES256` JWT validation with scope/role RBAC, static and JWKS-backed key sources
-with background refresh and rollover overlap, and external auth via HTTP subrequest or OIDC._
 
 ## Longer-Term Competitive Priorities
 
@@ -123,17 +94,7 @@ These areas are what move Impulse from “strong specialized edge proxy” towar
 - broader production history
 - stronger release-process guarantees
 
-## Non-Goals Today
-
-The following are not current core strengths and should not be assumed:
-
-- full service-mesh control-plane behavior
-- built-in WAF capability
-- full API-gateway parity with dedicated gateway products
-- broad plugin ecosystem
-
 ## Related Pages
 
 - [Production Readiness](/docs/deployment/production#production-readiness-and-fit)
-- [Feature Matrix](/docs/reference/feature-matrix)
-- [Limitations](/docs/reference/limitations)
+- [Status and Limitations](/docs/reference/status-and-limitations)

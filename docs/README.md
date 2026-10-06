@@ -32,8 +32,7 @@ use the assigned reference below and correct the conflicting page:
 | configuration keys, types, defaults, validation, and runtime meaning | [Configuration Reference](/docs/configuration/reference) |
 | Control API endpoints, roles, requests, responses, and status semantics | [Control API Reference](/docs/reference/control-api-reference) |
 | exported metric names, types, labels, and meanings | [Metrics Reference](/docs/reference/metrics-reference) |
-| whether a capability is done, partial, or missing | [Feature Matrix](/docs/reference/feature-matrix) |
-| hard product boundaries and non-goals | [Limitations](/docs/reference/limitations) |
+| release maturity, capability status, partial-support boundaries, and limitations | [Status and Limitations](/docs/reference/status-and-limitations) |
 | reader-facing product vocabulary | [Terminology](/docs/reference/terminology) |
 
 Examples demonstrate valid deployment shapes, and operational pages explain
@@ -51,6 +50,7 @@ workflows. Neither redefines the contracts owned by the references above.
 | Run the packaged container | [Docker](/docs/getting-started/docker) |
 | Prepare for deployment | [Operations Overview](/docs/operations/overview) and [Production Deployment](/docs/deployment/production) |
 | Troubleshoot issues | [Operations Runbook](/docs/operations/runbook) |
+| Check maturity and product limits | [Status and Limitations](/docs/reference/status-and-limitations) |
 | Find exact supported behavior | [Reference Overview](/docs/reference/overview) |
 
 ## Documentation Paths
@@ -71,7 +71,7 @@ workflows. Neither redefines the contracts owned by the references above.
 | [Production Deployment](/docs/deployment/production) | Readiness, systemd, privileges, configuration ownership, validation, rollout, rollback, and production checklist |
 | [Operations Overview](/docs/operations/overview) | Main entry point for deployment, rollout, observability, and failure handling |
 | [Operations Runbook](/docs/operations/runbook) | Symptom-driven diagnostics, safe remediation, and escalation criteria |
-| [Limitations](/docs/reference/limitations) | The current hard product limits, without marketing language |
+| [Status and Limitations](/docs/reference/status-and-limitations) | Release maturity, capability status, partial-support boundaries, GA blockers, and product limits |
 
 ### Architecture — understand the runtime and subsystem ownership
 
@@ -119,23 +119,10 @@ workflows. Neither redefines the contracts owned by the references above.
 |---|---|
 | [Reference Overview](/docs/reference/overview) | Map of exact behavior, product limits, and reference ownership |
 | [Configuration Reference](/docs/configuration/reference) | Configuration schema authority for every configuration block |
-| [Feature Matrix](/docs/reference/feature-matrix) | Feature-status authority for what is done, partial, and missing |
-| [Roadmap](/docs/roadmap) | Planned features, GA exit criteria, known limitations |
-| [Changelog](/docs/changelog) | Version history with added, fixed, and changed entries |
-
----
-
-## Status
-
-| Field | Value |
-|---|---|
-| Documentation target | Impulse v0.6 |
-| Release maturity | Beta |
-| License | GPLv3 |
-
-Beta means core proxying, routing, load balancing, and health-check features are implemented and actively validated, but the project remains pre-GA — extended soak validation and broader failure-mode hardening are still in progress.
-
-Controlled production rollout is supported. See [release-maturity.md](/docs/release-maturity) for operator expectations, environment guidance, and GA exit criteria.
+| [Status and Limitations](/docs/reference/status-and-limitations) | Product-status authority for maturity, capability support, limitations, and GA blockers |
+| [Roadmap](/docs/roadmap) | Possible future direction, separate from the current support contract |
+| [Repository Changelog](https://github.com/impulse-proxy/impulse/blob/master/CHANGELOG.md) | Version history, compatibility notes, and behavior changes |
+| [GitHub Releases](https://github.com/impulse-proxy/impulse/releases) | Tagged release notes and published artifacts |
 
 ---
 
@@ -147,7 +134,7 @@ If you are in a hurry:
 - production deployment: [deployment/production.md](/docs/deployment/production)
 - incident response: [operations/runbook.md](/docs/operations/runbook)
 - troubleshooting: [operations/runbook.md](/docs/operations/runbook)
-- exact support surface: [reference/feature-matrix.md](/docs/reference/feature-matrix)
+- product status and limits: [reference/status-and-limitations.md](/docs/reference/status-and-limitations)
 
 For starting examples and exact commands:
 

@@ -11,8 +11,7 @@ be corrected.
 
 | Topic | Authoritative page | Use when |
 | --- | --- | --- |
-| exact feature support | [Feature Matrix](/docs/reference/feature-matrix) | you need to know whether a capability is done, partial, or missing |
-| hard product limits | [Limitations](/docs/reference/limitations) | you need boundaries or non-goals |
+| maturity, feature support, and product limits | [Status and Limitations](/docs/reference/status-and-limitations) | you need to know whether a capability is done, partial, or missing, or need its boundaries and non-goals |
 | exact config semantics | [Configuration Reference](/docs/configuration/reference) | you need field shape, precedence, and runtime meaning |
 | exact control-plane interface | [Control API Reference](/docs/reference/control-api-reference) | you need endpoint, role, or response semantics |
 | exact metric and label vocabulary | [Metrics Reference](/docs/reference/metrics-reference) | you need exported signal names and labels |

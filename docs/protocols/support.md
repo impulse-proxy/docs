@@ -152,8 +152,8 @@ transport façade. Impulse does not forward to backends over HTTP/3.
 - General CONNECT and WebSocket support remains protocol-pair dependent rather
   than a universal tunneling surface.
 
-For broader product status, see the [Feature Matrix](/docs/reference/feature-matrix)
-and [Limitations](/docs/reference/limitations).
+For broader product status, see
+[Status and Limitations](/docs/reference/status-and-limitations).
 
 ## Standards
 
