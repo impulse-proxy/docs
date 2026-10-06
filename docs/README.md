@@ -45,8 +45,10 @@ workflows. Neither redefines the contracts owned by the references above.
 
 | Goal | Go to |
 | --- | --- |
-| Understand the product | [Project README](https://github.com/impulse-proxy/impulse#readme) and [Getting Started Overview](/docs/getting-started/overview) |
-| Install and run Impulse | [Getting Started](/docs/getting-started/overview) |
+| Understand the product | [Project README](https://github.com/impulse-proxy/impulse#readme) |
+| See Impulse proxy a request | [Quickstart](/docs/getting-started/quickstart) |
+| Install Impulse on a host | [Installation](/docs/getting-started/installation) |
+| Run the packaged container | [Docker](/docs/getting-started/docker) |
 | Prepare for deployment | [Operations Overview](/docs/operations/overview) and [Production Deployment](/docs/deployment/production) |
 | Troubleshoot issues | [Common Issues](/docs/troubleshooting/common-issues) and [Runbook](/docs/operations/runbook) |
 | Find exact supported behavior | [Reference Overview](/docs/reference/overview) |
@@ -57,8 +59,9 @@ workflows. Neither redefines the contracts owned by the references above.
 
 | Document | What you'll find |
 |---|---|
-| [Installation](/docs/getting-started/installation) | Debian package, build from source, system requirements, TLS certificate layout |
-| [Docker](/docs/getting-started/docker) | Container image, Compose bootstrap, smoke-test scripts |
+| [Quickstart](/docs/getting-started/quickstart) | One local backend, one minimal config, and one HTTP/3 request |
+| [Installation](/docs/getting-started/installation) | Debian package and source installation paths |
+| [Docker](/docs/getting-started/docker) | Packaged image availability, container contract, and Compose workflow |
 | [Configuration Reference](/docs/configuration/reference) | Configuration schema entry point, with links to focused domain references |
 | [Routing and Upstreams](/docs/configuration/routing-and-upstreams) | Exact route matching, upstream, backend, request-key, and load-balancing behavior |
 | [Authentication and Secrets](/docs/configuration/authentication-and-secrets) | Downstream API-key, JWT, external-auth, OIDC, and secret-provider configuration |
@@ -152,7 +155,7 @@ Controlled production rollout is supported. See [release-maturity.md](/docs/rele
 
 If you are in a hurry:
 
-- first run: [getting-started/overview.md](/docs/getting-started/overview)
+- first run: [getting-started/quickstart.md](/docs/getting-started/quickstart)
 - production deployment: [deployment/production.md](/docs/deployment/production)
 - incident response: [operations/runbook.md](/docs/operations/runbook)
 - troubleshooting: [troubleshooting/common-issues.md](/docs/troubleshooting/common-issues)
