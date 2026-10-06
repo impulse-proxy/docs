@@ -50,7 +50,7 @@ workflows. Neither redefines the contracts owned by the references above.
 | Install Impulse on a host | [Installation](/docs/getting-started/installation) |
 | Run the packaged container | [Docker](/docs/getting-started/docker) |
 | Prepare for deployment | [Operations Overview](/docs/operations/overview) and [Production Deployment](/docs/deployment/production) |
-| Troubleshoot issues | [Common Issues](/docs/troubleshooting/common-issues) and [Runbook](/docs/operations/runbook) |
+| Troubleshoot issues | [Operations Runbook](/docs/operations/runbook) |
 | Find exact supported behavior | [Reference Overview](/docs/reference/overview) |
 
 ## Documentation Paths
@@ -70,7 +70,7 @@ workflows. Neither redefines the contracts owned by the references above.
 | [Observability and Control Configuration](/docs/configuration/observability-and-control) | Exact metrics, tracing, Control API security, audit, limits, and privilege-drop configuration |
 | [Production Deployment](/docs/deployment/production) | Readiness, systemd, privileges, configuration ownership, validation, rollout, rollback, and production checklist |
 | [Operations Overview](/docs/operations/overview) | Main entry point for deployment, rollout, observability, and failure handling |
-| [Troubleshooting](/docs/troubleshooting/common-issues) | Symptom-driven diagnostics and operator checks |
+| [Operations Runbook](/docs/operations/runbook) | Symptom-driven diagnostics, safe remediation, and escalation criteria |
 | [Limitations](/docs/reference/limitations) | The current hard product limits, without marketing language |
 
 ### Architecture — understand the runtime and subsystem ownership
@@ -96,8 +96,7 @@ workflows. Neither redefines the contracts owned by the references above.
 | [Metrics Reference](/docs/reference/metrics-reference) | Metric names, labels, and exported runtime signals |
 | [Operations Overview](/docs/operations/overview) | Operator map for deployment, sizing, tuning, and failure handling |
 | [Distributed Quota Operations](/docs/operations/distributed-quota) | Redis deployment, rollout, degraded-mode guidance, and incident interpretation |
-| [Runbook](/docs/operations/runbook) | Day-2 operational procedures and troubleshooting flow |
-| [Failure Modes](/docs/operations/failure-modes) | Expected degraded behaviors and what they mean operationally |
+| [Operations Runbook](/docs/operations/runbook) | Failure semantics, read-only diagnosis, safe remediation, and escalation criteria |
 | [Capacity Planning and Host Tuning](/docs/operations/sizing-and-capacity) | File descriptors, socket buffers, workers, limits, memory pressure, queues, metrics, and testing methodology |
 
 ### Protocol, traffic, and policy reference
@@ -153,7 +152,7 @@ If you are in a hurry:
 - first run: [getting-started/quickstart.md](/docs/getting-started/quickstart)
 - production deployment: [deployment/production.md](/docs/deployment/production)
 - incident response: [operations/runbook.md](/docs/operations/runbook)
-- troubleshooting: [troubleshooting/common-issues.md](/docs/troubleshooting/common-issues)
+- troubleshooting: [operations/runbook.md](/docs/operations/runbook)
 - exact support surface: [reference/feature-matrix.md](/docs/reference/feature-matrix)
 
 For starting examples and exact commands:

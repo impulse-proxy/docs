@@ -13,7 +13,6 @@ Use it to answer where Impulse fits well today, how to prepare hosts and capacit
 | Plan capacity and tune the host runtime | [Capacity Planning and Host Tuning](/docs/operations/sizing-and-capacity) |
 | Choose, validate, and execute a rollout | [Rollout and Validation](/docs/deployment/production#rollout-and-validation) |
 | Troubleshoot incidents quickly | [Runbook](/docs/operations/runbook) |
-| Interpret visible failures and status codes | [Failure Modes](/docs/operations/failure-modes) |
 | Operate distributed quota safely | [Distributed Quota](/docs/operations/distributed-quota) |
 | Use the shipped dashboards, alerts, and SLO views | [Observability Operations](/docs/operations/observability) |
 
@@ -22,8 +21,8 @@ Use it to answer where Impulse fits well today, how to prepare hosts and capacit
 This page owns operational navigation and workflow guidance; it does not redefine
 configuration, API, metrics, feature-status, or limitation contracts. Use the
 [Reference Overview](/docs/reference/overview) for the authority assigned to
-each product surface. Use [Troubleshooting](/docs/troubleshooting/common-issues)
-for symptom-driven diagnosis and the
+each product surface. Use the [Runbook](/docs/operations/runbook) for
+symptom-driven diagnosis and the
 [Observability Operations](/docs/operations/observability) for
 dashboard, alert, and SLO guidance.
 
@@ -69,9 +68,7 @@ Start with:
 Start with:
 
 - [Runbook](/docs/operations/runbook)
-- [Failure Modes](/docs/operations/failure-modes)
 - [Observability Operations](/docs/operations/observability)
-- [Troubleshooting](/docs/troubleshooting/common-issues)
 
 ## Operator Rules
 
@@ -87,4 +84,4 @@ Start with:
 - [API Overview](/docs/api/overview)
 - [Control API Reference](/docs/reference/control-api-reference)
 - [Metrics Reference](/docs/reference/metrics-reference)
-- [Troubleshooting](/docs/troubleshooting/common-issues)
+- [Runbook](/docs/operations/runbook)

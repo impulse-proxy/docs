@@ -380,4 +380,4 @@ generation's policy.
 - [Distributed Quota Operations](/docs/operations/distributed-quota)
 - [Quota Policy Contract](/docs/architecture/quota-policy-contract)
 - [Metrics Reference](/docs/reference/metrics-reference)
-- [Failure Modes](/docs/operations/failure-modes)
+- [Operations Runbook](/docs/operations/runbook)

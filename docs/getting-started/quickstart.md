@@ -103,4 +103,4 @@ certificate paths are relative to `impulse-demo/`.
 - [Configuration Reference](/docs/configuration/reference) for exact fields and defaults
 - [Configuration Examples](/docs/configuration/examples) for non-minimal deployment shapes
 - [Production Deployment](/docs/deployment/production) before serving real traffic
-- [Troubleshooting](/docs/troubleshooting/common-issues) for symptom-driven diagnosis
+- [Operations Runbook](/docs/operations/runbook) for symptom-driven diagnosis

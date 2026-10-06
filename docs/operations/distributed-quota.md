@@ -180,5 +180,4 @@ failure.
 
 - [Resilience, Rate Limits, and Quota](/docs/configuration/resilience)
 - [Quota Policy Contract](/docs/architecture/quota-policy-contract)
-- [Failure Modes](/docs/operations/failure-modes)
 - [Runbook](/docs/operations/runbook)
