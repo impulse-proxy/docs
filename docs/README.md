@@ -64,6 +64,7 @@ workflows. Neither redefines the contracts owned by the references above.
 | [Authentication and Secrets](/docs/configuration/authentication-and-secrets) | Downstream API-key, JWT, external-auth, OIDC, and secret-provider configuration |
 | [TLS Setup](/docs/configuration/tls) | Certificate generation, mTLS client auth, key ownership and permissions |
 | [Resilience, Rate Limits, and Quota](/docs/configuration/resilience) | Exact retry, hedge, circuit-breaker, admission, rate-limit, and quota configuration |
+| [Observability and Control Configuration](/docs/configuration/observability-and-control) | Exact metrics, tracing, Control API security, audit, limits, and privilege-drop configuration |
 | [Production Deployment](/docs/deployment/production) | Systemd unit, privilege drop, sysctl tuning, canary rollout guidance |
 | [Production Readiness](/docs/operations/production-readiness) | Rollout assessment and operating guidance for the current beta release |
 | [Operations Overview](/docs/operations/overview) | Main entry point for deployment, rollout, observability, and failure handling |
@@ -91,6 +92,7 @@ workflows. Neither redefines the contracts owned by the references above.
 | Document | What you'll find |
 |---|---|
 | [API Overview](/docs/api/overview) | Metrics endpoint and Control API surfaces at a high level |
+| [Observability and Control Configuration](/docs/configuration/observability-and-control) | Focused field reference for metrics, tracing, the Control API, and privilege dropping |
 | [Control API Reference](/docs/reference/control-api-reference) | Endpoint-by-endpoint control API contract |
 | [Metrics Reference](/docs/reference/metrics-reference) | Metric names, labels, and exported runtime signals |
 | [Operations Overview](/docs/operations/overview) | Operator map for deployment, sizing, tuning, and failure handling |

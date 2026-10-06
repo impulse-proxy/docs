@@ -33,7 +33,8 @@ Examples:
 
 - `observability.control_api.enabled` defaults to `false`
 - `observability.control_api.auth_token` defaults to `null`
-- if you set `observability.control_api.enabled: true`, validation then requires `auth_token`
+- if you set `observability.control_api.enabled: true`, validation then requires
+  a legacy or role-bearing bearer token, or required mTLS
 
 ## Common Mistakes
 
@@ -335,7 +336,7 @@ These apply when a backend provides a `health_check` object and omits individual
 | `observability.control_api.restart_path` | `"/admin/runtime/restart"` | Restart control path |
 | `observability.control_api.reload_path` | `"/admin/runtime/reload"` | Full config hot-reload path |
 | `observability.control_api.reload_certs_path` | `"/admin/runtime/reload-certs"` | Certificate reload path |
-| `observability.control_api.auth_token` | `null` | Must be set when the control API is enabled |
+| `observability.control_api.auth_token` | `null` | One valid bearer credential or required mTLS is needed when the API is enabled |
 | `observability.control_api.max_connections` | `256` | Concurrent control API connections cap |
 | `observability.control_api.connection_timeout_ms` | `30000` | Control API connection timeout |
 

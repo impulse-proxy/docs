@@ -18,10 +18,10 @@ Use this table when you need the fastest runtime-introspection path:
 
 ## Endpoint Index
 
-| Endpoint | Method | Minimum role | Purpose |
+| Endpoint | Method | Default minimum role | Purpose |
 | --- | --- | --- | --- |
-| `/health` | `GET` | none | liveness |
-| `/ready` | `GET` | none | readiness |
+| `/health` | `GET` | none (`viewer` when protected) | liveness |
+| `/ready` | `GET` | none (`viewer` when protected) | readiness |
 | `/admin/runtime` | `GET` | `viewer` | current runtime snapshot |
 | `/admin/runtime/history` | `GET` | `viewer` | retained generations and operation history |
 | `/admin/runtime/history/{generation}` | `GET` | `viewer` | one retained generation and related entries |
@@ -93,6 +93,11 @@ The `-k` flag skips certificate verification for self-signed certs.
 
 ## Authentication
 
+The exact TLS, bearer-token, mTLS identity, RBAC, IP-allowlist, audit, and
+connection-limit fields are defined in
+[Observability and Control Configuration](/docs/configuration/observability-and-control).
+This section describes how those settings affect HTTP requests.
+
 Supported authentication shapes:
 
 - bearer token only
@@ -117,7 +122,7 @@ Compatibility note:
 - new deployments should prefer `observability.control_api.auth.bearer_tokens[]` with explicit roles
 - compatibility boundary: a new Impulse binary accepts legacy `auth_token` configs, but an older binary will reject configs that use the newer nested control-plane fields because `ControlApi` uses strict `deny_unknown_fields`
 
-Role model:
+Default role model:
 
 - `viewer`: runtime snapshot and history reads
 - `operator`: `viewer` plus validate, preview, activate, rollback, reload, and cert reload
@@ -127,12 +132,12 @@ Role model:
 
 Route families:
 
-- `/health` and `/ready`: unauthenticated or separately protected
-- `/admin/runtime*` reads: `viewer`
-- runtime mutation routes except restart: `operator`
-- `/admin/runtime/restart`: `admin`
+- `/health` and `/ready`: unauthenticated unless their protection flag is set
+- `/admin/runtime*` reads: `authorization.runtime_read_role` (`viewer` by default)
+- runtime mutation routes except restart: `authorization.runtime_mutate_role` (`operator` by default)
+- `/admin/runtime/restart`: `authorization.restart_role` (`admin` by default)
 
-Contract rules:
+Default contract rules:
 
 - `viewer` is the minimum privileged read role
 - `operator` is the minimum non-restart mutation role
@@ -155,77 +160,13 @@ Representative reasons returned in JSON payloads:
 
 When control API mTLS is configured as `required`, missing or invalid client certificates are rejected during the TLS handshake before HTTP routing. That failure does not produce an HTTP `401` or `403` response.
 
-## Configuration Patterns
+## Configuration Boundary
 
-### Bearer-Only Local Dev
-
-Use this for loopback-only development or local automation.
-
-```yaml
-observability:
-  control_api:
-    enabled: true
-    address: "127.0.0.1"
-    port: 9890
-    auth_token: "change-me-local-dev"
-```
-
-### mTLS Optional With Viewer Token
-
-Use this when you want to accept client certificates without making them mandatory yet.
-
-```yaml
-observability:
-  control_api:
-    enabled: true
-    address: "127.0.0.1"
-    port: 9902
-    tls:
-      client_auth:
-        mode: optional
-        ca_file: "/etc/impulse/pki/admin-ca.pem"
-    auth:
-      bearer_tokens:
-        - token: "viewer-token"
-          role: viewer
-          actor_id: "ops-readonly"
-```
-
-### mTLS Required With Operator/Admin Identities
-
-Use this for hardened production admin-plane access.
-
-```yaml
-observability:
-  control_api:
-    enabled: true
-    required: true
-    address: "10.0.10.5"
-    port: 9902
-    tls:
-      client_auth:
-        mode: required
-        ca_file: "/etc/impulse/pki/admin-ca.pem"
-    auth:
-      bearer_tokens:
-        - token: "operator-token"
-          role: operator
-          actor_id: "ops-automation"
-        - token: "admin-token"
-          role: admin
-          actor_id: "platform-admin"
-      identity_source:
-        kind: "mtls_subject_cn"
-        role_attribute: "OU"
-    ip_allowlist:
-      cidrs:
-        - "10.0.10.0/24"
-      trusted_proxy_cidrs: []
-    audit:
-      enabled: true
-      format: json
-      sink: log
-```
+Configuration examples and validation rules intentionally live in
+[Observability and Control Configuration](/docs/configuration/observability-and-control).
+In particular, that page defines how protected health/readiness routes, custom
+role thresholds, mTLS identities, trusted proxy headers, and connection limits
+alter the defaults shown here.
 
 ## Endpoints
 
@@ -258,7 +199,7 @@ Purpose:
 
 - runtime snapshot for operators
 
-Minimum role:
+Default minimum role:
 
 - `viewer`
 
@@ -327,7 +268,7 @@ Expected use:
 - CI gating on config changes before a deploy
 - confirming a config is loadable before scheduling a maintenance window
 
-Minimum role:
+Default minimum role:
 
 - `operator`
 
@@ -352,7 +293,7 @@ Expected use:
 
 - operator dry-run immediately before an activation, when you want the attempt in the audit trail
 
-Minimum role:
+Default minimum role:
 
 - `operator`
 
@@ -376,7 +317,7 @@ Expected use:
 
 - the preferred activation path — prefer this over the legacy `/reload` shortcut, since it returns the full diff, rejection detail, and generation history entry
 
-Minimum role:
+Default minimum role:
 
 - `operator`
 
@@ -414,7 +355,7 @@ Returns `202` on success. Failures:
 
 Use `GET /admin/runtime/history` first to pick a target whose `rollback_candidate` is `true`.
 
-Minimum role:
+Default minimum role:
 
 - `operator`
 
@@ -460,7 +401,7 @@ Expected use:
 - diagnosing why a staged activation never committed
 - correlating runtime operations with audit and observability views
 
-Minimum role:
+Default minimum role:
 
 - `viewer`
 
@@ -480,7 +421,7 @@ Purpose:
 
 Returns `200` with `generation`, a single `retained_generation` object (same shape as above), and the `entries` recorded against it. Returns `404` if that generation is not retained.
 
-Minimum role:
+Default minimum role:
 
 - `viewer`
 
@@ -509,7 +450,7 @@ Expected use:
 - adding or removing backends
 - changing load balancing, timeouts, resilience, or routing policy at runtime
 
-Minimum role:
+Default minimum role:
 
 - `operator`
 
@@ -554,7 +495,7 @@ Expected use:
 - listener certificate rotation
 - listener trust-material refresh
 
-Minimum role:
+Default minimum role:
 
 - `operator`
 
@@ -569,24 +510,15 @@ Expected use:
 - operational restart requests
 - orchestrated maintenance flow
 
-Minimum role:
+Default minimum role:
 
 - `admin`
 
-## Audit Configuration And Event Shape
+## Audit Event Shape
 
-The control API audit stream is the operator history surface for admin-plane actions.
-
-Example:
-
-```yaml
-observability:
-  control_api:
-    audit:
-      enabled: true
-      format: json
-      sink: log
-```
+The Control API audit stream is the operator history surface for admin-plane
+actions. Audit sink configuration is defined in
+[Observability and Control Configuration](/docs/configuration/observability-and-control#audit-output).
 
 Current audit schema version:
 

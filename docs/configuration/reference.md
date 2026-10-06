@@ -388,42 +388,26 @@ quota failure semantics, and complete example are in
 deployment and incident guidance is intentionally separate in
 [Distributed Quota Operations](/docs/operations/distributed-quota).
 
-## Observability Endpoint Hardening
+## Observability and Control
 
-When enabling `observability.metrics` or `observability.control_api`, keep endpoints on loopback unless you intentionally expose them behind network controls.
+`observability` configures the metrics listener, the HTTPS Control API,
+OpenTelemetry tracing, and route-decision transparency. `security.privileges`
+configures the post-bind Unix privilege drop.
 
-Use this section when you need to decide:
+| **Field** | **Type** | **Required** | **Default** | **Meaning** |
+| --------- | -------- | ------------ | ----------- | ----------- |
+| `observability.metrics` | object | No | object defaults | Prometheus endpoint bind, path, connection limits, and remote-mTLS opt-in. |
+| `observability.control_api` | object | No | object defaults | Administrative listener, paths, TLS client auth, bearer auth, RBAC, source policy, audit, and limits. |
+| `observability.tracing` | object | No | object defaults | OTLP endpoint, service name, and sample ratio. |
+| `observability.routing` | object | No | object defaults | Route-decision logging and transparency controls. |
+| `security.privileges` | object | No | object defaults | Post-bind process user and group. |
 
-- where metrics and the Control API should bind
-- how much runtime control to expose
-- how strongly the admin surface must be protected
-
-### Metrics Endpoint
-
-Key fields:
-
-- `observability.metrics.address` (default: `127.0.0.1`): bind address. Non-loopback addresses are rejected unless `allow_non_loopback` is explicitly enabled.
-- `observability.metrics.allow_non_loopback` (default: `false`): explicit opt-in for remote scraping. It requires `observability.control_api.tls.client_auth.mode=required`; the metrics endpoint then uses the primary listener certificate and the configured control-plane CA for mTLS.
-- `observability.metrics.max_connections` (default: `512`): concurrent connection cap.
-- `observability.metrics.connection_timeout_ms` (default: `30000`): per-connection lifetime timeout.
-
-### Control API Endpoint
-
-Key fields:
-
-- `observability.control_api.auth_token` / `auth_token_ref`: legacy admin-scoped bearer credential.
-- `observability.control_api.auth.bearer_tokens`: role-bearing Control API credentials with optional actor IDs.
-- `observability.control_api.tls.client_auth`: optional or required admin-plane mTLS. When the Control API is enabled, authentication must use a bearer credential or required mTLS; optional mTLS cannot be the only mechanism.
-- `observability.control_api.reload_path` (default: `/admin/runtime/reload`): authenticated POST endpoint that re-reads the config file and applies the full configuration via an atomic runtime swap (routes, upstreams, backends, timeouts, limits, resilience policies). Startup-owned settings and listener bind/removal changes are rejected and still require a restart.
-- `observability.control_api.reload_certs_path`: authenticated POST endpoint that reloads listener certificate and client-auth CA material for new handshakes.
-- `observability.control_api.max_connections` (default: `256`): concurrent connection cap.
-- `observability.control_api.connection_timeout_ms` (default: `30000`): per-connection lifetime timeout.
-
-These credentials protect the admin plane only. They do not satisfy
-`upstream.<name>.auth`, and downstream API keys or JWTs do not authorize
-Control API requests. See the
-[Control API Reference](/docs/reference/control-api-reference) for the complete
-endpoint, role, mTLS, and source-address contract.
+The exact fields, defaults, constraints, complete security policy, and
+privilege-dropping behavior are in
+[Observability and Control Configuration](/docs/configuration/observability-and-control).
+HTTP endpoint methods, payloads, responses, and status codes remain in the
+[Control API Reference](/docs/reference/control-api-reference); metric names
+and labels remain in the [Metrics Reference](/docs/reference/metrics-reference).
 
 ### Routing Transparency
 
