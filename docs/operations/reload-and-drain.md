@@ -171,7 +171,6 @@ If drain times out:
 ## Related Pages
 
 - [Production Deployment](/docs/deployment/production)
-- [Production Readiness](/docs/operations/production-readiness)
 - [Runbook](/docs/operations/runbook)
 - [Secret and Certificate Rotation](/docs/operations/secret-and-cert-rotation)
 - [Control API Reference](/docs/reference/control-api-reference)

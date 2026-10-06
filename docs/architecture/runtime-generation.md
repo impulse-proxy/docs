@@ -115,7 +115,7 @@ Architecture does not maintain a second field-by-field reload matrix. Use:
 - [Configuration Reference](/docs/configuration/reference) for schema meaning
 - [Control API Reference](/docs/reference/control-api-reference) for staged operations
 - [Reload and Drain](/docs/operations/reload-and-drain) for operator workflow
-- [Configuration Validation](/docs/deployment/validation) for safe validation procedures
+- [Production Rollout and Validation](/docs/deployment/production#rollout-and-validation) for safe validation procedures
 
 ## Invariants
 

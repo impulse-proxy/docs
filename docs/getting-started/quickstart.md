@@ -102,5 +102,5 @@ certificate paths are relative to `impulse-demo/`.
 - [Docker](/docs/getting-started/docker) for the packaged container workflow
 - [Configuration Reference](/docs/configuration/reference) for exact fields and defaults
 - [Configuration Examples](/docs/configuration/examples) for non-minimal deployment shapes
-- [Production Readiness](/docs/operations/production-readiness) before serving real traffic
+- [Production Deployment](/docs/deployment/production) before serving real traffic
 - [Troubleshooting](/docs/troubleshooting/common-issues) for symptom-driven diagnosis

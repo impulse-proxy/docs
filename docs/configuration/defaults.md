@@ -370,4 +370,4 @@ These apply when a backend provides a `health_check` object and omits individual
 
 - [Configuration Reference](/docs/configuration/reference)
 - [Configuration Examples](/docs/configuration/examples)
-- [Production Readiness](/docs/operations/production-readiness)
+- [Production Checklist](/docs/deployment/production#production-checklist)

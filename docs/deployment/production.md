@@ -1,167 +1,118 @@
 # Production Deployment
 
-> Impulse is beta software. Deploy it to production only with staged rollout, rollback readiness, and verified observability. Read [Production Readiness](/docs/operations/production-readiness) first.
+Impulse v0.6 is beta software intended for controlled production rollout. This
+guide owns the production host, service, validation, rollout, and readiness
+workflow. Exact feature status and product boundaries remain in the
+[Feature Matrix](/docs/reference/feature-matrix) and
+[Limitations](/docs/reference/limitations).
 
-This guide covers the recommended production host layout, service model, security posture, rollout sequence, and change-management workflow for Impulse.
+Day-two diagnosis and recovery belong in the
+[Operations Runbook](/docs/operations/runbook), not in this deployment guide.
 
-## Recommended Deployment Shape
+## Production Readiness and Fit
 
-Use Impulse as:
+Impulse is a good fit when:
 
-- an active-active edge pool
-- behind a UDP-capable load balancer or traffic manager
-- with one protected Control API surface per node
-- with Prometheus scraping and centralized log collection in place before broad rollout
+- HTTP/3 terminates at the edge and services use HTTP/2, HTTP/1.1, or both
+- one accountable team owns configuration, TLS, rollout, and incidents
+- configuration is file-backed and changed through controlled automation
+- every change can start with a canary or bounded traffic slice
+- metrics, logs, health, readiness, and rollback are available before traffic
+  expands
 
-Recommended rollout shape:
+It is a weaker fit for a highly dynamic multi-tenant control plane, broad
+legacy-protocol compatibility, deep service-mesh discovery, or a full API
+gateway replacement. Review the current limitations before selecting it for
+those roles.
 
-1. one canary node or one bounded traffic slice
-2. staged activation for runtime-managed config changes
-3. cert reload for cert-only changes
-4. drain-aware restart or node replacement for restart-required changes
+Do not move beyond a controlled slice until rollback has been exercised,
+Control API access is protected, dashboards and alerts are live, and the team
+can distinguish runtime-managed changes from restart-required changes.
 
-## Minimum Host Baseline
+## Deployment Shape
 
-Start with:
+The recommended production shape is an active-active pool behind a traffic
+manager that supports both TCP and UDP on the listener port. Each node should
+have:
 
-- Linux kernel 5.x or later
-- 4 to 8 cores for a serious production node baseline
-- 4 GB minimum memory, more for heavy concurrency or large-body workloads
-- enough file descriptors and socket buffer headroom for expected traffic
+- one public listener exposed over UDP for HTTP/3 and TCP for bootstrap
+  HTTP/1.1/HTTP/2
+- a Control API bound to loopback or an isolated administration network
+- a metrics endpoint reachable only by the monitoring path
+- centralized logs and durable Control API audit output
+- enough spare capacity for another node to drain or leave service
 
-Validate with your real traffic shape before treating these as final numbers.
+Use a canary or bounded traffic slice for ordinary changes. Use blue-green or
+node replacement for binary upgrades and restart-required changes when that is
+safer than mutating a node in place. A single-node deployment has no
+availability during restart and should not be treated as the production
+baseline.
 
-## Directory And Account Layout
+## Host and Service Layout
 
-Recommended baseline:
+Use Linux for production. Size CPU, memory, socket buffers, queues, and file
+descriptors from measured traffic rather than treating a generic host shape as
+a capacity guarantee. See [Sizing and Capacity](/docs/operations/sizing-and-capacity)
+and [Host Tuning](/docs/operations/host-tuning).
 
-```bash
-sudo useradd --system --shell /usr/sbin/nologin \
-  --home-dir /var/lib/impulse --create-home impulse
+Recommended paths and ownership:
 
-sudo mkdir -p /etc/impulse/certs /var/lib/impulse /var/log/impulse
+| Path | Owner and mode | Purpose |
+| --- | --- | --- |
+| `/usr/local/bin/impulse` | `root:root`, `0755` | Versioned or atomically replaced binary |
+| `/etc/impulse/` | `root:impulse`, `0750` | Operator-owned configuration tree |
+| `/etc/impulse/config.yaml` | `root:impulse`, `0640` | Active configuration source |
+| `/etc/impulse/candidate.yaml` | `root:impulse`, `0640` | Staged candidate configuration |
+| `/etc/impulse/certs/` | `root:impulse`, `0750` | Certificates, keys, and trust material |
+| `/var/lib/impulse/` | `impulse:impulse`, `0750` | Runtime-owned state when required |
+| `/var/log/impulse/` | `impulse:impulse`, `0750` | File logs or audit output when configured |
 
-sudo chown root:impulse /etc/impulse
-sudo chmod 750 /etc/impulse
+Keep one configuration owner. Deployment automation should render a complete
+candidate, set its ownership and permissions, and then validate that exact
+file. A successful activation with an alternate `config_path` makes that path
+the active source for later reload operations; do not let temporary paths or
+multiple writers become accidental sources of truth.
 
-sudo chown root:impulse /etc/impulse/certs
-sudo chmod 750 /etc/impulse/certs
+Keep the current and previous known-good binary, the active config, and one
+reviewed rollback config available throughout a rollout. Record artifact
+checksums or equivalent provenance in the deployment system.
 
-sudo chown impulse:impulse /var/lib/impulse /var/log/impulse
-sudo chmod 750 /var/lib/impulse /var/log/impulse
+## Privileges
+
+Prefer running the service as the unprivileged `impulse` user. Bind a port at
+or above `1024` behind the traffic manager when possible. If the process must
+bind port `443` directly, grant only `CAP_NET_BIND_SERVICE`; do not grant broad
+capabilities.
+
+Impulse also supports an internal post-bind privilege drop:
+
+```yaml
+security:
+  privileges:
+    enabled: true
+    user: impulse
+    group: impulse
 ```
 
-Recommended permissions:
+This drop occurs only when the process starts with effective UID `0`. It is a
+no-op when systemd already starts the process as `User=impulse`. Choose one
+deliberate model:
 
-- config files: readable by `root` and the `impulse` group
-- private keys: readable only by the minimum required service identities
-- writable paths: limited to runtime state and optional local logs
+- start as `impulse`, using a high port or `CAP_NET_BIND_SERVICE`; or
+- start as root solely to bind, keep privilege dropping enabled, and verify the
+  configured user and group exist
 
-## Binary Installation
+In both models, the final service identity needs read access to active and
+candidate configs, certificates, keys, CA files, and secret files used during
+activation or reload. It needs write access only to configured runtime, log,
+and audit paths. See
+[Observability and Control Configuration](/docs/configuration/observability-and-control#privilege-dropping)
+for the exact fields and failure behavior.
 
-Install a release binary or a verified internal build into a stable path such as:
+## systemd Service
 
-```bash
-sudo install -m 755 -o root -g root impulse /usr/local/bin/impulse
-```
-
-Keep:
-
-- the current production binary
-- the previous known-good binary
-- checksums or provenance metadata for the binary you deployed
-
-## Host Tuning Baseline
-
-Before rollout, set and verify:
-
-- UDP and TCP buffer ceilings
-- device backlog and packet budget
-- file descriptor ceilings
-- privileged-port bind strategy
-- conntrack behavior, if present
-
-Use [Host Tuning](/docs/operations/host-tuning) for the tuning model.
-
-Example `sysctl` baseline:
-
-```bash
-# /etc/sysctl.d/99-impulse.conf
-net.core.rmem_max = 67108864
-net.core.wmem_max = 67108864
-net.core.rmem_default = 16777216
-net.core.wmem_default = 16777216
-net.core.netdev_max_backlog = 65536
-fs.file-max = 2097152
-```
-
-Apply and verify:
-
-```bash
-sudo sysctl --system
-sysctl net.core.rmem_max
-sysctl fs.file-max
-```
-
-## Resource Limits
-
-Recommended service-account limits:
-
-```bash
-# /etc/security/limits.d/impulse.conf
-impulse soft nofile 1048576
-impulse hard nofile 1048576
-impulse soft nproc 16384
-impulse hard nproc 16384
-```
-
-Also reflect the same intent in your `systemd` unit.
-
-## Control API Posture
-
-Treat the Control API as operator-only infrastructure.
-
-Recommended posture:
-
-- bind to loopback or an isolated admin network
-- require TLS
-- require explicit auth
-- grant `viewer`, `operator`, and `admin` roles deliberately
-- use `--http1.1` for all `curl` interactions
-
-Do not expose the Control API broadly on the same network surface as public traffic.
-
-## Certificate Management
-
-Use a documented certificate lifecycle with:
-
-- predictable source of truth
-- verified SAN coverage
-- expiry monitoring
-- tested cert reload workflow
-
-Before replacing a certificate, verify:
-
-```bash
-openssl x509 -noout -dates -in /etc/impulse/certs/fullchain.pem
-openssl x509 -noout -text -in /etc/impulse/certs/fullchain.pem | grep -A1 "Subject Alternative Name"
-openssl rsa -noout -modulus -in /etc/impulse/certs/privkey.pem | openssl md5
-openssl x509 -noout -modulus -in /etc/impulse/certs/fullchain.pem | openssl md5
-```
-
-For cert-only updates, prefer:
-
-```bash
-curl -k --http1.1 -X POST \
-  -H "Authorization: Bearer <operator-token>" \
-  https://127.0.0.1:9902/admin/runtime/reload-certs
-```
-
-Use a full restart only when the change is not cert-only.
-
-## Example Service Unit
-
-Use `systemd` as a supervised service layer and keep change management in your rollout automation rather than depending on ad hoc shell access.
+The following unit uses the preferred unprivileged model and assumes the public
+listener binds above `1024`:
 
 ```ini
 [Unit]
@@ -175,7 +126,7 @@ Type=simple
 User=impulse
 Group=impulse
 ExecStart=/usr/local/bin/impulse --config /etc/impulse/config.yaml
-Restart=always
+Restart=on-failure
 RestartSec=5s
 LimitNOFILE=1048576
 LimitNPROC=16384
@@ -198,150 +149,193 @@ SyslogIdentifier=impulse
 WantedBy=multi-user.target
 ```
 
-Notes:
+For direct binding below `1024`, add both of these lines and retain the
+unprivileged `User` and `Group`:
 
-- Do not assume `systemctl reload` is your primary production change path.
-- Prefer explicit Control API activation automation for runtime-managed changes.
-- Use `systemctl restart` only for restart-required changes or binary replacement workflows.
-
-## Change Management Model
-
-### Runtime-managed config changes
-
-Use:
-
-1. config render or distribution
-2. `POST /admin/runtime/validate`
-3. `POST /admin/runtime/preview`
-4. `POST /admin/runtime/activate`
-5. runtime-history and metrics verification
-
-### Certificate-only changes
-
-Use:
-
-1. write new cert material
-2. verify permissions and expiry
-3. `POST /admin/runtime/reload-certs`
-4. verify new handshakes
-
-### Restart-required changes
-
-Use:
-
-1. canary node or bounded slice
-2. drain-aware restart or node replacement
-3. post-restart verification
-4. expand only after stable health and latency
-
-## Activation Workflow Example
-
-```bash
-curl -k --http1.1 -X POST \
-  -H "Authorization: Bearer <operator-token>" \
-  -H "content-type: application/json" \
-  -d '{"config_path":"/etc/impulse/config.yaml","requested_by":"ops","reason":"route change"}' \
-  https://127.0.0.1:9902/admin/runtime/validate
-
-curl -k --http1.1 -X POST \
-  -H "Authorization: Bearer <operator-token>" \
-  -H "content-type: application/json" \
-  -d '{"config_path":"/etc/impulse/config.yaml","requested_by":"ops","reason":"route change"}' \
-  https://127.0.0.1:9902/admin/runtime/preview
-
-curl -k --http1.1 -X POST \
-  -H "Authorization: Bearer <operator-token>" \
-  -H "content-type: application/json" \
-  -d '{"config_path":"/etc/impulse/config.yaml","expected_generation":12,"requested_by":"ops","reason":"route change"}' \
-  https://127.0.0.1:9902/admin/runtime/activate
+```ini
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
 ```
 
-## Rollback Workflow Example
+Review hardening directives against configured file, secret, audit, tracing,
+DNS, and network access. Verify the rendered unit with
+`systemd-analyze security impulse.service` and test it in the target
+environment before rollout.
 
-Choose a retained generation first:
+`systemctl reload` is not the configuration change path. Use the Control API
+for runtime generations, `reload-certs` for downstream certificate-only
+changes, and a drain-aware restart or node replacement for startup-owned
+changes.
 
-```bash
-curl -k --http1.1 \
-  -H "Authorization: Bearer <viewer-or-operator-token>" \
-  https://127.0.0.1:9902/admin/runtime/history
-```
+## Certificates and Secrets
 
-Then roll back:
+Before deployment, verify that:
 
-```bash
-curl -k --http1.1 -X POST \
-  -H "Authorization: Bearer <operator-token>" \
-  -H "content-type: application/json" \
-  -d '{"target_generation":11,"expected_active_generation":12,"requested_by":"ops","reason":"rollback"}' \
-  https://127.0.0.1:9902/admin/runtime/rollback
-```
+- certificate SANs cover every served hostname
+- certificate and private-key public keys match
+- expiry alerts provide enough rotation lead time
+- the final service identity can read every referenced file
+- previous material remains recoverable until new handshakes are verified
 
-## Observability Before Traffic Expansion
+For downstream certificate-only rotation, replace material safely and call
+`POST /admin/runtime/reload-certs`; existing sessions keep their current TLS
+state. Upstream client certificates, upstream CA changes, and other
+generation-owned secrets use `validate → preview → activate`, not
+`reload-certs`. Follow
+[Secret and Certificate Rotation](/docs/operations/secret-and-cert-rotation)
+for the complete rotation and rollback contract.
 
-Before broad rollout, verify:
+## Change Paths
 
-- metrics endpoint is scraped successfully
-- logs are shipping
-- Control API health and readiness are reachable from the admin path
-- dashboards for latency, overload, quota, backend health, and TLS are populated
+Classify every deployment before changing a node:
 
-Use the shipped observability package rather than inventing an unverified local query set.
+| Change | Production path |
+| --- | --- |
+| Routes, upstreams, backends, runtime policy, timeouts, or `log.level` | `validate → preview → activate` |
+| Downstream listener certificate material only | `POST /admin/runtime/reload-certs` |
+| Listener removal or bind change, metrics/Control API bind change, tracing startup settings, logging sink/format, or control-plane thread count | Drain-aware restart or node replacement |
+| Binary upgrade | Canary node followed by node-by-node or blue-green replacement |
 
-See:
+Preview or activation may classify additional differences as restart-required.
+Treat the returned plan as authoritative for that candidate; never assume a
+field can activate live merely because a previous change did.
 
-- [Observability Operations](/docs/operations/observability)
-- [Metrics Reference](/docs/reference/metrics-reference)
+## Rollout and Validation
 
-## Rollout Procedure
+### Safe configuration validation
 
-### New config on an existing binary
+`impulse --config` starts the server. A valid config proceeds to runtime
+initialization and listener binding; it does not validate and exit. Use one of
+these workflows:
 
-1. Render the candidate config to disk.
-2. Validate it before touching traffic.
-3. Activate on one canary node or one bounded slice.
-4. Watch latency, overload, backend health, quota outcomes, and auth outcomes.
-5. Expand gradually.
+1. **Controlled startup.** Copy the candidate to an isolated host or change
+   every listener, metrics, and Control API binding to non-production addresses
+   and ports. Start it with `impulse --config <isolated-candidate>`, require the
+   listening/ready state, then stop it. An unreadable or invalid explicit config
+   exits with status `1`; a valid config remains running, so its eventual exit
+   status after operator shutdown is not a validation result.
+2. **Staged Control API.** On a secured validation or target instance, call
+   `POST /admin/runtime/validate`, then `/preview`, then `/activate`. Validate
+   and preview do not publish the candidate. Their HTTP `200` responses can
+   still contain rejected changes, so require an acceptable `candidate_status`
+   and empty `rejected_changes` before activation.
 
-### New binary
+Use the [Control API Reference](/docs/reference/control-api-reference) for
+request bodies, roles, response fields, and status codes.
 
-1. Keep the previous binary available.
-2. Deploy to one canary node first.
-3. Let the node rejoin only after health, readiness, and key dashboards stay stable.
-4. Roll out node by node or slice by slice.
+Startup validation catches schema, normalization, and required startup-resource
+errors. It does not prove backend reachability, certificate freshness, route
+intent, capacity, or behavior under real traffic. Check those separately.
 
-### Restart-required config change
+### Pre-rollout verification
 
-1. Prepare the config and verify it is intentionally restart-required.
-2. Use a drain-aware restart or node replacement workflow.
-3. Keep rollback ready at the binary and config level.
+Before sending traffic to a candidate:
 
-## Security Checklist
+1. Review the complete config diff and identify its change path.
+2. Confirm the candidate file, certificates, keys, CAs, and secrets are readable
+   by the final service identity.
+3. Check certificate expiry, SAN coverage, and key pairing.
+4. Test backend DNS, network reachability, TLS expectations, and configured
+   health paths from the target node.
+5. Review host/path/method route overlaps and representative expected matches.
+6. Confirm public listener, metrics, and Control API bindings and firewall
+   separation.
+7. Confirm metrics scraping, log shipping, audit output, health, and readiness.
+8. Record the active generation and verify the chosen rollback target or
+   previous binary.
 
-Before production, confirm:
+### Canary rollout
 
-1. private keys are minimally readable
-2. Control API is not broadly exposed
-3. service account permissions are minimal
-4. public ingress and admin-plane firewall rules are distinct
-5. logs do not expose secrets or unnecessary request material
+Use a separate node or isolated listener bindings; never start a second process
+against production bindings merely to validate it.
 
-## Final Pre-Go-Live Checklist
+1. Deploy the candidate to one node or bounded traffic slice.
+2. Require health and readiness before adding traffic.
+3. Begin with a small weight appropriate to the risk and traffic volume.
+4. Compare route success/failure, latency, overload, quota, auth, backend
+   health, connection pressure, and resource use with the unchanged pool.
+5. Hold long enough to cover meaningful traffic and background health/DNS work.
+6. Expand in controlled increments only while the candidate stays within the
+   predeclared acceptance thresholds.
 
-Confirm all of the following:
+Do not use a fixed ten-minute observation period as proof of safety. Set the
+window and thresholds from request volume, error budget, retry behavior,
+certificate/DNS refresh intervals, and the specific risk of the change.
 
-- host tuning baseline applied and verified
-- metrics and logs visible
-- Control API auth tested
-- cert reload tested
-- runtime activation and rollback tested
-- restart-required workflow tested
-- canary rollout procedure documented
-- incident owner and rollback owner clear
+### Activation and rollback
+
+For a runtime-managed candidate, pass `expected_generation` to activation so a
+concurrent change fails with `409`. After activation, confirm the returned and
+active generation, runtime history, backend state, and primary dashboards
+before expanding traffic.
+
+If a live activation regresses behavior, choose a retained candidate from
+`GET /admin/runtime/history` and call `POST /admin/runtime/rollback` with
+`expected_active_generation`. Rollback publishes a new generation and retained
+history is bounded; it does not replace binary rollback or a saved config.
+
+For a binary or restart-required regression, remove the node from traffic,
+restore the previous binary and config as applicable, restart, revalidate, and
+return it only after health and readiness recover. See
+[Reload and Drain](/docs/operations/reload-and-drain) for exact lifecycle
+semantics.
+
+### After deployment
+
+Verify the active generation and watch the shipped dashboards and alerts for
+the complete observation window. If health, readiness, latency, error rate,
+overload, quota, auth, backend health, TLS, ingress drops, or resource use
+crosses an acceptance threshold, stop expansion and roll back.
+
+Use [Observability Operations](/docs/operations/observability) for signal
+interpretation. Use the [Operations Runbook](/docs/operations/runbook) for
+day-two incidents and recovery; do not debug an unexplained regression while
+continuing rollout.
+
+## Production Checklist
+
+### Ownership and rollback
+
+- [ ] A single team owns config, TLS, rollout, and incident decisions.
+- [ ] The candidate diff and change classification were reviewed.
+- [ ] The active generation, retained rollback target, previous config, and
+      previous binary are recorded.
+- [ ] Canary acceptance thresholds and rollback authority are explicit.
+
+### Host and service
+
+- [ ] Capacity and host tuning were validated with representative traffic.
+- [ ] UDP and TCP reachability is available on the public listener port.
+- [ ] File-descriptor, task, socket-buffer, and queue limits are sufficient.
+- [ ] The systemd unit, restart policy, writable paths, and hardening were tested.
+- [ ] The process ends startup as the intended unprivileged identity with only
+      required capabilities.
+
+### Configuration and security
+
+- [ ] Config and secret ownership has one source of truth and minimal writers.
+- [ ] The Control API is isolated and its TLS, authentication, RBAC, IP policy,
+      connection limit, and audit output were tested.
+- [ ] Metrics and health/readiness exposure match the intended network policy.
+- [ ] Certificate expiry, SANs, key pairing, file access, and reload were tested.
+- [ ] Backend reachability, DNS, TLS verification, health paths, and route intent
+      were checked from the candidate node.
+
+### Rollout and operations
+
+- [ ] Safe validation completed without using production bindings.
+- [ ] Metrics, dashboards, alerts, logs, traces, and audit records are visible.
+- [ ] Runtime activation, certificate reload, restart/drain, and rollback paths
+      have been rehearsed as applicable.
+- [ ] The canary completed its full observation window within thresholds.
+- [ ] The incident owner knows when to stop expansion and use the runbook.
 
 ## Related Pages
 
-- [Production Readiness](/docs/operations/production-readiness)
+- [Installation](/docs/getting-started/installation)
+- [Protocol Support](/docs/protocols/support)
 - [Reload and Drain](/docs/operations/reload-and-drain)
-- [Validation](/docs/deployment/validation)
-- [Deployment Patterns](/docs/operations/deployment-patterns)
-- [Runbook](/docs/operations/runbook)
+- [Host Tuning](/docs/operations/host-tuning)
+- [Sizing and Capacity](/docs/operations/sizing-and-capacity)
+- [Observability Operations](/docs/operations/observability)
+- [Operations Runbook](/docs/operations/runbook)

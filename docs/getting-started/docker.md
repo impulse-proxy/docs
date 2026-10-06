@@ -108,9 +108,8 @@ choice before production; the image itself defaults to UID `10001`.
   [Observability and Control Configuration](/docs/configuration/observability-and-control).
 - Send container logs to stdout/stderr unless your platform has a deliberate
   file-volume and rotation policy.
-- Use [Production Deployment](/docs/deployment/production) and
-  [Production Readiness](/docs/operations/production-readiness) before serving
-  real traffic.
+- Use [Production Deployment](/docs/deployment/production) before serving real
+  traffic.
 
 For the fastest non-container demonstration, use the
 [Quickstart](/docs/getting-started/quickstart).

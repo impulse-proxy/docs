@@ -113,11 +113,10 @@ These commands verify the executable, not a configuration. `impulse --config`
 is a server start command: a valid configuration proceeds to runtime and binds
 listeners. Validate a candidate through controlled non-production startup or
 the Control API `validate → preview → activate` flow described in
-[Configuration Validation](/docs/deployment/validation).
+[Production Rollout and Validation](/docs/deployment/production#rollout-and-validation).
 
 ## Next Step
 
 Use the [Quickstart](/docs/getting-started/quickstart) for the single minimal
-configuration and first proxied request. Before production, continue with
-[Production Readiness](/docs/operations/production-readiness) and
-[Production Deployment](/docs/deployment/production).
+configuration and first proxied request. Before serving real traffic, continue
+with [Production Deployment](/docs/deployment/production).

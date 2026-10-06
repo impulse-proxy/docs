@@ -4,7 +4,7 @@ Use this section to understand what Impulse is, where it is strong today, and ho
 
 ## Start Here
 
-- [Production Readiness](/docs/operations/production-readiness) explains the current maturity level and the most important production caveats.
+- [Production Deployment](/docs/deployment/production) explains readiness, rollout discipline, and the production checklist.
 - [Security Model](/docs/concepts/security-model) documents trust boundaries and what security features are intentionally out of scope today.
 - [Architecture Overview](/docs/architecture/overview) explains the data plane,
   control plane, current crates, and major subsystem boundaries.

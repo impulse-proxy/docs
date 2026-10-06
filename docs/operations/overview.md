@@ -8,13 +8,11 @@ Use it to answer where Impulse fits well today, how to prepare hosts and capacit
 
 | Goal | Document |
 |---|---|
-| Decide whether the current release is ready for your environment | [Production Readiness](/docs/operations/production-readiness) |
-| Prepare a production host and service layout | [Production Deployment](/docs/deployment/production) |
+| Assess readiness and prepare a production deployment | [Production Deployment](/docs/deployment/production) |
 | Understand safe activation, restart-required changes, drain, and rollback | [Reload and Drain](/docs/operations/reload-and-drain) |
 | Plan host sizing and concurrency limits | [Sizing And Capacity](/docs/operations/sizing-and-capacity) |
 | Tune the host OS and runtime environment | [Host Tuning](/docs/operations/host-tuning) |
-| Choose a rollout shape | [Deployment Patterns](/docs/operations/deployment-patterns) |
-| Validate before and after a change | [Validation](/docs/deployment/validation) |
+| Choose, validate, and execute a rollout | [Rollout and Validation](/docs/deployment/production#rollout-and-validation) |
 | Troubleshoot incidents quickly | [Runbook](/docs/operations/runbook) |
 | Interpret visible failures and status codes | [Failure Modes](/docs/operations/failure-modes) |
 | Operate distributed quota safely | [Distributed Quota](/docs/operations/distributed-quota) |
@@ -49,7 +47,6 @@ Do not treat all changes as restarts, and do not assume every change is eligible
 
 Start with:
 
-- [Production Readiness](/docs/operations/production-readiness)
 - [Production Deployment](/docs/deployment/production)
 - [Host Tuning](/docs/operations/host-tuning)
 - [Sizing And Capacity](/docs/operations/sizing-and-capacity)
@@ -58,7 +55,7 @@ Start with:
 
 Start with:
 
-- [Validation](/docs/deployment/validation)
+- [Rollout and Validation](/docs/deployment/production#rollout-and-validation)
 - [Reload and Drain](/docs/operations/reload-and-drain)
 - [Runbook](/docs/operations/runbook)
 
@@ -66,7 +63,6 @@ Start with:
 
 Start with:
 
-- [Deployment Patterns](/docs/operations/deployment-patterns)
 - [Production Deployment](/docs/deployment/production)
 - [Reload and Drain](/docs/operations/reload-and-drain)
 

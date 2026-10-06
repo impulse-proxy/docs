@@ -75,5 +75,5 @@ done/partial/missing status for individual capabilities.
 ## Related Pages
 
 - [Feature Matrix](/docs/reference/feature-matrix)
-- [Production Readiness](/docs/operations/production-readiness)
+- [Production Readiness](/docs/deployment/production#production-readiness-and-fit)
 - [Roadmap](/docs/roadmap)

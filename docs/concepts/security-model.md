@@ -206,7 +206,7 @@ Impulse does not currently provide first-class:
 
 ## Related Pages
 
-- [Production Readiness](/docs/operations/production-readiness)
+- [Production Deployment](/docs/deployment/production)
 - [Limitations](/docs/reference/limitations)
 - [Authentication and Secrets](/docs/configuration/authentication-and-secrets)
 - [Control API Reference](/docs/reference/control-api-reference)

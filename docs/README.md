@@ -68,8 +68,7 @@ workflows. Neither redefines the contracts owned by the references above.
 | [TLS Setup](/docs/configuration/tls) | Certificate generation, mTLS client auth, key ownership and permissions |
 | [Resilience, Rate Limits, and Quota](/docs/configuration/resilience) | Exact retry, hedge, circuit-breaker, admission, rate-limit, and quota configuration |
 | [Observability and Control Configuration](/docs/configuration/observability-and-control) | Exact metrics, tracing, Control API security, audit, limits, and privilege-drop configuration |
-| [Production Deployment](/docs/deployment/production) | Systemd unit, privilege drop, sysctl tuning, canary rollout guidance |
-| [Production Readiness](/docs/operations/production-readiness) | Rollout assessment and operating guidance for the current beta release |
+| [Production Deployment](/docs/deployment/production) | Readiness, systemd, privileges, configuration ownership, validation, rollout, rollback, and production checklist |
 | [Operations Overview](/docs/operations/overview) | Main entry point for deployment, rollout, observability, and failure handling |
 | [Troubleshooting](/docs/troubleshooting/common-issues) | Symptom-driven diagnostics and operator checks |
 | [Limitations](/docs/reference/limitations) | The current hard product limits, without marketing language |

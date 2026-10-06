@@ -402,4 +402,4 @@ Impulse supports generation-based validation, preview, activation, rollback, and
 
 - [Configuration Reference](/docs/configuration/reference)
 - [TLS Setup](/docs/configuration/tls)
-- [Production Readiness](/docs/operations/production-readiness)
+- [Production Deployment](/docs/deployment/production)
