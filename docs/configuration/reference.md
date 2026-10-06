@@ -37,7 +37,7 @@ is omitted, it attempts `/etc/impulse/config.yaml`.
 | `listeners` | array of objects | No | `[]` | Effective listener set when non-empty; otherwise `listen` is used. |
 | `upstream` | map of objects | Yes | — | Named upstream pools. The map must contain at least one entry. |
 | `load_balancing` | object or `null` | No | `null` | Accepted and validated, but not applied as a v0.6 runtime fallback; configure each upstream instead. |
-| `upstream_tls` | object | No | `{}` | Global TLS policy inherited by upstreams that omit `tls`. |
+| `upstream_tls` | object | No | `{}` | Global backend TLS policy inherited by upstreams that omit `tls`. See [TLS Configuration](/docs/configuration/tls#upstream-backend-tls). |
 | `secrets` | object | No | `{}` | Literal and file-backed secret-provider configuration. See [Authentication and Secrets](/docs/configuration/authentication-and-secrets). |
 | `log` | object | No | `{}` | Logging level and output configuration. |
 | `performance` | object | No | `{}` | Timeouts, limits, worker settings, buffers, and backend DNS refresh. |
@@ -112,6 +112,10 @@ match first, then the default `cert`/`key` pair, then the first
 identity. Certificate reload affects new handshakes, not established
 connections.
 
+Downstream SNI normalization, SAN coverage, optional and required client-auth
+behavior, and atomic reload semantics are documented in
+[TLS Configuration](/docs/configuration/tls#downstream-listener-tls).
+
 ```yaml
 listen:
   protocol: http3
@@ -122,6 +126,49 @@ listen:
       - server_name: "api.example.com"
         cert: "/etc/impulse/tls/api.crt"
         key: "/etc/impulse/tls/api.key"
+```
+
+## Upstream TLS
+
+The top-level `upstream_tls` policy applies to each upstream that omits its own
+`tls` object. A present `upstream.<name>.tls` object replaces the complete
+global policy rather than merging with it. These settings affect only
+`https://` backends.
+
+| **Field** | **Type** | **Required** | **Default** | **Meaning** |
+| --------- | -------- | ------------ | ----------- | ----------- |
+| `verify_certificates` | boolean | No | `true` | Verifies the backend certificate chain and identity. |
+| `strict_sni` | boolean | No | `true` | Sends the backend hostname as SNI; disabling it does not disable certificate verification. |
+| `ca_file` | string or `null` | No | `null` | PEM CA bundle added to the built-in WebPKI roots. |
+| `ca_dir` | string or `null` | No | `null` | Directory of `.pem`, `.crt`, or `.cer` CA files added to the built-in roots. |
+| `client_certificate` | string or `null` | Conditionally | `null` | PEM client-certificate chain path; mutually exclusive with `client_certificate_ref`. |
+| `client_certificate_ref` | object or `null` | Conditionally | `null` | Secret reference for the client-certificate chain. |
+| `client_key` | string or `null` | Conditionally | `null` | PEM client-key path; mutually exclusive with `client_key_ref`. |
+| `client_key_ref` | object or `null` | Conditionally | `null` | Secret reference for the client key. |
+
+Client certificate and key sources must form a complete pair and require at
+least one HTTPS backend. Inline paths and references may be mixed across the
+pair, but a field and its `_ref` counterpart cannot both be set. CA material,
+client identities, verification semantics, examples, and activation behavior
+are documented in
+[TLS Configuration](/docs/configuration/tls#upstream-backend-tls).
+
+```yaml
+upstream:
+  private_api:
+    route:
+      path_prefix: "/"
+    tls:
+      verify_certificates: true
+      strict_sni: true
+      ca_file: "/etc/impulse/tls/backend-ca.pem"
+      client_certificate_ref:
+        ref: "file://private-api/client-chain.pem"
+      client_key_ref:
+        ref: "file://private-api/client-key.pem"
+    backends:
+      - id: "private-api-1"
+        address: "https://private-api.internal:8443"
 ```
 
 ## Routing and Upstreams

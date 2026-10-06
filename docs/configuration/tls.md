@@ -1,653 +1,318 @@
 # TLS Configuration
 
-This page explains how to configure downstream TLS certificates and upstream trust behavior in Impulse.
+This page is the focused Impulse v0.6 reference for downstream listener TLS
+and upstream backend TLS. The general
+[Configuration Reference](/docs/configuration/reference) remains the schema
+authority. For rotation procedures, see
+[Secret and Certificate Rotation](/docs/operations/secret-and-cert-rotation).
 
-## Overview
+## Keep the Two Directions Separate
 
-HTTP/3 uses QUIC as its transport protocol, which requires TLS 1.3 for encryption and authentication. Impulse requires valid TLS certificates to establish secure connections with clients.
+| Direction | Impulse role | Configuration | Purpose |
+| --- | --- | --- | --- |
+| Downstream client → Impulse | TLS server | `listen.tls` or `listeners[].tls` | Selects the certificate Impulse presents and optionally verifies client certificates. |
+| Impulse → upstream backend | TLS client | top-level `upstream_tls` or `upstream.<name>.tls` | Verifies backend certificates and optionally presents an Impulse client certificate. |
 
-Use this page when you need to answer:
+Downstream certificate settings do not configure backend trust. Upstream CA or
+client-certificate settings do not change the certificates presented to
+downstream clients. Control API mTLS is another admin-plane policy documented
+in the [Control API Reference](/docs/reference/control-api-reference).
 
-- what certificate and key formats Impulse accepts
-- how to configure one or many TLS identities on a listener
-- how to set file paths and permissions safely
-- what TLS changes require reload versus restart
+## Downstream Listener TLS
 
-## Requirements
+Every effective listener needs a default TLS identity. Configure either the
+`cert`/`key` pair, one or more `certificates` entries, or both.
 
-### Protocol Requirements
+| **Field** | **Type** | **Required** | **Default** | **Meaning** |
+| --------- | -------- | ------------ | ----------- | ----------- |
+| `cert` | string | Conditionally | `""` | PEM certificate-chain file for the default identity. Must be paired with `key`. |
+| `key` | string | Conditionally | `""` | PEM private-key file for the default identity. Must be paired with `cert`. |
+| `certificates` | array of objects | No | `[]` | Additional exact-SNI identities. At least one entry is required when `cert`/`key` is absent. |
+| `certificates[].server_name` | string | Yes | — | DNS name used as an exact SNI map key. |
+| `certificates[].cert` | string | Yes | — | PEM certificate-chain file for this identity. |
+| `certificates[].key` | string | Yes | — | PEM private-key file for this identity. |
+| `client_auth` | object | No | `{}` | Downstream client-certificate policy. |
+| `client_auth.enabled` | boolean | No | `false` | Requests and verifies a client certificate against `ca_file`. |
+| `client_auth.require_client_cert` | boolean | No | `false` | Rejects a client that does not present a certificate. Requires `enabled: true`. |
+| `client_auth.ca_file` | string or `null` | Conditionally | `null` | PEM CA bundle used to verify downstream client certificates. Required when client auth is enabled. |
 
-- TLS 1.3 (required for QUIC/HTTP3)
-- ALPN (Application-Layer Protocol Negotiation) support
-- SNI (Server Name Indication) support
+Listener certificate, key, and client-CA fields are filesystem paths; they do
+not accept secret-reference objects. Paths may be absolute or relative to the
+Impulse process working directory. Each PEM file must be a regular readable
+file no larger than 1 MiB.
 
-### Supported Formats
-
-- **Certificates**: PEM-encoded X.509 certificates
-- **Private Keys**: PEM-encoded PKCS#8 format (recommended) or traditional RSA/ECDSA formats
-- **Key Types**: RSA (2048-bit minimum) or ECDSA (P-256, P-384)
-
-## Certificate Generation
-
-### Development: Self-Signed Certificates with mkcert
-
-For local development, mkcert generates locally-trusted certificates:
-
-```bash
-# Install mkcert
-# Ubuntu/Debian
-sudo apt install mkcert
-
-# macOS
-brew install mkcert
-
-# Install local CA
-mkcert -install
-
-# Generate certificate for localhost
-mkdir -p certs
-cd certs
-mkcert -key-file server.key -cert-file server.crt localhost 127.0.0.1 ::1
-
-# Verify generation
-ls -lh server.crt server.key
-```
-
-Configuration:
+### Default identity
 
 ```yaml
 listen:
   protocol: http3
+  address: "0.0.0.0"
   port: 9889
+  tls:
+    cert: "/etc/impulse/tls/default-chain.pem"
+    key: "/etc/impulse/tls/default-key.pem"
+```
+
+The certificate file may contain a leaf followed by intermediate certificates.
+The private key must be a supported PEM private key and must match the leaf
+certificate. Impulse rejects unreadable, empty, malformed, expired, or
+not-yet-valid identities before they become active.
+
+### SNI identities and selection
+
+```yaml
+listen:
+  protocol: http3
+  address: "0.0.0.0"
+  port: 9889
+  tls:
+    cert: "/etc/impulse/tls/default-chain.pem"
+    key: "/etc/impulse/tls/default-key.pem"
+    certificates:
+      - server_name: "api.example.com"
+        cert: "/etc/impulse/tls/api-chain.pem"
+        key: "/etc/impulse/tls/api-key.pem"
+      - server_name: "www.example.com"
+        cert: "/etc/impulse/tls/www-chain.pem"
+        key: "/etc/impulse/tls/www-key.pem"
+```
+
+Selection is identical on the native QUIC listener and bootstrap listener:
+
+1. Use an exact normalized match between the client's SNI name and a
+   `certificates[].server_name` entry.
+2. Otherwise use the `cert`/`key` identity.
+3. If that pair is absent, use the first `certificates[]` entry as the default.
+
+No SNI and unmatched SNI both use the default identity. A `server_name` is
+trimmed, converted to IDNA ASCII, lowercased, and stripped of a trailing dot.
+It must be a DNS hostname: IP addresses, ports, whitespace, and `*` are
+rejected. Names must be unique after normalization.
+
+The mapped certificate's SANs must cover its `server_name`. A SAN wildcard such
+as `*.example.com` may cover one label, but the configured `server_name` itself
+is always exact; `server_name: "*.example.com"` is invalid.
+
+### Downstream client authentication
+
+```yaml
+listen:
+  protocol: http3
+  address: "0.0.0.0"
+  port: 9889
+  tls:
+    cert: "/etc/impulse/tls/server-chain.pem"
+    key: "/etc/impulse/tls/server-key.pem"
+    client_auth:
+      enabled: true
+      require_client_cert: true
+      ca_file: "/etc/impulse/tls/client-ca.pem"
+```
+
+When `enabled: true`, Impulse verifies a presented client chain against the
+certificates in `ca_file` on both native QUIC and bootstrap TLS handshakes.
+
+- `require_client_cert: false` makes presentation optional, but rejects an
+  invalid certificate when one is presented.
+- `require_client_cert: true` rejects both a missing certificate and an invalid
+  certificate during the TLS handshake.
+- `require_client_cert: true` with `enabled: false`, or enabled client auth
+  without a non-empty CA file, is invalid configuration.
+
+This policy protects downstream application traffic. It is not the Control API
+client-auth policy under `observability.control_api.tls.client_auth`.
+
+## Downstream Reload Behavior
+
+`POST /admin/runtime/reload-certs` reloads every active listener's configured
+certificate chains, private keys, and downstream client-auth CA material.
+
+- Reload is staged across all listeners. If any identity or CA fails to load,
+  none of the staged listener TLS states is installed.
+- A successful reload affects new native QUIC handshakes and new bootstrap TLS
+  sessions. Existing QUIC connections, bootstrap TLS sessions, and multiplexed
+  HTTP/2 streams continue with their negotiated state.
+- Replacing files at the existing paths requires `reload-certs`; file changes
+  are not watched automatically.
+- To change listener TLS paths, SNI mappings, or client-auth policy, first use
+  the runtime `validate → preview → activate` workflow, then call
+  `reload-certs` so the active listener TLS store loads the new configuration.
+  A listener bind removal or bind-address change still requires restart.
+- `reload-certs` does not reload upstream trust roots or upstream client
+  identities.
+
+The endpoint requires Control API authorization. See the
+[Control API Reference](/docs/reference/control-api-reference#post-adminruntimereload-certs)
+for its request and response contract.
+
+## Upstream Backend TLS
+
+Upstream TLS policy applies only to `https://` backends. The top-level
+`upstream_tls` object is inherited by an upstream whose `tls` field is absent.
+When `upstream.<name>.tls` is present, it replaces the complete top-level policy;
+the two objects are not merged. An `http://` backend is cleartext and does not
+use the TLS policy.
+
+| **Field** | **Type** | **Required** | **Default** | **Meaning** |
+| --------- | -------- | ------------ | ----------- | ----------- |
+| `verify_certificates` | boolean | No | `true` | Verifies the backend certificate chain and backend identity. |
+| `strict_sni` | boolean | No | `true` | Sends the backend hostname in the TLS SNI extension. |
+| `ca_file` | string or `null` | No | `null` | PEM CA bundle added to the default WebPKI roots. |
+| `ca_dir` | string or `null` | No | `null` | Directory of PEM CA files added to the default WebPKI roots. |
+| `client_certificate` | string or `null` | Conditionally | `null` | Filesystem path to the PEM client-certificate chain Impulse presents to the backend. |
+| `client_certificate_ref` | object or `null` | Conditionally | `null` | Secret reference for the client-certificate chain. Mutually exclusive with `client_certificate`. |
+| `client_key` | string or `null` | Conditionally | `null` | Filesystem path to the PEM client private key. |
+| `client_key_ref` | object or `null` | Conditionally | `null` | Secret reference for the client private key. Mutually exclusive with `client_key`. |
+
+### Server verification and CA behavior
+
+With `verify_certificates: true`, Impulse starts with the built-in WebPKI root
+set and adds certificates from `ca_file` and `ca_dir`. Custom roots augment the
+public roots; they do not replace them. The backend certificate must chain to a
+trusted root and match the host in the backend URL.
+
+`ca_file` must be a non-empty readable PEM certificate bundle no larger than
+1 MiB. `ca_dir` must be a readable directory containing at least one
+certificate in files ending in `.pem`, `.crt`, or `.cer`, or their uppercase
+equivalents. Each loaded file is limited to
+1 MiB. Other directory entries are ignored.
+
+`strict_sni: false` only suppresses the SNI extension. When certificate
+verification is enabled, chain and backend-identity verification remain active.
+`verify_certificates: false` disables backend certificate-chain and identity
+verification and should be limited to controlled development or emergency use.
+It does not turn HTTPS into cleartext.
+
+```yaml
+upstream_tls:
+  verify_certificates: true
+  strict_sni: true
+  ca_file: "/etc/impulse/tls/private-root-ca.pem"
+
+upstream:
+  payments:
+    route:
+      path_prefix: "/payments"
+    backends:
+      - id: "payments-1"
+        address: "https://payments.internal:8443"
+```
+
+### Upstream client mTLS
+
+An upstream client identity is a complete certificate/key pair. Either side of
+the pair may use a path or a secret reference independently, but each field and
+its `_ref` counterpart are mutually exclusive. At least one backend in the
+upstream must use HTTPS.
+
+Path-backed example:
+
+```yaml
+upstream:
+  payments:
+    route:
+      path_prefix: "/payments"
+    tls:
+      verify_certificates: true
+      strict_sni: true
+      ca_file: "/etc/impulse/tls/backend-ca.pem"
+      client_certificate: "/etc/impulse/tls/payments-client-chain.pem"
+      client_key: "/etc/impulse/tls/payments-client-key.pem"
+    backends:
+      - id: "payments-1"
+        address: "https://payments.internal:8443"
+```
+
+File-backed secret example:
+
+```yaml
+secrets:
+  default_provider: tls_files
+  providers:
+    tls_files:
+      kind: file
+      base_dir: "/run/impulse/secrets"
+
+upstream:
+  payments:
+    route:
+      path_prefix: "/payments"
+    tls:
+      verify_certificates: true
+      ca_file: "/etc/impulse/tls/backend-ca.pem"
+      client_certificate_ref:
+        ref: "file://payments/client-chain.pem"
+      client_key_ref:
+        ref: "file://payments/client-key.pem"
+    backends:
+      - id: "payments-1"
+        address: "https://payments.internal:8443"
+```
+
+The certificate source must contain at least one PEM certificate; the first is
+the leaf and the remainder form its chain. The key must be a parseable PEM
+private key matching the certificate. Secret-reference syntax, `base_dir`
+containment, size limits, and failure behavior are documented in
+[Authentication and Secrets](/docs/configuration/authentication-and-secrets#secret-providers-and-references).
+
+## Upstream TLS Activation and Rotation
+
+Upstream TLS is runtime-generation-owned:
+
+- Use Control API `validate → preview → activate` for changes to upstream CA
+  material, verification/SNI settings, and client mTLS material.
+- Candidate preparation reads CA files and directories, resolves client
+  certificate/key references, parses the PEM material, and fingerprints it.
+  Failure rejects the candidate and leaves the active generation unchanged.
+- A successful activation rebuilds the affected backend transport pool. New
+  backend connections use the new policy; `reload-certs` is not involved.
+- Same-path file replacement is detected because candidate preparation hashes
+  loaded CA and client-identity content, not only path strings.
+- Rollback restores the retained generation and its already loaded TLS
+  material. It does not re-read the current files.
+
+See [Secret and Certificate Rotation](/docs/operations/secret-and-cert-rotation)
+for the operator sequence and rollback cautions.
+
+## Optional Development Certificate
+
+For an isolated local listener, a short-lived self-signed certificate is
+sufficient. This command creates a PEM certificate and key with a localhost SAN:
+
+```bash
+mkdir -p certs
+openssl req -x509 -newkey rsa:2048 -nodes -days 7 \
+  -keyout certs/server.key -out certs/server.crt \
+  -subj "/CN=localhost" \
+  -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+```
+
+```yaml
+listen:
+  protocol: http3
   address: "127.0.0.1"
+  port: 9889
   tls:
     cert: "certs/server.crt"
     key: "certs/server.key"
 ```
 
-### Development: Self-Signed Certificates with OpenSSL
+This is development material, not a production certificate-management
+workflow. Impulse does not issue or renew certificates.
 
-For environments where mkcert is not available:
+## Operational Signals
 
-```bash
-# Create certificate directory
-mkdir -p certs
-cd certs
-
-# Generate private key (RSA 2048-bit)
-openssl genrsa -out server.key 2048
-
-# Generate certificate signing request
-openssl req -new -key server.key -out server.csr \
-  -subj "/C=US/ST=State/L=City/O=Development/CN=localhost"
-
-# Generate self-signed certificate (valid 365 days)
-openssl x509 -req -in server.csr -signkey server.key \
-  -out server.crt -days 365 -sha256
-
-# Convert key to PKCS#8 format (recommended)
-openssl pkcs8 -topk8 -nocrypt -in server.key -out server-pkcs8.key
-
-# Verify certificate
-openssl x509 -in server.crt -text -noout
-
-# Clean up CSR
-rm server.csr
-```
-
-Configuration:
-
-```yaml
-listen:
-  protocol: http3
-  port: 9889
-  address: "127.0.0.1"
-  tls:
-    cert: "certs/server.crt"
-    key: "certs/server-pkcs8.key"
-```
-
-### Production: Let's Encrypt
-
-For production deployments with public domains:
-
-```bash
-# Install certbot
-sudo apt update
-sudo apt install certbot
-
-# Option 1: Standalone mode (requires port 80 available)
-sudo certbot certonly --standalone \
-  -d example.com \
-  -d www.example.com
-
-# Option 2: DNS challenge (no port requirements)
-sudo certbot certonly --manual \
-  --preferred-challenges dns \
-  -d example.com
-
-# Certificates are saved to:
-# Certificate: /etc/letsencrypt/live/example.com/fullchain.pem
-# Private Key: /etc/letsencrypt/live/example.com/privkey.pem
-```
-
-Configuration:
-
-```yaml
-listen:
-  protocol: http3
-  port: 9889
-  address: "0.0.0.0"
-  tls:
-    cert: "/etc/letsencrypt/live/example.com/fullchain.pem"
-    key: "/etc/letsencrypt/live/example.com/privkey.pem"
-```
-
-### Production: ECDSA Certificates
-
-ECDSA certificates offer better performance than RSA:
-
-```bash
-# Generate ECDSA private key (P-256)
-openssl ecparam -genkey -name prime256v1 -out server-ec.key
-
-# Convert to PKCS#8 format
-openssl pkcs8 -topk8 -nocrypt -in server-ec.key -out server-ec-pkcs8.key
-
-# Generate CSR
-openssl req -new -key server-ec-pkcs8.key -out server-ec.csr \
-  -subj "/C=US/ST=State/L=City/O=Organization/CN=example.com"
-
-# Generate self-signed certificate (or send CSR to CA)
-openssl x509 -req -in server-ec.csr -signkey server-ec-pkcs8.key \
-  -out server-ec.crt -days 365 -sha256
-```
-
-## Certificate Configuration
-
-### Basic Configuration
-
-Minimal TLS configuration for HTTP/3:
-
-```yaml
-listen:
-  protocol: http3
-  port: 9889
-  address: "0.0.0.0"
-tls:
-  cert: "/path/to/certificate.pem"
-  key: "/path/to/private-key.pem"
-```
-
-Operational implication:
-
-- if you do not configure a valid certificate and key, Impulse will fail before serving traffic
-
-### Path Specifications
-
-Paths can be absolute or relative:
-
-```yaml
-# Absolute paths (recommended for production)
-tls:
-  cert: "/etc/impulse/certs/fullchain.pem"
-  key: "/etc/impulse/certs/privkey.pem"
-
-# Relative paths (relative to working directory)
-tls:
-  cert: "certs/server.crt"
-  key: "certs/server.key"
-```
-
-### Multi-Domain Certificates
-
-For certificates covering multiple domains (SAN certificates):
-
-```bash
-# Generate certificate with Subject Alternative Names
-openssl req -new -x509 -key server.key -out server.crt -days 365 \
-  -subj "/CN=example.com" \
-  -addext "subjectAltName=DNS:example.com,DNS:www.example.com,DNS:api.example.com"
-```
-
-Configuration remains the same:
-
-```yaml
-tls:
-  cert: "/etc/impulse/certs/multi-domain.crt"
-  key: "/etc/impulse/certs/multi-domain.key"
-```
-
-### Multi-Certificate SNI Configuration
-
-Use `listen.tls.certificates` when one listener must present different certificates by hostname:
-
-```yaml
-listen:
-  protocol: http3
-  address: "0.0.0.0"
-  port: 9889
-  tls:
-    cert: "/etc/impulse/certs/default-fullchain.pem"
-    key: "/etc/impulse/certs/default-privkey.pem"
-    certificates:
-      - server_name: "api.example.com"
-        cert: "/etc/impulse/certs/api-fullchain.pem"
-        key: "/etc/impulse/certs/api-privkey.pem"
-      - server_name: "www.example.com"
-        cert: "/etc/impulse/certs/www-fullchain.pem"
-        key: "/etc/impulse/certs/www-privkey.pem"
-```
-
-Selection order:
-
-1. Exact `server_name` match in `listen.tls.certificates`
-2. Fallback `listen.tls.cert` + `listen.tls.key`
-3. If no legacy fallback pair is configured, the first `certificates[]` entry becomes the default identity
-
-Fallback behavior details:
-
-- Both the native QUIC listener and the bootstrap listener use the same selection order.
-- `server_name` matching is exact after hostname normalization. There is no wildcard SNI certificate lookup here; wildcard behavior must come from the certificate SANs themselves, not from the listener map.
-- If the client sends no SNI, Impulse always serves the default identity.
-- If the client sends an SNI hostname that is not present in `listen.tls.certificates`, Impulse serves the default identity rather than rejecting the handshake.
-- Startup rejects any `listen.tls.certificates[].server_name` mapping whose configured certificate SANs do not cover that hostname.
-
-Common mistakes:
-
-- expecting wildcard lookup behavior from `server_name` entries instead of from certificate SANs
-- forgetting that one default identity is still needed for non-SNI or unmatched-SNI handshakes
-
-## File Permissions and Security
-
-### Recommended Permissions
-
-Restrict access to certificate files:
-
-```bash
-# Create dedicated certificate directory
-sudo mkdir -p /etc/impulse/certs
-sudo chown impulse:impulse /etc/impulse/certs
-sudo chmod 700 /etc/impulse/certs
-
-# Set certificate permissions
-sudo chmod 644 /etc/impulse/certs/server.crt
-sudo chmod 600 /etc/impulse/certs/server.key
-
-# Verify permissions
-ls -l /etc/impulse/certs/
-```
-
-Expected output:
-
-```
-drwx------ 2 impulse impulse 4096 Dec 15 10:00 .
--rw-r--r-- 1 impulse impulse 1234 Dec 15 10:00 server.crt
--rw------- 1 impulse impulse 1704 Dec 15 10:00 server.key
-```
-
-Operational implications:
-
-- key readability must match the runtime user model; overly strict permissions can block startup
-- overly broad permissions create unnecessary key-exposure risk
-
-### Security Best Practices
-
-1. **Private Key Protection**
-   - Never commit private keys to version control
-   - Use restrictive file permissions (600)
-   - Store keys on encrypted filesystems
-   - Consider using hardware security modules (HSM) for production
-
-2. **Certificate Chain Validation**
-   - Use complete certificate chains (fullchain.pem with Let's Encrypt)
-   - Include intermediate certificates
-   - Verify chain with `openssl verify`
-
-3. **Certificate Monitoring**
-   - Monitor expiration dates
-   - Set up renewal automation for Let's Encrypt
-   - Implement alerting for certificates expiring within 30 days
-   - Scrape:
-     - `impulse_downstream_tls_certificate_not_after_seconds`
-     - `impulse_downstream_tls_certificate_days_remaining`
-
-## Certificate Validation
-
-### Verify Certificate and Key Match
-
-Ensure certificate and private key are paired correctly:
-
-```bash
-# Extract modulus from certificate
-cert_modulus=$(openssl x509 -noout -modulus -in server.crt | md5sum)
-
-# Extract modulus from private key
-key_modulus=$(openssl rsa -noout -modulus -in server.key | md5sum)
-
-# Compare (should be identical)
-echo "Certificate: $cert_modulus"
-echo "Private Key: $key_modulus"
-```
-
-For ECDSA keys:
-
-```bash
-# Verify ECDSA private key
-openssl ec -in server-ec.key -check
-
-# Verify certificate
-openssl x509 -in server-ec.crt -text -noout
-```
-
-### Verify Certificate Properties
-
-Check certificate details:
-
-```bash
-# Display certificate information
-openssl x509 -in server.crt -text -noout
-
-# Check expiration date
-openssl x509 -in server.crt -noout -enddate
-
-# Check subject and issuer
-openssl x509 -in server.crt -noout -subject -issuer
-
-# Verify certificate chain
-openssl verify -CAfile ca.crt server.crt
-```
-
-### Test Configuration
-
-There is no validation-only CLI command. To verify that Impulse can load the
-certificate material, use a config whose listeners and observability endpoints
-bind only to isolated, non-production addresses and ports. Start it in the
-foreground and stop it after the listening/ready state is reached:
-
-```bash
-impulse --config config-validation.yaml
-# Wait for the listening/ready log, then Ctrl-C
-```
-
-An invalid certificate path or malformed startup configuration exits with
-status `1`. A valid configuration continues running; it does not exit after the
-certificate check. For runtime-managed certificate changes on an existing
-instance, use the Control API `validate`, `preview`, and `activate` flow instead.
-
-## Certificate Rotation and Renewal
-
-### Let's Encrypt Automatic Renewal
-
-Let's Encrypt certificates are valid for 90 days. Set up automatic renewal:
-
-```bash
-# Test renewal process
-sudo certbot renew --dry-run
-
-# Enable automatic renewal (certbot installs systemd timer)
-sudo systemctl status certbot.timer
-
-# Manually renew certificates
-sudo certbot renew
-
-# Reload listener certificates for new handshakes
-curl -X POST \
-  --http1.1 \
-  -H "Authorization: Bearer ${IMPULSE_CONTROL_API_TOKEN}" \
-  https://127.0.0.1:9902/admin/runtime/reload-certs
-```
-
-### Manual Certificate Rotation
-
-For manually-managed certificates:
-
-```bash
-# Backup current certificates
-sudo cp /etc/impulse/certs/server.crt /etc/impulse/certs/server.crt.backup
-sudo cp /etc/impulse/certs/server.key /etc/impulse/certs/server.key.backup
-
-# Install new certificates
-sudo cp new-server.crt /etc/impulse/certs/server.crt
-sudo cp new-server.key /etc/impulse/certs/server.key
-
-# Set permissions
-sudo chmod 644 /etc/impulse/certs/server.crt
-sudo chmod 600 /etc/impulse/certs/server.key
-
-# Reload listener certificates for new handshakes
-curl -X POST \
-  --http1.1 \
-  -H "Authorization: Bearer ${IMPULSE_CONTROL_API_TOKEN}" \
-  https://127.0.0.1:9902/admin/runtime/reload-certs
-
-# Verify new certificates are loaded
-openssl s_client -connect localhost:9889 -servername localhost < /dev/null 2>/dev/null | openssl x509 -noout -dates
-```
-
-Reload behavior:
-
-- New QUIC and bootstrap TLS handshakes use the updated certificate material immediately after reload succeeds.
-- Existing connections are not interrupted or re-handshaken.
-- Existing QUIC connections keep the certificate and client-auth policy that were negotiated when their handshake completed. The new certificate material is only visible to later QUIC Initial packets and later bootstrap TCP+TLS accepts.
-- Existing HTTP/2 streams multiplexed over an already-established bootstrap TLS session are also unaffected. Only brand-new bootstrap TLS sessions observe the reloaded certificate set.
-
-### Downstream TLS Metrics
-
-Impulse exposes downstream TLS observability through Prometheus:
+Relevant metrics include:
 
 - `impulse_downstream_tls_handshake_failure_total{listener,reason}`
 - `impulse_downstream_tls_certificate_selection_total{listener,selection}`
 - `impulse_downstream_tls_alpn_total{listener,protocol}`
 - `impulse_downstream_tls_certificate_not_after_seconds{listener,server_name}`
 - `impulse_downstream_tls_certificate_days_remaining{listener,server_name}`
+- `impulse_upstream_tls_failure_total{upstream,backend,phase,reason}`
+- `impulse_upstream_client_certificate_not_after_seconds{upstream}`
+- `impulse_upstream_client_certificate_days_remaining{upstream}`
+- `impulse_control_plane_cert_reload_total{result,reason}`
 
-Important label values:
-
-- `reason=missing_client_cert`: mTLS listener required a client cert and none was presented
-- `reason=invalid_client_cert`: client cert was present but rejected for a generic certificate validation reason
-- `reason=expired_client_cert`: client cert was expired or not yet valid
-- `reason=unknown_issuer`: client cert chain was not rooted in the configured CA set
-- `reason=alpn`: handshake failed because no acceptable application protocol could be negotiated
-- `reason=handshake`: fallback bucket for other downstream TLS handshake failures
-
-Certificate-selection labels:
-
-- `selection=exact_sni`: exact SNI match in `listen.tls.certificates`
-- `selection=fallback_unmatched_sni`: client sent SNI, but no configured mapping matched, so Impulse served the default identity
-- `selection=fallback_no_sni`: client sent no SNI and Impulse served the default identity while additional SNI identities existed
-- `selection=default_only`: listener had only one effective identity, so that certificate was always served
-
-### Monitoring Certificate Expiry
-
-Check certificate expiration:
-
-```bash
-# Check days until expiry
-openssl x509 -in /etc/impulse/certs/server.crt -noout -enddate
-
-# Calculate days remaining
-days_left=$(( ($(date -d "$(openssl x509 -in /etc/impulse/certs/server.crt -noout -enddate | cut -d= -f2)" +%s) - $(date +%s)) / 86400 ))
-echo "Certificate expires in $days_left days"
-
-# Alert if less than 30 days
-if [ $days_left -lt 30 ]; then
-  echo "WARNING: Certificate expires soon!"
-fi
-```
-
-## Troubleshooting
-
-### Common Issues
-
-#### Certificate File Not Found
-
-```
-Error: failed to read certificate file: No such file or directory
-```
-
-Solution:
-
-```bash
-# Verify file exists
-ls -l /etc/impulse/certs/server.crt
-
-# Check path in configuration
-cat config.yaml | grep -A2 tls
-
-# Use absolute paths
-realpath certs/server.crt
-```
-
-#### Permission Denied
-
-```
-Error: failed to read certificate file: Permission denied
-```
-
-Solution:
-
-```bash
-# Check file permissions
-ls -l /etc/impulse/certs/
-
-# Fix permissions
-sudo chown impulse:impulse /etc/impulse/certs/server.{crt,key}
-sudo chmod 644 /etc/impulse/certs/server.crt
-sudo chmod 600 /etc/impulse/certs/server.key
-
-# Verify the impulse user can read files
-sudo -u impulse cat /etc/impulse/certs/server.crt > /dev/null
-```
-
-#### Invalid Certificate Format
-
-```
-Error: failed to parse certificate: invalid PEM format
-```
-
-Solution:
-
-```bash
-# Verify PEM format
-openssl x509 -in server.crt -text -noout
-
-# Check file encoding
-file server.crt
-
-# Convert DER to PEM if needed
-openssl x509 -inform DER -in server.der -out server.pem
-```
-
-#### Certificate and Key Mismatch
-
-```
-Error: certificate and private key do not match
-```
-
-Solution:
-
-```bash
-# Verify certificate and key match (RSA)
-openssl x509 -noout -modulus -in server.crt | md5sum
-openssl rsa -noout -modulus -in server.key | md5sum
-
-# Verify ECDSA key
-openssl ec -in server.key -pubout -out server-pub.pem
-openssl x509 -in server.crt -pubkey -noout -out cert-pub.pem
-diff server-pub.pem cert-pub.pem
-```
-
-#### PKCS#8 Format Required
-
-Some systems require PKCS#8 format:
-
-```bash
-# Convert traditional RSA to PKCS#8
-openssl pkcs8 -topk8 -nocrypt -in server.key -out server-pkcs8.key
-
-# Update configuration to use PKCS#8 key
-```
-
-### Testing TLS Connections
-
-#### Test with OpenSSL
-
-```bash
-# Test TLS 1.3 connection
-echo -e "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n" | \
-  openssl s_client -connect localhost:9889 -servername localhost -tls1_3
-
-# Display certificate chain
-openssl s_client -connect localhost:9889 -servername localhost -showcerts < /dev/null
-
-# Check ALPN negotiation
-openssl s_client -connect localhost:9889 -servername localhost -alpn h3 < /dev/null
-```
-
-#### Test with cURL (HTTP/3 Support)
-
-If curl is built with HTTP/3 support:
-
-```bash
-# Test HTTP/3 connection
-curl --http3 https://localhost:9889/
-
-# Verbose output for debugging
-curl --http3 -v https://localhost:9889/
-
-# Test with self-signed certificate
-curl --http3 -k https://localhost:9889/
-```
-
-### Debug Logging
-
-Enable debug logging to troubleshoot TLS issues:
-
-```yaml
-log:
-  level: debug
-```
-
-Look for log entries related to:
-
-- Certificate loading
-- TLS handshake
-- QUIC connection establishment
-- ALPN negotiation
-
-### Common Error Messages
-
-| Error | Cause | Solution |
-|-------|-------|----------|
-| `certificate has expired` | Certificate validity period ended | Renew certificate |
-| `certificate is not yet valid` | System clock incorrect or certificate future-dated | Check system time |
-| `unable to get local issuer certificate` | Missing intermediate certificate | Use fullchain.pem |
-| `self signed certificate` | Client doesn't trust self-signed cert | Use CA-signed cert or add to client trust store |
-| `wrong signature type` | Key algorithm mismatch | Ensure certificate and key use same algorithm |
-
-## Reference
-
-### Configuration Schema
-
-```yaml
-listen:
-  tls:
-    cert: string    # Path to PEM certificate file (required)
-    key: string     # Path to PEM private key file (required)
-```
-
-### Supported Key Algorithms
-
-- RSA 2048-bit (minimum)
-- RSA 4096-bit (recommended for long-term use)
-- ECDSA P-256 (secp256r1)
-- ECDSA P-384 (secp384r1)
-
-### Certificate Requirements
-
-- PEM encoding
-- X.509 format
-- Valid date range (not expired, not future-dated)
-- Subject Alternative Names (SAN) for multi-domain support
-- Complete certificate chain (including intermediates)
+Use the [Metrics Reference](/docs/reference/metrics-reference) for exact metric
+semantics and the [Runbook](/docs/operations/runbook) for diagnosis.

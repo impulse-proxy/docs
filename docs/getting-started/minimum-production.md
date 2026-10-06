@@ -20,7 +20,7 @@ listen:
   port: 443                          # Requires CAP_NET_BIND_SERVICE or root at start
   tls:
     cert: "/etc/impulse/certs/fullchain.pem"   # Full chain, not just the leaf
-    key:  "/etc/impulse/certs/privkey.pem"     # PKCS#8 PEM; mode 640, owner root:impulse
+    key:  "/etc/impulse/certs/privkey.pem"     # PEM private key; mode 640, owner root:impulse
 
 upstream:
   # API pool — more-specific prefix wins over the default "/" below
@@ -247,7 +247,7 @@ If the change affects restart-required settings such as listener bind/removal or
 
 ## Related Docs
 
-- [TLS Setup](/docs/configuration/tls) — Certificate formats, PKCS#8 conversion, Let's Encrypt automation, and rotation procedures
+- [TLS Setup](/docs/configuration/tls) — Downstream identities, SNI, client authentication, upstream trust, mTLS, and reload behavior
 - [Production Deployment](/docs/deployment/production) — Full hardening guide: HA architecture, nftables rules, AppArmor, alerting rules, and incident runbooks
 - [Troubleshooting](/docs/troubleshooting/common-issues) — Diagnosis commands for common startup failures, backend connection errors, and high latency
 - [Load Balancing Guide](/docs/user-guide/load-balancing) — Algorithm selection, consistent hashing key configuration, and least-connections vs. latency-aware trade-offs

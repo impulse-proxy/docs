@@ -228,8 +228,8 @@ top-level `upstream_tls` policy.
 
 Client certificate and key settings require at least one HTTPS backend.
 Setting `strict_sni: false` disables SNI only; it does not disable certificate
-verification. See [TLS Setup](/docs/configuration/tls) for listener certificate
-operations.
+verification. See [TLS Configuration](/docs/configuration/tls#upstream-backend-tls)
+for CA composition, client mTLS, and activation behavior.
 
 ## Canonical example
 

@@ -452,12 +452,10 @@ impulse --config dev-config.yaml
 
 > **Note:** Impulse is beta. The configuration below demonstrates structure and routing patterns; use the deployment guide hardening checklist before production rollout.
 
-```bash
-# Obtain certificates (Let's Encrypt)
-certbot certonly --standalone -d example.com
+Provision a PEM certificate chain and matching private key through your
+existing production PKI or certificate automation, then configure their paths:
 
-# Create production configuration
-cat > prod-config.yaml <<EOF
+```yaml
 version: 1
 
 listen:
@@ -498,11 +496,6 @@ upstream:
 
 log:
   level: info
-EOF
-
-# Deploy as systemd service
-sudo systemctl start impulse
-sudo systemctl enable impulse
 ```
 
 ## Troubleshooting

@@ -2,157 +2,67 @@
 slug: /howto/certificates
 ---
 
-# How to Set Up TLS Certificates
+# Configure Downstream Certificates
 
-Impulse requires TLS certificates for both the native QUIC listener and the HTTP/1.1+HTTP/2 bootstrap listener.
+Use this checklist after your CA or certificate automation has produced a PEM
+certificate chain and matching PEM private key. Impulse does not issue or renew
+certificates.
 
-- **Certificate format:** PEM X.509 (`-----BEGIN CERTIFICATE-----`)
-- **Key format:** PEM private key — both PKCS#8 (`-----BEGIN PRIVATE KEY-----`) and PKCS#1 (`-----BEGIN RSA PRIVATE KEY-----`) are accepted
-- Both are validated at startup — impulse exits if either is missing or malformed
+For exact field, SNI, client-auth, and reload semantics, use
+[TLS Configuration](/docs/configuration/tls#downstream-listener-tls).
 
----
-
-## Option 1: Let's Encrypt with Certbot (Standalone)
-
-Use when no other service is running on port 80, or when you want a fresh independent cert.
-
-```bash
-# Stop whatever is on port 80 first (e.g. sudo systemctl stop caddy/nginx/apache)
-
-sudo apt install -y certbot
-
-sudo certbot certonly --standalone \
-  -d example.com \
-  --email admin@example.com \
-  --agree-tos \
-  --non-interactive
-```
-
-Let's Encrypt issues PKCS#1 keys — convert to PKCS#8 which Impulse requires:
-
-```bash
-sudo mkdir -p /etc/impulse/certs
-
-sudo openssl pkcs8 -topk8 -nocrypt \
-  -in /etc/letsencrypt/live/example.com/privkey.pem \
-  -out /etc/impulse/certs/privkey.pem
-
-sudo cp /etc/letsencrypt/live/example.com/fullchain.pem \
-    /etc/impulse/certs/fullchain.pem
-
-sudo chown $USER:$USER /etc/impulse/certs/*
-sudo chmod 640 /etc/impulse/certs/*
-```
-
-### Auto-renewal deploy hook
-
-Create `/etc/letsencrypt/renewal-hooks/deploy/impulse-reload.sh`:
-
-```bash
-#!/bin/bash
-set -e
-
-DOMAIN="example.com"
-SRC="/etc/letsencrypt/live/${DOMAIN}"
-DST="/etc/impulse/certs"
-
-cp "${SRC}/fullchain.pem" "${DST}/fullchain.pem"
-
-openssl pkcs8 -topk8 -nocrypt \
-  -in "${SRC}/privkey.pem" \
-  -out "${DST}/privkey.pem"
-
-chown $SUDO_USER:$SUDO_USER "${DST}"/*.pem
-systemctl restart impulse
-```
-
-```bash
-sudo chmod +x /etc/letsencrypt/renewal-hooks/deploy/impulse-reload.sh
-sudo certbot renew --dry-run   # test renewal
-```
-
----
-
-## Option 2: Let's Encrypt with acme.sh (No Port 80 Required)
-
-`acme.sh` supports DNS-01 challenges — no need to stop any service on port 80.
-
-```bash
-curl https://get.acme.sh | sh -s email=admin@example.com
-source ~/.bashrc
-
-# Issue cert via DNS challenge (requires DNS provider API key)
-# Example for Cloudflare:
-export CF_Token="your-cloudflare-api-token"
-~/.acme.sh/acme.sh --issue --dns dns_cf \
-  -d example.com \
-  --server letsencrypt
-
-# Install to impulse cert dir with PKCS#8 key conversion
-sudo mkdir -p /etc/impulse/certs
-
-~/.acme.sh/acme.sh --install-cert -d example.com \
-  --cert-file      /etc/impulse/certs/fullchain.pem \
-  --key-file       /tmp/privkey-pkcs1.pem \
-  --reloadcmd      "openssl pkcs8 -topk8 -nocrypt -in /tmp/privkey-pkcs1.pem -out /etc/impulse/certs/privkey.pem && systemctl restart impulse"
-```
-
----
-
-## Multi-Domain SNI Certificates
-
-Serve multiple domains from one listener with per-domain cert selection:
+## Configure the Listener Identity
 
 ```yaml
 listen:
+  protocol: http3
+  address: "0.0.0.0"
+  port: 9889
   tls:
-    cert: /etc/impulse/certs/default-fullchain.pem   # fallback when SNI unmatched
-    key:  /etc/impulse/certs/default-privkey.pem
-    certificates:
-      - server_name: "example.com"
-        cert: /etc/impulse/certs/impulse-fullchain.pem
-        key:  /etc/impulse/certs/impulse-privkey.pem
-      - server_name: "api.example.com"
-        cert: /etc/impulse/certs/api-fullchain.pem
-        key:  /etc/impulse/certs/api-privkey.pem
+    cert: "/etc/impulse/tls/server-chain.pem"
+    key: "/etc/impulse/tls/server-key.pem"
 ```
 
-Certificate selection order:
-1. Exact SNI match in `certificates` array
-2. Fallback to `cert`/`key` if no match
-3. If no `cert`/`key`, falls back to first `certificates` entry
+- Put the leaf certificate first and any intermediate certificates after it in
+  `cert`.
+- Use a PEM private key that matches the leaf certificate.
+- Make both files readable by the Impulse runtime user; restrict private-key
+  access to that user or group.
+- Use absolute paths in service-managed deployments so the process working
+  directory cannot change path resolution.
 
----
+For multiple names, add exact `certificates[].server_name` mappings. Keep a
+`cert`/`key` pair as the explicit fallback, or understand that the first array
+entry becomes the fallback when the pair is absent.
 
-## Verifying Your Certificates
+## Apply Certificate Content Changes
+
+Replace the files atomically at their configured paths, then call the
+authenticated Control API endpoint:
 
 ```bash
-# Check issuer, subject, expiry
-openssl x509 -in /etc/impulse/certs/fullchain.pem -noout -issuer -subject -dates
-
-# Verify cert and key match (both lines must print same hash)
-openssl x509 -noout -modulus -in /etc/impulse/certs/fullchain.pem | openssl md5
-openssl pkey -noout -modulus -in /etc/impulse/certs/privkey.pem   | openssl md5
-
-# Check key format — both PKCS#8 and PKCS#1 PEM keys are accepted
-head -1 /etc/impulse/certs/privkey.pem
-# PKCS#8:  -----BEGIN PRIVATE KEY-----      (accepted)
-# PKCS#1:  -----BEGIN RSA PRIVATE KEY-----  (also accepted)
+curl --http1.1 -X POST https://127.0.0.1:9902/admin/runtime/reload-certs \
+  -H "Authorization: Bearer <token>"
 ```
 
-Both key encodings load fine. If you nonetheless want to normalize a PKCS#1 key to PKCS#8:
-```bash
-openssl pkcs8 -topk8 -nocrypt -in old-privkey.pem -out /etc/impulse/certs/privkey.pem
-```
+A successful reload updates new native QUIC and bootstrap TLS handshakes only.
+Existing connections continue unchanged. The operation stages every active
+listener and installs none of them if any certificate, key, or downstream
+client-auth CA fails to load.
 
----
+To change paths, SNI mappings, or downstream client-auth policy, run the
+Control API `validate → preview → activate` workflow first, then call
+`reload-certs`.
 
-## Troubleshooting
+## Development Only
 
-| Error | Cause | Fix |
-|-------|-------|-----|
-| `Cannot open listen.tls.cert` | Wrong path or permissions | `chown ubuntu:ubuntu /etc/impulse/certs/*` |
-| `Cannot parse PEM private key` | Key file is malformed or not a PEM private key | Ensure the file is a valid PEM key (PKCS#8 or PKCS#1 both work) |
-| `NET::ERR_CERT_AUTHORITY_INVALID` | Self-signed cert | Use Let's Encrypt cert (Options 1–3 above) |
-| `NET::ERR_CERT_COMMON_NAME_INVALID` | Cert domain doesn't match | Issue cert for the exact domain being served |
-| `HSTS` blocks bypass | Domain has HSTS preloaded | Must use a valid trusted cert — no bypass possible |
+The small self-signed example in
+[TLS Configuration](/docs/configuration/tls#optional-development-certificate)
+is sufficient for isolated local testing. Use your organization's existing PKI
+or certificate automation for production issuance and renewal.
+
+## Related Pages
+
+- [Secret and Certificate Rotation](/docs/operations/secret-and-cert-rotation)
+- [Control API Reference](/docs/reference/control-api-reference#post-adminruntimereload-certs)
+- [Security Model](/docs/concepts/security-model)

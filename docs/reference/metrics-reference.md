@@ -198,7 +198,7 @@ Use these to separate:
 | `impulse_downstream_tls_alpn_total{listener,protocol}` | counter | Negotiated ALPN protocols |
 | `impulse_downstream_tls_certificate_not_after_seconds{listener,server_name}` | gauge | Certificate expiration timestamp |
 | `impulse_downstream_tls_certificate_days_remaining{listener,server_name}` | gauge | Estimated remaining days to expiration |
-| `impulse_upstream_tls_failure_total{backend,phase,reason}` | counter | Upstream TLS failures |
+| `impulse_upstream_tls_failure_total{upstream,backend,phase,reason}` | counter | Upstream TLS failures |
 
 ## DNS And Backend Refresh Metrics
 

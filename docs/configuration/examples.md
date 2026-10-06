@@ -46,16 +46,13 @@ upstream:
       - id: "backend1"
         address: "http://127.0.0.1:8080"
 
-upstream_tls:
-  verify_certificates: false
-  strict_sni: false
 ```
 
 Use this shape for local iteration only. It opts into cleartext upstream traffic explicitly with `http://`.
 
 Common mistake:
 
-- copying this example into production without restoring upstream TLS verification and stronger admin-surface protection
+- copying this example into production without replacing cleartext upstream traffic and adding stronger admin-surface protection
 
 ## Example 2: Single-Upstream Production
 
@@ -272,7 +269,9 @@ upstream:
 Use this when:
 
 - the upstream certificate chain is not rooted in the public Web PKI
-- one deployment needs stricter trust control than public default CA bundles
+- the private CA must be trusted in addition to the built-in public Web PKI roots
+
+Custom CA material augments the built-in roots; it does not replace them.
 
 ## Example 7: Static RS256 And ES256 JWT Keys
 

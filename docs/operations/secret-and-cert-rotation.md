@@ -8,12 +8,19 @@ Read [Reload and Drain](/docs/operations/reload-and-drain) first if you have not
 
 | Material | Path | Why |
 | --- | --- | --- |
-| Downstream listener cert/key, listener client-auth CA | `POST /admin/runtime/reload-certs` | Listener-scoped hot swap; does not touch runtime generation |
+| Downstream listener cert/key or client-auth CA content at configured paths | `POST /admin/runtime/reload-certs` | Listener-scoped hot swap; does not create a runtime generation |
+| Downstream TLS path, SNI mapping, or client-auth policy change | `validate` → `preview` → `activate` → `reload-certs` | Activates the configuration, then installs its TLS material into the live listener store |
 | Upstream client certificate/key (mTLS) | `validate` → `preview` → `activate` | Generation-owned; rebuilds the affected backend connection pool |
 | Upstream CA bundle (`ca_file`/`ca_dir`) | `validate` → `preview` → `activate` | Generation-owned; same reasoning as client cert/key |
+| Upstream `verify_certificates` or `strict_sni` | `validate` → `preview` → `activate` | Generation-owned backend transport policy |
 | `secrets.providers` registry shape | `validate` → `preview` → `activate` | Generation-owned config, not a listener concern |
 
-Upstream TLS material is never rotated through `reload-certs`, even when the change is "just a certificate." `reload-certs` is intentionally narrow: it only reloads listener identity and listener client-auth trust material for new downstream handshakes. Upstream client identity and upstream trust roots always go through the normal activation path so the change gets a diff, a generation number, and rollback semantics.
+Upstream TLS material is never rotated through `reload-certs`, even when the
+change is "just a certificate." `reload-certs` is intentionally narrow: it
+stages every active listener identity and listener client-auth CA, then swaps
+the listener TLS states only if all of them load successfully. Upstream client
+identity and upstream trust roots always go through runtime activation so the
+change gets a diff, generation number, and rollback semantics.
 
 ## Secret References
 
@@ -38,6 +45,13 @@ upstream:
 
 A `_ref` field and its plaintext sibling (`client_certificate` / `client_certificate_ref`, `client_key` / `client_key_ref`, `secret` / `secret_ref`, `client_secret` / `client_secret_ref`, `auth_token` / `auth_token_ref`, `token` / `token_ref`) are mutually exclusive — setting both fails validation. Supported ref schemes are `literal:<value>` and `file://<path>`.
 
+Listener `cert`, `key`, and `client_auth.ca_file` fields are paths and do not
+accept secret-reference objects. See
+[TLS Configuration](/docs/configuration/tls#upstream-client-mtls) for the exact
+upstream mTLS field contract and
+[Authentication and Secrets](/docs/configuration/authentication-and-secrets#secret-providers-and-references)
+for reference resolution.
+
 Secret references resolve **eagerly while a runtime candidate is prepared**, not lazily on first request. A missing file, unreadable file, empty file, or malformed PEM fails `validate`, `preview`, or `activate` before the candidate generation goes live — it never reaches request-serving code.
 
 ## Downstream Listener Certificate Rotation
@@ -54,7 +68,11 @@ Secret references resolve **eagerly while a runtime candidate is prepared**, not
 3. Confirm the new cert in the runtime snapshot: `GET /admin/runtime` → `tls.listeners.<listener>` shows an updated `generation`, `last_loaded_at_unix_ms`, and `default_cert_not_after_unix_seconds`.
 4. Confirm `impulse_control_plane_cert_reload_total{result="success"}` incremented and downstream cert-expiry metrics reflect the new material.
 
-This does not rebuild the runtime generation, mutate route/policy state, or affect already-negotiated sessions — only new handshakes see the new certificate.
+The reload includes all configured default and SNI identities plus downstream
+client-auth CA files. It does not rebuild the runtime generation, mutate
+route/policy state, or affect already-negotiated sessions—only new native QUIC
+and bootstrap TLS handshakes see the new material. If any listener fails to
+load, none of the staged listener TLS states is installed.
 
 ## Upstream Client Certificate Rotation (mTLS)
 
@@ -83,7 +101,7 @@ This does not rebuild the runtime generation, mutate route/policy state, or affe
 
 ## Upstream CA Rotation
 
-Upstream CA rotation (`ca_file` / `ca_dir`) follows the exact same `validate` → `preview` → `activate` flow as client certificate rotation, since it is also generation-owned, not `reload-certs`-scoped.
+Upstream CA rotation (`ca_file` / `ca_dir`) follows the exact same `validate` → `preview` → `activate` flow as client certificate rotation, since it is also generation-owned, not `reload-certs`-scoped. Custom CA material augments the built-in WebPKI roots; it does not replace them.
 
 For safe overlap during a CA transition:
 

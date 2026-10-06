@@ -95,6 +95,10 @@ These defaults apply to the top-level `upstream_tls` block and to per-upstream `
 | `upstream_tls.strict_sni` | `true` | Upstream SNI stays strict by default |
 | `upstream_tls.ca_file` | `null` | No custom CA file |
 | `upstream_tls.ca_dir` | `null` | No custom CA directory |
+| `upstream_tls.client_certificate` | `null` | No file-backed client certificate chain |
+| `upstream_tls.client_certificate_ref` | `null` | No secret-backed client certificate chain |
+| `upstream_tls.client_key` | `null` | No file-backed client private key |
+| `upstream_tls.client_key_ref` | `null` | No secret-backed client private key |
 
 ## Upstream And Backend Defaults
 

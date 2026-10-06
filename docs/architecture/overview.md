@@ -363,7 +363,7 @@ See [Runtime Generation Model](/docs/architecture/runtime-generation) for the ex
 
 - Upstream execution currently uses HTTP/1.1 or HTTP/2 transport
 - HTTPS backends use upstream TLS with certificate verification enabled by default
-- Backend mTLS client-certificate authentication remains a gap
+- HTTPS backends may authenticate Impulse with a path-backed or secret-backed client certificate and key
 - Connection reuse reduces repeated handshake cost
 
 ### Attack Surface
@@ -428,14 +428,13 @@ Distributed tracing via OpenTelemetry (shipped).
 
 ### Planned Features
 
-- Mutual TLS (client certificates) **to backends** — upstream TLS with certificate verification is
-  already implemented; client-cert authentication toward backends is the remaining gap
 - Upstream HTTP/3 forwarding
 - Richer service-discovery integrations
 
-_Already shipped (previously listed here as planned): active HTTP health-check probes, per-client
-scoped rate limiting, per-backend circuit breakers, and the admin/control API for runtime
-inspection and live activation._
+_Already shipped (previously listed here as planned): upstream client-certificate
+authentication, active HTTP health-check probes, per-client scoped rate limiting,
+per-backend circuit breakers, and the admin/control API for runtime inspection and
+live activation._
 
 ### Architectural Improvements
 
