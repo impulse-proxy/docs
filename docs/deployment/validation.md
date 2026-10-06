@@ -8,19 +8,53 @@ The goal is to catch problems at each stage of deployment, not after the restart
 
 ## Config Validation Before Restart
 
-Impulse validates its configuration at startup and exits with a non-zero code if the config is invalid. This gives you a free dry-run: start the process against the new config on a non-production host (or in a pre-deploy step on the same host with a different port), watch for the startup log line, then stop it.
+Impulse has no validation-only CLI mode. It validates and normalizes the config
+during startup, but a valid config then initializes the runtime, binds its
+listeners, and remains running. Use either a controlled startup or the staged
+Control API; do not run a second process against production bindings and expect
+it to validate and exit.
+
+### Workflow A: controlled startup
+
+Run the candidate on an isolated host, or change every listener, metrics, and
+Control API binding to non-production addresses and ports. Then start it in the
+foreground:
 
 ```bash
-impulse --config /etc/impulse/config-new.yaml
+impulse --config /etc/impulse/config-validation.yaml
 ```
 
-If the process reaches a log line matching `listening on ...`, the configuration is structurally valid and all externally referenced files (TLS certificates, key files, CA bundles) were found and could be opened. At that point, stop the process immediately:
+If the process reaches its listening/ready state, startup validation and runtime
+initialization succeeded and the referenced TLS, key, CA, and secret material
+needed at startup was loadable. Stop the isolated process:
 
 ```
 Ctrl-C
 ```
 
-You are not doing a real deployment yet. This is purely a parse-and-load check.
+An unreadable or invalid explicitly supplied config produces a fatal startup
+error and exits with status `1`. A valid config does not exit automatically, so
+do not use status `0` as the success criterion. A bind or runtime-initialization
+failure means the controlled startup failed even if schema validation passed.
+
+### Workflow B: staged Control API
+
+For a candidate available to an existing instance, use the authenticated staged
+flow:
+
+1. `POST /admin/runtime/validate` parses the candidate and returns its plan
+   without changing the active runtime.
+2. `POST /admin/runtime/preview` records a preview in generation history without
+   replacing the active runtime.
+3. `POST /admin/runtime/activate` commits the candidate after the plan is
+   reviewed.
+
+The validate and preview endpoints may return HTTP `200` while describing
+rejected changes. Require an acceptable `candidate_status` and an empty
+`rejected_changes` result before activation. Activation can still reject
+restart-required changes or a stale expected generation. See the
+[Control API Reference](/docs/reference/control-api-reference#post-adminruntimevalidate)
+for the request body and response contract.
 
 **What startup validation catches:**
 
@@ -36,7 +70,9 @@ You are not doing a real deployment yet. This is purely a parse-and-load check.
 - **Certificate expiry.** Impulse loads the certificate file and checks that it is parseable PEM; it does not validate `notAfter`. An expired cert will load without error.
 - **Behavioral correctness.** A valid config can still produce wrong routing. Overlapping route prefixes, a backend pointed at the wrong port, or a timeout set to an unintended value all pass validation.
 
-Run this check in CI on every config change. It is fast (sub-second) and catches the majority of deployment-blocking errors before any process restarts.
+Run one of these workflows for every config change. The Control API workflow is
+the appropriate CI gate when a secured validation instance is available;
+controlled startup is appropriate in an isolated pre-deploy environment.
 
 ---
 
@@ -123,16 +159,19 @@ If this also fails, the problem is backend availability or network, not the Impu
 
 Run through this checklist for every config change before restarting Impulse in production. Each item is phrased as what to verify and how to verify it.
 
-**1. Run startup validation against the new config on a non-production host.**
+**1. Run a controlled startup with the new config on a non-production host.**
 
 ```bash
-impulse --config /etc/impulse/config-new.yaml
+impulse --config /etc/impulse/config-validation.yaml
 # Wait for "listening on ..." log line, then Ctrl-C
-echo "Exit code: $?"
-# Expected: 130 (Ctrl-C SIGINT), not 1 or 2
 ```
 
-If the process exits with code 1 or 2 before the listening line, the config is invalid. Read the error output carefully — Impulse emits the field path that caused the failure.
+The validation copy must use non-production listener and observability bindings.
+If an explicitly supplied candidate exits with status `1` before reaching the
+listening/ready state, startup failed. Read the fatal error carefully to
+distinguish config loading or validation failures from bind and runtime
+initialization failures. Do not interpret the status produced after your manual
+`Ctrl-C` as a validation result.
 
 **2. Diff the config change and confirm each difference is intentional.**
 
@@ -357,14 +396,20 @@ Do not overwrite the running binary yet.
 
 Confirm the output matches the intended release version. If it does not, you have the wrong artifact.
 
-**3. Run startup validation with the existing config against the new binary.**
+**3. Run a controlled startup with the existing config against the new binary.**
 
 ```bash
-/usr/local/bin/impulse-new --config /etc/impulse/config.yaml
+/usr/local/bin/impulse-new --config /etc/impulse/config-validation.yaml
 # Wait for "listening on ..." log line, then Ctrl-C
 ```
 
-This confirms that the new binary accepts your existing configuration. New versions occasionally rename config fields or tighten validation rules. If the new binary rejects a config that the current binary accepts, read the error output and update the config before proceeding.
+Create `config-validation.yaml` from the existing config, but move every
+listener and observability binding to isolated addresses and ports so the new
+binary cannot collide with or accept traffic intended for the running service.
+This confirms that the new binary accepts and can initialize from the existing
+configuration. New versions occasionally rename config fields or tighten
+validation rules. If the new binary rejects a config that the current binary
+accepts, read the error output and update the config before proceeding.
 
 **4. Review the changelog for the new version — check "Breaking Changes" first.**
 

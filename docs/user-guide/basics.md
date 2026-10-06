@@ -541,16 +541,12 @@ telnet 10.0.1.10 8080
 
 ### Configuration Validation
 
-```bash
-# Validate configuration syntax (startup validation happens before serving)
-impulse --config config.yaml
-
-# Check for YAML syntax errors
-yamllint config.yaml
-
-# Verify routing configuration
-grep -A 10 "route:" config.yaml
-```
+`impulse --config config.yaml` is a server start, not a validation-only command.
+If the config is valid, Impulse proceeds to bind its listeners and remains
+running. Validate a candidate with an isolated controlled startup using
+non-production bindings, or use the Control API `validate`, `preview`, and
+`activate` workflow described in
+[Configuration Validation](/docs/configuration/reference#testing-configuration).
 
 ### Performance Debugging
 

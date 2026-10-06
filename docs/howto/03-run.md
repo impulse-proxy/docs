@@ -44,12 +44,22 @@ impulse --config /etc/impulse/config.yaml
 
 ### Validate by startup on a safe host or staging instance
 
-Impulse validates its config during startup. There is no standalone `--validate` flag.
+Impulse validates its config during startup. There is no standalone `--validate`
+flag. When validation succeeds, the process continues into runtime and listener
+startup and remains running.
 
 Use one of these approaches:
 
-- start Impulse against the candidate config on a non-production host and stop it after successful startup
-- use the Control API staged flow: `POST /admin/runtime/validate`, `/preview`, then `/activate`
+- start Impulse against the candidate on an isolated host or with all listener
+  and observability bindings moved to non-production addresses and ports; stop
+  it with `Ctrl-C` after the listening/ready state is reached
+- on a running instance, use `POST /admin/runtime/validate`, inspect the plan,
+  call `/preview`, and call `/activate` only if `candidate_status` and
+  `rejected_changes` show the candidate is acceptable
+
+An unreadable or invalid explicitly supplied config exits with status `1`. A
+valid config does not produce an automatic success exit status because the
+server keeps running.
 
 ### Foreground with debug logging (development)
 
@@ -232,7 +242,7 @@ When Impulse starts, it follows this order:
 
 1. Reads and parses the config file
 2. Initializes logging and tracing
-3. Validates the config — exits with error on failure
+3. Validates and normalizes the config — an invalid config causes a fatal startup error with status `1`
 4. Checks if root is required (port `< 1024`)
 5. Builds shared runtime state (route index, connection pools)
 6. Binds UDP sockets (one per worker, or SO_REUSEPORT group)

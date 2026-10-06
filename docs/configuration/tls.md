@@ -360,16 +360,20 @@ openssl verify -CAfile ca.crt server.crt
 
 ### Test Configuration
 
-Verify Impulse can load certificates:
+There is no validation-only CLI command. To verify that Impulse can load the
+certificate material, use a config whose listeners and observability endpoints
+bind only to isolated, non-production addresses and ports. Start it in the
+foreground and stop it after the listening/ready state is reached:
 
 ```bash
-# Test configuration validity
-impulse --config config.yaml
-
-# Run in debug mode to see TLS initialization
-# Set log level in config.yaml (log.level) or via RUST_LOG=debug
-impulse --config config.yaml
+impulse --config config-validation.yaml
+# Wait for the listening/ready log, then Ctrl-C
 ```
+
+An invalid certificate path or malformed startup configuration exits with
+status `1`. A valid configuration continues running; it does not exit after the
+certificate check. For runtime-managed certificate changes on an existing
+instance, use the Control API `validate`, `preview`, and `activate` flow instead.
 
 ## Certificate Rotation and Renewal
 

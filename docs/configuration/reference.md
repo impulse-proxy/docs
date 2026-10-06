@@ -1675,13 +1675,40 @@ Impulse validates configuration at startup and reports errors before attempting 
 
 ### Testing Configuration
 
-Validate configuration without starting the server:
+There is no validation-only CLI flag. Running Impulse with a valid configuration
+continues into runtime initialization, binds the configured listeners, and keeps
+the process running. It does not exit after validation.
+
+Use one of these workflows instead:
+
+1. **Controlled startup:** copy the candidate config to an isolated host or
+   change every listener and observability bind to non-production addresses and
+   ports. Start Impulse in the foreground, wait for its listening/ready log,
+   then stop it with `Ctrl-C`.
+2. **Staged Control API:** on a running instance, submit the same candidate to
+   `POST /admin/runtime/validate`, then `/preview`, and finally `/activate` only
+   after reviewing the returned plan and rejected changes. Validate and preview
+   do not replace the active runtime; activate does.
+
+Controlled-startup example:
 
 ```bash
-impulse --config <path>
+impulse --config /etc/impulse/config-validation.yaml
 ```
 
-The command exits with status 0 if configuration is valid, or prints detailed error messages and exits with non-zero status if invalid.
+An unreadable or invalid explicitly supplied configuration produces a fatal
+startup error and exits with status `1`. A valid configuration has no automatic
+success exit status because the server remains running; reaching the
+listening/ready state is the success signal. Stop the isolated process after
+that signal. A later bind or runtime-initialization failure is also a failed
+startup, even if schema validation succeeded. If `--config` is omitted and the
+default `/etc/impulse/config.yaml` does not exist, Impulse exits with status `2`.
+
+For the staged workflow, do not treat HTTP status alone as the validation
+result: `/admin/runtime/validate` can return `200` with rejected changes. Inspect
+`candidate_status` and `rejected_changes` before previewing or activating. See
+the [Control API Reference](/docs/reference/control-api-reference#post-adminruntimevalidate)
+for request and response details.
 
 ## Complete Working Example
 

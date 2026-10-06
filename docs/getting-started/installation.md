@@ -347,14 +347,28 @@ docker run -d \
 # Check service status
 sudo systemctl status impulse
 
-# Validate configuration (runs startup validation then exits)
-sudo -u impulse impulse --config /etc/impulse/config.yaml
-
 # View logs
 sudo journalctl -u impulse -f
 # or if file logging is enabled:
 sudo tail -f /var/log/impulse/impulse.log
 ```
+
+Do not run a second `impulse --config /etc/impulse/config.yaml` process as a
+validation command. The CLI has no validation-only mode: a valid config proceeds
+to runtime startup and attempts to bind its configured listeners. Verify an
+installed service by checking that systemd reports it active and that the logs
+show the expected listening/ready state.
+
+Before replacing the service config, either start the candidate on an isolated
+host with non-production listener and observability bindings, or use the running
+instance's staged Control API flow:
+
+1. `POST /admin/runtime/validate`
+2. `POST /admin/runtime/preview`
+3. `POST /admin/runtime/activate`
+
+Review the validation/preview response before activation. A validation response
+can use HTTP `200` while still reporting rejected changes.
 
 ## Troubleshooting
 

@@ -440,13 +440,44 @@ sudo chown -R impulse:impulse /etc/impulse /var/log/impulse
 
 ## Validating Your Config
 
-Impulse runs full validation on startup and exits with a clear error message. There is no standalone `--validate` flag.
+Impulse validates and normalizes its config during startup. There is no
+standalone `--validate` flag, and a valid config does not exit after validation:
+the process continues into runtime initialization and listener startup.
 
-To validate a config safely, start Impulse with the candidate file in a controlled environment and confirm it reaches the listening state without exiting. Stop it after you confirm startup succeeded:
+Choose one of these safe workflows.
+
+### Controlled startup
+
+Use an isolated host or change every listener, metrics, and Control API binding
+in the candidate to non-production addresses and ports. Start it in the
+foreground, confirm that it reaches the listening/ready state, and then stop it
+with `Ctrl-C`:
 
 ```bash
-impulse --config /etc/impulse/config.yaml
+impulse --config /etc/impulse/config-validation.yaml
 ```
+
+If that explicitly supplied file is unreadable or invalid, Impulse reports a
+fatal startup error and exits with status `1`. A valid config keeps running, so
+an exit status of `0` is not the validation signal. Treat listener bind or later
+runtime-initialization failures as failed startup too.
+
+### Staged validation on a running instance
+
+For runtime-managed changes, use the authenticated Control API in order:
+
+1. `POST /admin/runtime/validate` parses the candidate and returns an activation
+   plan without changing the active runtime.
+2. `POST /admin/runtime/preview` records the reviewed plan in generation
+   history without changing the active runtime.
+3. `POST /admin/runtime/activate` commits the candidate after the first two
+   responses are accepted.
+
+The validate endpoint can return HTTP `200` even when the plan contains rejected
+changes. Check `candidate_status` and `rejected_changes`; do not use the HTTP
+status alone as proof that activation is safe. See the
+[Control API Reference](/docs/reference/control-api-reference#post-adminruntimevalidate)
+for request examples.
 
 Common validation errors and fixes:
 
