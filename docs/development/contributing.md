@@ -154,7 +154,7 @@ claims require representative end-to-end testing, not Criterion alone.
 - [ ] Preserve the invariants above across both native and bootstrap ingress where applicable.
 - [ ] Add unit, integration, parity, regression, and observable-signal assertions in proportion to the change.
 - [ ] Benchmark material hot-path changes under the policy above; otherwise do not add ceremonial benchmarks.
-- [ ] Update the canonical configuration/API/metrics/feature-status/limitations pages affected by the change.
+- [ ] Update the canonical configuration, Control API, metrics, or status-and-limitations reference affected by the change.
 - [ ] Keep public crate visibility deliberate; do not widen a façade only to avoid placing code in its owner.
 - [ ] Follow the Impulse contribution guide for formatting, linting, test commands, commits, and pull-request workflow.
 

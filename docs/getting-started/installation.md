@@ -109,6 +109,14 @@ impulse --version
 impulse --help
 ```
 
+The executable has three core options:
+
+| Option | Meaning |
+| --- | --- |
+| `--config <path>` / `-c <path>` | Load the configuration at `path` and start Impulse. |
+| `--version` / `-V` | Print the executable version and exit. |
+| `--help` / `-h` | Print command help and exit. |
+
 These commands verify the executable, not a configuration. `impulse --config`
 is a server start command: a valid configuration proceeds to runtime and binds
 listeners. Validate a candidate through controlled non-production startup or

@@ -492,7 +492,6 @@ raw secret values, or an unsanitized configuration.
 
 ## Related Pages
 
-- [Operations Overview](/docs/operations/overview)
 - [Reload and Drain](/docs/operations/reload-and-drain)
 - [Secret and Certificate Rotation](/docs/operations/secret-and-cert-rotation)
 - [Observability Operations](/docs/operations/observability)

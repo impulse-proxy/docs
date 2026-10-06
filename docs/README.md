@@ -48,10 +48,10 @@ workflows. Neither redefines the contracts owned by the references above.
 | See Impulse proxy a request | [Quickstart](/docs/getting-started/quickstart) |
 | Install Impulse on a host | [Installation](/docs/getting-started/installation) |
 | Run the packaged container | [Docker](/docs/getting-started/docker) |
-| Prepare for deployment | [Operations Overview](/docs/operations/overview) and [Production Deployment](/docs/deployment/production) |
+| Prepare for deployment | [Production Deployment](/docs/deployment/production) |
 | Troubleshoot issues | [Operations Runbook](/docs/operations/runbook) |
 | Check maturity and product limits | [Status and Limitations](/docs/reference/status-and-limitations) |
-| Find exact supported behavior | [Reference Overview](/docs/reference/overview) |
+| Find exact supported behavior | [Documentation Authority](#documentation-authority) and [Status and Limitations](/docs/reference/status-and-limitations) |
 
 ## Documentation Paths
 
@@ -69,7 +69,6 @@ workflows. Neither redefines the contracts owned by the references above.
 | [Resilience, Rate Limits, and Quota](/docs/configuration/resilience) | Exact retry, hedge, circuit-breaker, admission, rate-limit, and quota configuration |
 | [Observability and Control Configuration](/docs/configuration/observability-and-control) | Exact metrics, tracing, Control API security, audit, limits, and privilege-drop configuration |
 | [Production Deployment](/docs/deployment/production) | Readiness, systemd, privileges, configuration ownership, validation, rollout, rollback, and production checklist |
-| [Operations Overview](/docs/operations/overview) | Main entry point for deployment, rollout, observability, and failure handling |
 | [Operations Runbook](/docs/operations/runbook) | Symptom-driven diagnostics, safe remediation, and escalation criteria |
 | [Status and Limitations](/docs/reference/status-and-limitations) | Release maturity, capability status, partial-support boundaries, GA blockers, and product limits |
 
@@ -87,11 +86,9 @@ workflows. Neither redefines the contracts owned by the references above.
 
 | Document | What you'll find |
 |---|---|
-| [API Overview](/docs/api/overview) | Metrics endpoint and Control API surfaces at a high level |
 | [Observability and Control Configuration](/docs/configuration/observability-and-control) | Focused field reference for metrics, tracing, the Control API, and privilege dropping |
 | [Control API Reference](/docs/reference/control-api-reference) | Endpoint-by-endpoint control API contract |
 | [Metrics Reference](/docs/reference/metrics-reference) | Metric names, labels, and exported runtime signals |
-| [Operations Overview](/docs/operations/overview) | Operator map for deployment, sizing, tuning, and failure handling |
 | [Distributed Quota Operations](/docs/operations/distributed-quota) | Redis deployment, rollout, degraded-mode guidance, and incident interpretation |
 | [Operations Runbook](/docs/operations/runbook) | Failure semantics, read-only diagnosis, safe remediation, and escalation criteria |
 | [Capacity Planning and Host Tuning](/docs/operations/sizing-and-capacity) | File descriptors, socket buffers, workers, limits, memory pressure, queues, metrics, and testing methodology |
@@ -111,13 +108,12 @@ workflows. Neither redefines the contracts owned by the references above.
 | Document | What you'll find |
 |---|---|
 | [Contributing Guide](https://github.com/impulse-proxy/impulse/blob/master/CONTRIBUTING.md) | Dev setup, build commands, test matrix, PR conventions |
-| [Contributor Guide](/docs/development/overview) | Repository boundary, crate map, invariants, test and benchmark policy, and feature checklist |
+| [Contributor Guide](/docs/development/contributing) | Repository boundary, crate map, invariants, test and benchmark policy, and feature checklist |
 
 ### Reference — schema, maturity, roadmap, and release state
 
 | Document | What you'll find |
 |---|---|
-| [Reference Overview](/docs/reference/overview) | Map of exact behavior, product limits, and reference ownership |
 | [Configuration Reference](/docs/configuration/reference) | Configuration schema authority for every configuration block |
 | [Status and Limitations](/docs/reference/status-and-limitations) | Product-status authority for maturity, capability support, limitations, and GA blockers |
 | [Roadmap](/docs/roadmap) | Possible future direction, separate from the current support contract |
@@ -140,13 +136,6 @@ For starting examples and exact commands:
 
 - working config snippets: [configuration/examples.md](/docs/configuration/examples)
 - full config semantics: [configuration/reference.md](/docs/configuration/reference)
-- Control API and metrics examples: [api/overview.md](/docs/api/overview)
+- Control API examples: [reference/control-api-reference.md](/docs/reference/control-api-reference)
+- metric names and labels: [reference/metrics-reference.md](/docs/reference/metrics-reference)
 - log levels and logging config: [configuration/reference.md](/docs/configuration/reference#logging-configuration)
-
----
-
-## External standards
-
-- [RFC 9000 — QUIC: A UDP-Based Multiplexed and Secure Transport](https://www.rfc-editor.org/rfc/rfc9000.html)
-- [RFC 9114 — HTTP/3](https://www.rfc-editor.org/rfc/rfc9114.html)
-- [RFC 9113 — HTTP/2](https://www.rfc-editor.org/rfc/rfc9113.html)

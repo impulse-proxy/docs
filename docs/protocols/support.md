@@ -159,6 +159,10 @@ For broader product status, see
 
 - [RFC 9000: QUIC: A UDP-Based Multiplexed and Secure Transport](https://www.rfc-editor.org/rfc/rfc9000)
 - [RFC 9001: Using TLS to Secure QUIC](https://www.rfc-editor.org/rfc/rfc9001)
+- [RFC 9002: QUIC Loss Detection and Congestion Control](https://www.rfc-editor.org/rfc/rfc9002)
+- [RFC 7301: TLS Application-Layer Protocol Negotiation](https://www.rfc-editor.org/rfc/rfc7301)
+- [RFC 8446: TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)
+- [RFC 9113: HTTP/2](https://www.rfc-editor.org/rfc/rfc9113)
 - [RFC 9114: HTTP/3](https://www.rfc-editor.org/rfc/rfc9114)
 - [RFC 9204: QPACK](https://www.rfc-editor.org/rfc/rfc9204)
 - [RFC 8441: Bootstrapping WebSockets with HTTP/2](https://www.rfc-editor.org/rfc/rfc8441)
