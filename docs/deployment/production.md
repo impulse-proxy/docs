@@ -311,15 +311,12 @@ continuing rollout.
 - [ ] The process ends startup as the intended unprivileged identity with only
       required capabilities.
 
-### Configuration and security
+### Security-model review
 
-- [ ] Config and secret ownership has one source of truth and minimal writers.
-- [ ] The Control API is isolated and its TLS, authentication, RBAC, IP policy,
-      connection limit, and audit output were tested.
-- [ ] Metrics and health/readiness exposure match the intended network policy.
-- [ ] Certificate expiry, SANs, key pairing, file access, and reload were tested.
-- [ ] Backend reachability, DNS, TLS verification, health paths, and route intent
-      were checked from the candidate node.
+- [ ] Every boundary in the [Security Model](/docs/concepts/security-model#trust-boundary-map)
+      was reviewed, and any deviation from its hardening baseline was approved.
+- [ ] The candidate's exact authentication, TLS, control-plane, secret, and
+      upstream behavior was verified against the linked configuration authorities.
 
 ### Rollout and operations
 
@@ -338,3 +335,4 @@ continuing rollout.
 - [Capacity Planning and Host Tuning](/docs/operations/sizing-and-capacity)
 - [Observability Operations](/docs/operations/observability)
 - [Operations Runbook](/docs/operations/runbook)
+- [Security Model](/docs/concepts/security-model)

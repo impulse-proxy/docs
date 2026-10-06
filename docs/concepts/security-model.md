@@ -1,213 +1,239 @@
 # Security Model
 
-This page describes the current trust boundaries and security assumptions in the project as it exists today.
+This page is the conceptual authority for Impulse trust boundaries, threat
+assumptions, and production-hardening posture. It does not define configuration
+keys, defaults, endpoint payloads, or feature status; use the linked references
+for those contracts.
 
-## Security Goals
+## Security Goals and Assumptions
 
 Impulse is designed to:
 
-- terminate downstream TLS for HTTP/3 and bootstrap TLS traffic
-- validate and forward requests to configured upstreams with explicit trust settings
-- bound resource consumption under malformed, slow, or overloaded traffic
-- expose a small operator control surface with authentication
+- terminate TLS-protected downstream transports
+- reject malformed or policy-disallowed requests before backend dispatch
+- authenticate selected application requests and administrative callers
+- verify secure upstream connections according to explicit trust policy
+- bound per-connection, per-request, and process-wide resource consumption
+- activate complete runtime generations without exposing partially applied policy
+- expose operational state without exposing resolved secret values
 
-Impulse is not yet designed to be:
+Assume that public clients, request contents, forwarded identity headers, and
+network traffic outside explicitly protected segments are hostile. Treat
+operators, deployment automation, configured trust roots, and the service
+account as privileged. Treat upstream applications and external dependencies as
+separate systems whose identities and availability must be verified rather than
+inherited from their network location.
 
-- a full web application firewall
-- a complete authentication gateway
-- a general-purpose policy engine
+Impulse is not a web application firewall, malware scanner, general policy
+engine, identity provider, secret manager, or service-mesh control plane. The
+authoritative list of missing and partial protections is in
+[Limitations](/docs/reference/limitations#security-and-policy-limits).
 
-## Trust Boundaries
+## Trust-Boundary Map
 
-### Downstream Client To Impulse
+| Boundary | Trust assumption | Primary risk | Required posture |
+| --- | --- | --- | --- |
+| Public data plane | Clients and request data are untrusted | Parser abuse, spoofed identity, resource exhaustion, unauthorized backend access | Authenticate transport and requests where required; validate input; enforce bounded admission and body/stream limits |
+| Bootstrap path | TCP/TLS compatibility clients are as untrusted as native HTTP/3 clients | Treating compatibility ingress as a privileged or weaker-policy path | Apply the same runtime policy as native ingress and secure TCP independently from UDP |
+| Control plane | Callers can observe or mutate privileged runtime state | Unauthorized activation, restart, secret reload, or state disclosure | Isolate the network, authenticate identities, enforce least privilege, and retain audit evidence |
+| Metrics and health endpoints | Operational output is sensitive even when read-only | Topology/state disclosure, probe abuse, scrape saturation | Keep endpoints private; authenticate remote metrics and protect probes when exposure requires it |
+| Upstream network | Backends and supporting services are external trust domains | Server impersonation, plaintext interception, poisoned discovery, dependency failure | Verify TLS identities, constrain egress, and make failure policy explicit |
+| Secret storage | Files, configuration sources, process memory, and deployment systems can disclose credentials | Credential or private-key theft, stale material, unsafe rollback | Minimize plaintext copies and readers, use atomic rotation, and keep secret values out of telemetry |
 
-Clients are untrusted. Impulse must:
+## Public Data Plane
 
-- parse QUIC and HTTP/3 safely
-- validate headers and pseudo-headers strictly
-- bound header count and total header bytes
-- enforce request-body limits and timeouts
-- reject unsupported upgrade-style semantics
-- avoid unbounded state growth from malformed packets or connection churn
+The native QUIC listener accepts HTTP/3 over UDP. Every packet, connection,
+header, body, authority, and application credential arriving there is
+untrusted. TLS protects the connection and identifies the server; it does not
+by itself authorize the application request. Downstream client certificates or
+per-upstream request authentication are separate, opt-in controls.
 
-### Impulse To Upstream Backends
+The request path validates protocol structure, normalizes routing inputs, and
+applies authentication, admission, routing, backend selection, and transport
+policy before outcome recording. Header/body caps, stream and connection caps,
+timeouts, scoped limits, adaptive admission, circuit breaking, and brownout
+reduce denial-of-service amplification; they do not make abusive traffic safe
+or replace capacity planning and upstream protection.
 
-Upstreams are trusted only according to explicit configuration.
+Do not trust a client-supplied forwarding header as proof of identity. Forwarded
+headers sent upstream are governed by Impulse policy, while caller identity for
+authentication or quota must come from the configured trusted source.
 
-- HTTPS upstreams are verified by default.
-- SNI is sent by default in strict mode.
-- Private trust roots can be configured with `ca_file` and `ca_dir`.
-- Disabling upstream certificate verification is allowed, but should be treated as a break-glass mode rather than a normal production stance.
+Exact controls:
 
-### Operator To Control Plane
+- [Authentication and Secrets](/docs/configuration/authentication-and-secrets)
+- [TLS Configuration](/docs/configuration/tls#downstream-listener-tls)
+- [Resilience, Rate Limits, and Quota](/docs/configuration/resilience)
+- [Protocol Support](/docs/protocols/support)
 
-The control API is privileged.
+## Bootstrap Path
 
-- It can expose runtime state.
-- It can trigger restart behavior.
-- It can trigger certificate reload.
-- It must be treated as an admin surface, not a public endpoint.
+The bootstrap listener is a public compatibility adapter, not an administrative
+bootstrap channel. It accepts HTTP/1.1 or HTTP/2 over TCP/TLS on the configured
+listener port and advertises HTTP/3 availability. It shares the active runtime
+generation, request policy, routing, admission, backend selection, and upstream
+transport with native QUIC ingress.
 
-Admin-plane authentication factors supported today:
+Protocol-specific parsing, connection handling, response writeback, and the
+supported HTTP/1.1 WebSocket upgrade path remain separate code paths. That
+separation creates an additional attack surface even though policy meaning is
+shared. Expose and filter TCP and UDP deliberately, monitor both, and validate
+the exact protocol pair used by upgrade or CONNECT traffic. Impulse provides no
+cleartext HTTP bootstrap listener.
 
-- bearer token only
-- mTLS only
-- mTLS + bearer token
+Exact behavior is defined in [Protocol Support](/docs/protocols/support) and
+[Request Lifecycle](/docs/architecture/request-lifecycle).
 
-Compatibility mode:
+## Control Plane
 
-- the legacy `observability.control_api.auth_token` is still accepted
-- it is mapped to an admin-scoped static identity to preserve existing behavior during migration
-- this is deliberate backward compatibility, not the recommended steady-state production posture
-- because the config schema uses `deny_unknown_fields`, compatibility is one-way: newer binaries accept legacy configs, but older binaries reject configs that use the newer nested admin-plane fields
+The Control API is a privileged administrative surface. Read operations expose
+runtime generations and health state; mutations can validate or activate
+configuration, roll back runtime state, reload listener certificates, or request
+a controlled restart. Compromise can therefore disclose deployment state or
+change request handling.
 
-Recommended production posture:
+Control-plane authentication is independent of downstream request
+authentication. An application API key, JWT, or external-authorization decision
+never grants administrative access. Administrative identities should be named,
+limited to the minimum role required, and attributable in a dedicated audit
+stream. Network isolation remains necessary even when bearer authentication and
+mTLS are enabled.
 
-- `observability.control_api.tls.client_auth.mode: required`
-- bearer token or role-bearing mTLS identity
-- admin-network IP allowlisting
-- dedicated audit stream enabled
+The Control API should be reachable only from loopback or a strongly isolated
+administration network. Remote operation should use mutually authenticated TLS,
+source restrictions, short-lived or rotated credentials, bounded connections,
+and monitored audit delivery. A trusted proxy is part of this boundary: accept
+forwarded source identity only from explicitly controlled proxy peers.
 
-## Downstream TLS Model
+Exact contracts:
 
-Impulse supports:
+- [Observability and Control Configuration](/docs/configuration/observability-and-control#control-api-listener)
+- [Control API Reference](/docs/reference/control-api-reference)
+- [Control Plane Operations](/docs/operations/control-plane)
 
-- default/fallback certificate identity
-- SNI-specific certificates
-- bootstrap listener client-auth with optional or required certificate modes
+## Metrics and Health Endpoints
 
-Important scope note:
+Metrics, health, and readiness are read-only but not necessarily public. Metrics
+can reveal route, upstream, backend, failure, certificate, and runtime state.
+Probe results reveal process availability and deployment transitions. Exposure
+also consumes connections and rendering work.
 
-- current client-auth coverage is centered on the bootstrap listener path
-- operators should verify whether their exact ingress shape requires stronger mTLS guarantees on every downstream path before broad rollout
+The normal posture is private scraping and probing over loopback or an isolated
+observability network. The default loopback metrics endpoint is plaintext and
+unauthenticated; remote metrics mode requires mTLS. Health and readiness belong
+to the TLS Control API listener and can be protected when the probe system can
+authenticate. Control API bearer credentials do not authenticate metrics
+scrapes.
 
-## Admin-Plane Authentication And Authorization Model
+Do not publish metrics or probes merely because they are read-only. Apply
+network policy, connection bounds, scrape timeouts, and monitoring for scrape or
+audit failure. Exact endpoint fields are in
+[Observability and Control Configuration](/docs/configuration/observability-and-control);
+endpoint semantics are in the
+[Control API Reference](/docs/reference/control-api-reference).
 
-The control API admin plane is separate from request-path auth.
+## Upstream Network
 
-Authentication and authorization are evaluated in this order:
+Routing a request to a configured backend does not make the network path or
+backend identity trustworthy. HTTPS backends should retain certificate and
+hostname verification, with explicit private trust roots where required.
+Disabling verification removes server authentication and is a temporary
+break-glass tradeoff, not a production trust model. Cleartext HTTP/1.1 backends
+must remain inside a separately protected network segment.
 
-1. source-address policy, if `observability.control_api.ip_allowlist` is configured
-2. authentication using bearer token, mTLS identity, or both
-3. authorization against the route-to-role contract
+Upstream client certificates identify Impulse to a backend but do not establish
+that the backend is healthy, authorized for every request, or safe to return
+unbounded data. Health checks, response limits, timeouts, and outcome recording
+remain independent controls.
 
-Role model:
+DNS resolvers, external authorization services, JWKS/OIDC endpoints, telemetry
+collectors, and distributed-quota storage are also outbound dependencies. Their
+network reachability, TLS identity, data sensitivity, and fail-open/fail-closed
+behavior are part of the deployment threat model. Restrict egress to the
+services the active configuration requires.
 
-- `viewer`: runtime snapshot and generation history reads
-- `operator`: `viewer` plus validate, preview, activate, rollback, reload, and cert reload
-- `admin`: `operator` plus restart and future destructive admin actions
-
-Response and failure contract:
-
-- `401 Unauthorized`: missing or invalid authentication
-- `403 Forbidden`: authenticated but under-scoped, or denied by source-address policy
-- TLS handshake rejection: client certificate missing or invalid when control API mTLS is required
-
-Handshake rejection is not an HTTP response. It terminates the TLS connection before routing and should be diagnosed through control-plane TLS logs and audit output.
-
-Admin-plane route contract:
-
-| Route family | Minimum role |
-| --- | --- |
-| `/health`, `/ready` | unauthenticated or separately configurable |
-| `/admin/runtime` | `viewer` |
-| `/admin/runtime/history` | `viewer` |
-| `/admin/runtime/history/{generation}` | `viewer` |
-| `/admin/runtime/validate` | `operator` |
-| `/admin/runtime/preview` | `operator` |
-| `/admin/runtime/activate` | `operator` |
-| `/admin/runtime/rollback` | `operator` |
-| `/admin/runtime/reload` | `operator` |
-| `/admin/runtime/reload-certs` | `operator` |
-| `/admin/runtime/restart` | `admin` |
-
-## Upstream TLS Model
-
-Upstream trust behavior is controlled by configuration.
-
-Safe posture:
-
-- `verify_certificates: true`
-- `strict_sni: true`
-- explicit custom CA material when using private PKI
-
-Unsafe posture:
-
-- `verify_certificates: false`
-- public or shared-network upstreams with disabled verification
-
-## Resource-Exhaustion Defense Model
-
-Impulse includes multiple defensive layers intended to limit blast radius from abusive or unhealthy traffic:
-
-- new-connection token bucket
-- maximum active connection caps
-- per-connection stream caps
-- global and scoped inflight limits
-- route queue caps
-- request and response body caps
-- body idle and total timeouts
-- adaptive admission and brownout controls
-
-These features are part of the project’s security posture because they reduce denial-of-service amplification inside the process.
-
-## Request Authentication And Authorization Model
-
-Per-upstream request authentication is part of the downstream data plane. It
-runs before backend dispatch and supports local API-key checks, local JWT
-verification, or one external authorization provider. Local policies fail
-closed. External policy defaults to fail-closed and may be made fail-open only
-as an explicit availability tradeoff.
-
-The trust boundary is strict:
-
-- request authentication lives under `upstream.<name>.auth`
-- Control API authentication lives under `observability.control_api`
-- identities, roles, credentials, failures, and audit events from one plane do
-  not grant access in the other
-- JWKS and OIDC endpoints are separate dependencies: JWKS supplies public keys
-  for local JWT verification, while OIDC external auth performs discovery and
-  token introspection
-
-The exact fields, algorithms, claim behavior, external-auth response contract,
-secret references, and reload semantics are documented in
+Exact TLS fields and verification behavior are in
+[TLS Configuration](/docs/configuration/tls#upstream-backend-tls). Authentication and
+external-service behavior are in
 [Authentication and Secrets](/docs/configuration/authentication-and-secrets).
 
-## What Impulse Does Not Currently Provide
+## Secret Storage
 
-Impulse does not currently provide first-class:
+Impulse consumes credentials and private keys; it is not their system of
+record. A value referenced from a file is still plaintext in that file and in
+process memory after resolution. Inline credentials also exist in the source
+configuration. Redaction from debug output or runtime views reduces accidental
+disclosure but does not protect the source file, process, backup, or deployment
+pipeline.
 
-- OIDC login flows (interactive/browser SSO) or session-cookie handling
-- a generic RBAC/policy engine beyond scope/role checks on JWT claims
-- WAF behavior
-- deep content inspection
-- extensible third-party auth/policy modules
+Grant the final service identity read access only to the configuration,
+certificate, key, CA, and secret files it needs for startup and later reloads.
+Limit writers to the deployment or rotation authority. Keep log, audit, and
+runtime-state write paths separate from secret sources. Replace material
+atomically, retain a recoverable prior version for the verification window, and
+remove it according to the organization's retention policy after successful
+rotation.
 
-## Recommended Deployment Security Posture
+Do not emit raw secrets, bearer tokens, private keys, sensitive request headers,
+or unsanitized configuration into logs, metrics, traces, audit records, or
+incident bundles. A rollback restores retained resolved generation state; it is
+not a secret-store restore and does not necessarily reread an edited file.
 
-- keep the control API bound to loopback or a strongly isolated admin network
-- use explicit admin roles rather than a single all-powerful token when possible
-- require control API mTLS in production
-- use a strong control API token and rotate it as an administrative secret when bearer auth is enabled
-- restrict control API source addresses with `ip_allowlist.cidrs`
-- enable the dedicated admin audit stream
-- keep upstream certificate verification enabled in production
-- run with least privilege after bind
-- restrict filesystem write access to the minimum required paths
-- monitor handshake failures, overload events, and unexpected restart activity
+Exact provider, reference, resolution, failure, and reload behavior is in
+[Authentication and Secrets](/docs/configuration/authentication-and-secrets#secret-providers-and-references).
+Certificate rotation is in
+[Secret and Certificate Rotation](/docs/operations/secret-and-cert-rotation).
 
-## Future Security Hardening Priorities
+## Cross-Boundary Invariants
 
-- deeper parser fuzzing
-- stronger control-plane auditability
-- broader documentation of mTLS behavior across all ingress paths
-- explicit support boundaries for admin-plane deployment patterns
-- stronger auth/policy features where the product direction requires them
+- Downstream request identities and Control API identities never authorize one another.
+- Native QUIC and bootstrap ingress share policy meaning; neither is a policy bypass.
+- Metrics and probes observe runtime state but do not own or mutate the active generation.
+- Runtime activation publishes a complete prepared generation or leaves the previous generation active.
+- Downstream TLS identity, upstream TLS trust, and Control API client identity are distinct trust decisions.
+- Resource limits contain work; they do not authenticate clients or prove backend health.
+- Runtime views, metrics, and audit output describe secret state without exposing secret values.
+
+## Production Hardening Baseline
+
+Review this baseline for every environment; deployment-specific evidence belongs
+in the [Production Checklist](/docs/deployment/production#production-checklist).
+
+1. **Segment networks.** Expose only the public listener. Keep the Control API,
+   metrics, probes, upstreams, and supporting services on explicitly allowed
+   administration, observability, or service networks.
+2. **Authenticate every crossed boundary.** Use valid downstream certificates,
+   request authentication where the application requires it, verified upstream
+   TLS, and strongly authenticated administrative identities.
+3. **Apply least privilege.** Separate viewer, operator, and restart authority;
+   run as an unprivileged service identity; grant only required bind capability
+   and filesystem access.
+4. **Protect secret material.** Prefer constrained file-backed references over
+   inline values, control readers and writers, rotate atomically, and monitor
+   expiry and reload failures.
+5. **Bound work.** Size connection, stream, body, queue, inflight, retry, and
+   control-plane limits from representative capacity tests; preserve overload
+   protection during incidents.
+6. **Make changes attributable and reversible.** Use staged activation, retain
+   known-good artifacts, enable administrative audit output, and alert on audit
+   loss, authentication failure, unexpected restart, and security-control drift.
+7. **Test both ingress paths.** Exercise UDP/HTTP/3 and TCP bootstrap behavior,
+   including TLS, routing, auth, limits, and failure responses, before rollout.
+
+## Configuration Authority
+
+| Security concern | Exact authority |
+| --- | --- |
+| Downstream API keys, JWT, external authorization, OIDC, secret providers and references | [Authentication and Secrets](/docs/configuration/authentication-and-secrets) |
+| Downstream certificates/client authentication and upstream TLS/mTLS | [TLS Configuration](/docs/configuration/tls) |
+| Control API TLS, bearer identities, RBAC, source policy, audit, metrics/probes, and privilege drop | [Observability and Control Configuration](/docs/configuration/observability-and-control) |
+| Control API methods, access results, and payloads | [Control API Reference](/docs/reference/control-api-reference) |
+| Admission, rate limits, quota, CONNECT constraints, and body/header limits | [Resilience, Rate Limits, and Quota](/docs/configuration/resilience) |
+| Current security feature status | [Feature Matrix](/docs/reference/feature-matrix#policy-security-and-platform-features) |
+| Unsupported and partial security behavior | [Limitations](/docs/reference/limitations#security-and-policy-limits) |
 
 ## Related Pages
 
 - [Production Deployment](/docs/deployment/production)
-- [Limitations](/docs/reference/limitations)
-- [Authentication and Secrets](/docs/configuration/authentication-and-secrets)
-- [Control API Reference](/docs/reference/control-api-reference)
-- [TLS Setup](/docs/configuration/tls)
+- [Operations Runbook](/docs/operations/runbook)
+- [Protocol Support](/docs/protocols/support)

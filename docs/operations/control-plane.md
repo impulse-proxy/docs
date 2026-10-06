@@ -50,10 +50,9 @@ sinks, and connection limits—is defined only in
 
 HTTP methods, route access behavior, request and response fields, and status
 semantics are defined only in the
-[Control API Reference](/docs/reference/control-api-reference). Operationally,
-keep the listener on loopback or an isolated admin network, require mTLS for a
-remotely reachable production endpoint, use named role-bearing identities, and
-retain audit output outside ordinary request logs.
+[Control API Reference](/docs/reference/control-api-reference). The
+[Security Model](/docs/concepts/security-model#control-plane) owns the trust
+boundary and production-hardening posture.
 
 ### Failure semantics
 
@@ -68,16 +67,6 @@ Control API mTLS failure is separate:
 - that failure happens before HTTP routing, so there is no HTTP `401` or `403` payload
 - operators should rely on control-plane TLS handshake logs for diagnosis; no
   HTTP audit event exists before a request is established
-
-### Operational hardening sequence
-
-1. Begin on loopback with a scoped bearer identity for local automation.
-2. Restrict the listener to a dedicated admin network before remote exposure.
-3. Add a source allowlist and required mTLS with role-bearing identities.
-4. Protect health and readiness if probes can supply credentials and deployment
-   policy requires it.
-5. Enable JSON audit output and alert on authentication throttling, denied
-   actions, connection-limit drops, and audit-write failures.
 
 ### Route families
 
@@ -246,9 +235,9 @@ above for exact behavior.
 
 The default loopback metrics endpoint is plaintext and unauthenticated. Remote
 exposure is an explicit mTLS mode that reuses the primary listener certificate
-and Control API client-CA policy; bearer tokens do not apply. Prefer loopback
-scraping or an isolated observability network and alert on scrape loss and
-connection saturation.
+and Control API client-CA policy; bearer tokens do not apply. Network-exposure
+guidance belongs to the
+[Security Model](/docs/concepts/security-model#metrics-and-health-endpoints).
 
 ### Watchdog
 
@@ -313,3 +302,4 @@ Do not:
 - [Reload and Drain](/docs/operations/reload-and-drain)
 - [Control API Reference](/docs/reference/control-api-reference)
 - [Observability and Control Configuration](/docs/configuration/observability-and-control)
+- [Security Model](/docs/concepts/security-model)

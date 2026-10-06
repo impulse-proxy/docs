@@ -414,18 +414,14 @@ does not watch them continuously.
 - JWKS is different: its remote public-key cache refreshes in the background
   according to the JWT settings above.
 
-## Security Cautions
+## Field Safety Notes
 
-- Prefer file references with a restrictive `base_dir`, least-privilege file
-  ownership, and atomic file replacement.
 - Do not place private signing keys in `static_keys`; Impulse needs only public
   verification material for `RS256` and `ES256`.
 - Treat `literal:` references, inline API keys, and configured request-header
   values as plaintext configuration secrets.
 - Keep `fail_closed` unless an explicit availability decision accepts
   unauthenticated traffic during an authorization-service outage.
-- Use HTTPS for every non-loopback auth or key endpoint, and restrict network
-  reachability to the intended services.
 
-See the [Security Model](/docs/concepts/security-model) for the broader trust
-model and production posture rather than duplicating it here.
+File ownership, network segmentation, rotation, and other production posture
+belong to the [Security Model](/docs/concepts/security-model).

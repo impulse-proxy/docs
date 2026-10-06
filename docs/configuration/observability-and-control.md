@@ -283,13 +283,9 @@ security:
     group: impulse
 ```
 
-## Operational Boundaries
+## Operational Guidance
 
-- Downstream request authentication and Control API authentication are
-  separate trust domains.
-- Keep the Control API on loopback or a dedicated admin network even when mTLS
-  and RBAC are enabled.
-- Use staged `validate -> preview -> activate` for runtime-managed changes.
-- Restart for tracing changes and Control API or metrics bind changes.
-- Use [Control Plane Operations](/docs/operations/control-plane) for rollout,
-  failure, and monitoring guidance.
+For trust boundaries and the production-hardening baseline, use the
+[Security Model](/docs/concepts/security-model). For rollout, failure, and
+monitoring procedures, use
+[Control Plane Operations](/docs/operations/control-plane).

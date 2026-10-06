@@ -51,8 +51,8 @@ done/partial/missing status for individual capabilities.
 - Request-path RBAC is limited to scope/role checks against JWT claims; there is no generic policy engine.
 - Admin-plane RBAC is a fixed three-tier model (`viewer`, `operator`, `admin`) with per-route minimums; custom roles and per-route policy expressions are not supported.
 - Control API mTLS has no CRL or OCSP revocation checking — a compromised client certificate remains valid until its CA material is rotated.
-- When a bearer token and an mTLS identity are presented together, their roles are **unioned**, not intersected: a `viewer` token with an `admin` certificate is treated as `admin`. Certificates cannot be used to constrain a token.
-- An unrecognized `auth.identity_source.kind` is ignored and silently falls back to the default rather than failing config validation.
+- When a bearer token and an mTLS identity are presented together, their actor identities must reconcile; when both mechanisms supply roles, the less-privileged role is effective.
+- Admin mTLS identity extraction supports only the documented subject/SAN sources; unknown `auth.identity_source.kind` values are rejected during configuration validation.
 - The admin audit stream is per-process and local; there is no fleet-wide aggregation, delivery guarantee, or tamper-evidence.
 - `ip_allowlist.trust_proxy_headers` uses forwarded client addresses only when the raw peer matches `ip_allowlist.trusted_proxy_cidrs`; configure that list for the proxy network before enabling header trust.
 - External auth (HTTP subrequest and OIDC) is implemented as a non-blocking async check per upstream, with configurable fail-open/fail-closed behavior; there is no interactive login or session-cookie flow.

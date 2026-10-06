@@ -72,7 +72,6 @@ Start with:
 
 ## Operator Rules
 
-- Keep the Control API on loopback or a strongly isolated admin network.
 - Use `--http1.1` for all `curl` calls to the Control API.
 - Prefer `validate` and `activate` over the legacy `reload` shortcut in production automation.
 - Pass `expected_generation` on activation and rollback workflows so concurrent changes fail safely.
@@ -84,4 +83,5 @@ Start with:
 - [API Overview](/docs/api/overview)
 - [Control API Reference](/docs/reference/control-api-reference)
 - [Metrics Reference](/docs/reference/metrics-reference)
+- [Security Model](/docs/concepts/security-model)
 - [Runbook](/docs/operations/runbook)
