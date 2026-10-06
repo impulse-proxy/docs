@@ -55,7 +55,7 @@ HTTP/3 Client → QUIC/TLS → Impulse Edge → HTTP/2 → Backend Servers
 - Random distribution
 - Round-robin rotation (default)
 - Consistent hashing with weighted virtual nodes
-- Per-upstream strategies with optional global fallback default
+- Per-upstream strategies; an omitted policy defaults to round-robin
 
 **Routing**
 - Path prefix matching with longest-match selection

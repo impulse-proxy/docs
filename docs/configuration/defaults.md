@@ -46,15 +46,15 @@ Examples:
 The following top-level and structural fields are still required and do not have a default:
 
 - `listen`
-- `listen.tls`
 - `upstream`
 - `upstream.<name>.route`
 - `upstream.<name>.backends`
 - `upstream.<name>.backends[].id`
 - `upstream.<name>.backends[].address`
-- `load_balancing.type` when a top-level `load_balancing` block is present
 
 `listeners` is optional and defaults to `[]`, but if `listeners[]` is non-empty it overrides the top-level `listen` block at runtime.
+Every effective listener must still configure a complete TLS identity through
+`tls.cert` plus `tls.key`, or through at least one `tls.certificates[]` entry.
 
 ## Top-Level Defaults
 
@@ -62,8 +62,9 @@ The following top-level and structural fields are still required and do not have
 | --- | --- | --- |
 | `version` | `1` | Current schema version |
 | `listeners` | `[]` | Optional multi-listener override |
-| `load_balancing` | `null` | Global fallback is absent unless configured |
+| `load_balancing` | `null` | Accepted and validated, but not applied as a v0.6 runtime fallback |
 | `upstream_tls` | object defaults | See [Upstream TLS Defaults](#upstream-tls-defaults) |
+| `secrets` | object defaults | No default provider and an empty provider map |
 | `log` | object defaults | See [Log Defaults](#log-defaults) |
 | `performance` | object defaults | See [Performance Defaults](#performance-defaults) |
 | `observability` | object defaults | See [Observability Defaults](#observability-defaults) |
