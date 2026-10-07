@@ -148,3 +148,9 @@ The current contract intentionally supports only route, tenant, token, and
 client dimensions, and only burst and sustained windows. Adding a selector
 dimension, window type, deny reason, or backend protocol version requires an
 explicit contract and observability update.
+
+## Related Pages
+
+- [Resilience, Rate Limits, and Quota](/docs/configuration/resilience)
+- [Operating Distributed Quota](/docs/operations/distributed-quota)
+- [Metrics Reference](/docs/reference/metrics-reference#quota)

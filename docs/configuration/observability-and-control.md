@@ -289,3 +289,10 @@ For trust boundaries and the production-hardening baseline, use the
 [Security Model](/docs/concepts/security-model). For rollout, failure, and
 monitoring procedures, use
 [Control Plane Operations](/docs/operations/control-plane).
+
+## Related Pages
+
+- [Control API Reference](/docs/reference/control-api-reference)
+- [Metrics Reference](/docs/reference/metrics-reference)
+- [Observability Operations](/docs/operations/observability)
+- [Operations Runbook](/docs/operations/runbook)

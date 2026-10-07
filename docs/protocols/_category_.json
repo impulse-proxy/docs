@@ -1,5 +1,9 @@
 {
-  "label": "Protocols",
-  "position": 11,
-  "link": {"type": "generated-index"}
+  "label": "Protocol Support",
+  "position": 8,
+  "link": {
+    "type": "generated-index",
+    "title": "Protocol Support",
+    "description": "Impulse-specific ingress, backend, ALPN, QUIC, and HTTP behavior."
+  }
 }

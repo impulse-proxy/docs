@@ -1,6 +1,8 @@
 # Migrating to Impulse from NGINX or Envoy
 
-This guide is for platform and SRE engineers who already operate NGINX or Envoy and want to put Impulse in front of their stack, or replace their existing proxy entirely. It assumes you know how reverse proxies work but are new to Impulse's config model.
+This guide helps platform and SRE teams migrate from NGINX or Envoy by placing
+Impulse in front of the existing proxy or replacing it incrementally. It
+assumes familiarity with reverse proxies but not with Impulse configuration.
 
 ---
 
@@ -248,3 +250,10 @@ Point your domain's A/AAAA records back to the old proxy host (or update the LB 
 **Step 5: Confirm traffic is flowing through the old proxy.**
 
 Check your old proxy's access logs to confirm requests are arriving. Check your error rate and latency monitors to confirm they match your pre-migration baseline. Once stable, investigate the Impulse issue in a non-production environment before attempting the migration again.
+
+## Related Pages
+
+- [Status and Limitations](/docs/reference/status-and-limitations)
+- [Production Deployment](/docs/deployment/production)
+- [Routing and Upstreams](/docs/configuration/routing-and-upstreams)
+- [Operations Runbook](/docs/operations/runbook)

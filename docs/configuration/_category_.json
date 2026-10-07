@@ -1,5 +1,9 @@
 {
-  "label": "Configuration",
-  "position": 7,
-  "link": {"type": "generated-index"}
+  "label": "Configure Traffic",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "title": "Configure Traffic",
+    "description": "Schema, examples, routing, TLS, authentication, resilience, and control settings."
+  }
 }

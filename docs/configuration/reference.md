@@ -507,3 +507,10 @@ Use [Configuration Examples](/docs/configuration/examples) for complete
 deployment files and
 [Routing and Upstreams](/docs/configuration/routing-and-upstreams#canonical-example)
 for the canonical routed backend-pool example.
+
+## Related Pages
+
+- [Configuration Defaults](/docs/configuration/defaults)
+- [Configuration Examples](/docs/configuration/examples)
+- [Routing and Upstreams](/docs/configuration/routing-and-upstreams)
+- [Production Deployment](/docs/deployment/production)

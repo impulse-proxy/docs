@@ -97,7 +97,7 @@ If the request fails, confirm that `curl --version` lists `HTTP3`, UDP port
 `9889` is free, the backend is reachable at `127.0.0.1:8080`, and both
 certificate paths are relative to `impulse-demo/`.
 
-## Go Further
+## Related Pages
 
 - [Docker](/docs/getting-started/docker) for the packaged container workflow
 - [Configuration Reference](/docs/configuration/reference) for exact fields and defaults

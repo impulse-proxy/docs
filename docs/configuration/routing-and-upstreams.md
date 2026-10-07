@@ -273,3 +273,10 @@ upstream:
           success_threshold: 2
           cooldown_ms: 5000
 ```
+
+## Related Pages
+
+- [Load Balancing](/docs/user-guide/load-balancing)
+- [Authentication and Secrets](/docs/configuration/authentication-and-secrets)
+- [TLS Configuration](/docs/configuration/tls)
+- [Resilience, Rate Limits, and Quota](/docs/configuration/resilience)

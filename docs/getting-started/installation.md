@@ -123,8 +123,9 @@ listeners. Validate a candidate through controlled non-production startup or
 the Control API `validate → preview → activate` flow described in
 [Production Rollout and Validation](/docs/deployment/production#rollout-and-validation).
 
-## Next Step
+## Related Pages
 
-Use the [Quickstart](/docs/getting-started/quickstart) for the single minimal
-configuration and first proxied request. Before serving real traffic, continue
-with [Production Deployment](/docs/deployment/production).
+- [Quickstart](/docs/getting-started/quickstart)
+- [Docker](/docs/getting-started/docker)
+- [Configuration Reference](/docs/configuration/reference)
+- [Production Deployment](/docs/deployment/production)

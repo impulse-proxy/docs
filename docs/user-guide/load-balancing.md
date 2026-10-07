@@ -52,3 +52,10 @@ Add this block under the selected `upstream.<name>`. Use the single canonical
 backend-pool example in
 [Routing and Upstreams](/docs/configuration/routing-and-upstreams#canonical-example)
 instead of copying separate backend lists for each strategy.
+
+## Related Pages
+
+- [Routing and Upstreams](/docs/configuration/routing-and-upstreams)
+- [Configuration Examples](/docs/configuration/examples)
+- [Metrics Reference](/docs/reference/metrics-reference)
+- [Transport and Backend Lifecycle](/docs/architecture/transport-and-backend-lifecycle)

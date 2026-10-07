@@ -1,5 +1,9 @@
 {
   "label": "Reference",
-  "position": 13,
-  "link": {"type": "generated-index"}
+  "position": 9,
+  "link": {
+    "type": "generated-index",
+    "title": "Reference",
+    "description": "Control API, metrics, status, limitations, and terminology."
+  }
 }

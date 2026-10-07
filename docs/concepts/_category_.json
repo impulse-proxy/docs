@@ -1,5 +1,9 @@
 {
-  "label": "Concepts",
-  "position": 3,
-  "link": {"type": "generated-index"}
+  "label": "Security Model",
+  "position": 7,
+  "link": {
+    "type": "generated-index",
+    "title": "Security Model",
+    "description": "Trust boundaries, threats, and security responsibilities."
+  }
 }

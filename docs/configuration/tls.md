@@ -316,3 +316,10 @@ Relevant metrics include:
 
 Use the [Metrics Reference](/docs/reference/metrics-reference) for exact metric
 semantics and the [Runbook](/docs/operations/runbook) for diagnosis.
+
+## Related Pages
+
+- [Authentication and Secrets](/docs/configuration/authentication-and-secrets)
+- [Secret and Certificate Rotation](/docs/operations/secret-and-cert-rotation)
+- [Security Model](/docs/concepts/security-model)
+- [Protocol Support](/docs/protocols/support)
