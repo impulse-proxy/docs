@@ -1,39 +1,26 @@
 # Configuration Defaults
 
-This page is the central reference for configuration defaults in Impulse.
-
-Use it when you need to answer two questions quickly:
+This page lists the values Impulse applies when configuration fields are
+omitted. Use it to answer two questions:
 
 - which fields may be omitted from the YAML
 - what value or behavior Impulse applies when they are omitted
 
-This page reflects the defaults defined in `crates/config/src/default.rs` and the `Default`-backed config structs in `crates/config/src/config.rs`.
-
-## When To Use This Page
-
-Use this page when you need to answer:
-
-- what happens if a field is omitted
-- whether a behavior is explicit or inherited by default
-- which defaults are safe enough to keep for an initial rollout
-
-Use [Configuration Reference](/docs/configuration/reference) when you need exact field semantics and validation rules. Use [Configuration Examples](/docs/configuration/examples) when you need working end-to-end templates.
+Use [Configuration Reference](/docs/configuration/reference) for field semantics
+and validation rules. Use
+[Configuration Examples](/docs/configuration/examples) for complete examples.
 
 ## How Defaults Work
 
-Impulse applies defaults in three different ways:
-
-- explicit helper-function defaults such as `get_default_port()` or `perf_default_worker_threads()`
-- struct-level `Default` implementations for nested sections such as `performance`, `observability`, and `resilience`
-- Rust/Serde zero-value defaults for optional or collection fields such as `false`, `[]`, `{}`, empty strings, and `null`
-
-Defaults only apply when a field is omitted. Validation still runs after defaults are applied, so an omitted field may deserialize successfully and still be rejected later if a related feature is enabled.
+Defaults apply only when a field is omitted. Validation runs after defaults, so
+enabling a related feature can make another field required.
 
 Examples:
 
 - `observability.control_api.enabled` defaults to `false`
 - `observability.control_api.auth_token` defaults to `null`
-- if you set `observability.control_api.enabled: true`, validation then requires `auth_token`
+- if you set `observability.control_api.enabled: true`, validation then requires
+  a legacy or role-bearing bearer token, or required mTLS
 
 ## Common Mistakes
 
@@ -46,15 +33,15 @@ Examples:
 The following top-level and structural fields are still required and do not have a default:
 
 - `listen`
-- `listen.tls`
 - `upstream`
 - `upstream.<name>.route`
 - `upstream.<name>.backends`
 - `upstream.<name>.backends[].id`
 - `upstream.<name>.backends[].address`
-- `load_balancing.type` when a top-level `load_balancing` block is present
 
 `listeners` is optional and defaults to `[]`, but if `listeners[]` is non-empty it overrides the top-level `listen` block at runtime.
+Every effective listener must still configure a complete TLS identity through
+`tls.cert` plus `tls.key`, or through at least one `tls.certificates[]` entry.
 
 ## Top-Level Defaults
 
@@ -62,8 +49,9 @@ The following top-level and structural fields are still required and do not have
 | --- | --- | --- |
 | `version` | `1` | Current schema version |
 | `listeners` | `[]` | Optional multi-listener override |
-| `load_balancing` | `null` | Global fallback is absent unless configured |
+| `load_balancing` | `null` | Accepted and validated, but not applied as a v0.6 runtime fallback |
 | `upstream_tls` | object defaults | See [Upstream TLS Defaults](#upstream-tls-defaults) |
+| `secrets` | object defaults | No default provider and an empty provider map |
 | `log` | object defaults | See [Log Defaults](#log-defaults) |
 | `performance` | object defaults | See [Performance Defaults](#performance-defaults) |
 | `observability` | object defaults | See [Observability Defaults](#observability-defaults) |
@@ -94,8 +82,12 @@ These defaults apply to the top-level `upstream_tls` block and to per-upstream `
 | `upstream_tls.strict_sni` | `true` | Upstream SNI stays strict by default |
 | `upstream_tls.ca_file` | `null` | No custom CA file |
 | `upstream_tls.ca_dir` | `null` | No custom CA directory |
+| `upstream_tls.client_certificate` | `null` | No file-backed client certificate chain |
+| `upstream_tls.client_certificate_ref` | `null` | No secret-backed client certificate chain |
+| `upstream_tls.client_key` | `null` | No file-backed client private key |
+| `upstream_tls.client_key_ref` | `null` | No secret-backed client private key |
 
-## Upstream And Backend Defaults
+## Upstream and Backend Defaults
 
 ### Upstream-Level Defaults
 
@@ -203,10 +195,19 @@ These apply when a backend provides a `health_check` object and omits individual
 
 | Field | Default | Notes |
 | --- | --- | --- |
-| `resilience.route_queue.default_cap` | `512` | Default per-route queue size |
-| `resilience.route_queue.global_cap` | `2048` | Global route-queue cap |
+| `resilience.route_queue.default_cap` | `512` | Default per-upstream concurrent permit cap |
+| `resilience.route_queue.global_cap` | `2048` | Global concurrent permit cap |
 | `resilience.route_queue.shed_retry_after_seconds` | `1` | Retry-After hint on shed responses |
 | `resilience.route_queue.caps` | `{}` | No per-route overrides by default |
+
+### Scoped Rate Limits
+
+| Field | Default | Notes |
+| --- | --- | --- |
+| `resilience.scoped_rate_limits` | `[]` | No per-instance token-bucket rules |
+| `resilience.scoped_rate_limits[].key` | `null` | Scope-specific validation or defaults apply |
+| `resilience.scoped_rate_limits[].route_allowlist` | `[]` | Empty means every upstream pool |
+| `resilience.scoped_rate_limits[].idle_ttl_secs` | `300` | Idle local bucket lifetime |
 
 ### Protocol Policy
 
@@ -273,6 +274,7 @@ These apply when a backend provides a `health_check` object and omits individual
 | `resilience.quota.backend.max_inflight` | `1024` | Redis only |
 | `resilience.quota.local_fallback` | `null` | No degraded local fallback unless configured explicitly |
 | `resilience.quota.local_fallback.key_prefix` | `"impulse:quota:fallback"` | Default fallback key prefix when fallback is enabled |
+| `resilience.quota.local_fallback.max_entries` | no default | Required when local fallback is configured |
 | `resilience.quota.policies` | `[]` | Quota stays inert until explicit policies are configured |
 
 ### Watchdog
@@ -320,7 +322,7 @@ These apply when a backend provides a `health_check` object and omits individual
 | `observability.control_api.restart_path` | `"/admin/runtime/restart"` | Restart control path |
 | `observability.control_api.reload_path` | `"/admin/runtime/reload"` | Full config hot-reload path |
 | `observability.control_api.reload_certs_path` | `"/admin/runtime/reload-certs"` | Certificate reload path |
-| `observability.control_api.auth_token` | `null` | Must be set when the control API is enabled |
+| `observability.control_api.auth_token` | `null` | One valid bearer credential or required mTLS is needed when the API is enabled |
 | `observability.control_api.max_connections` | `256` | Concurrent control API connections cap |
 | `observability.control_api.connection_timeout_ms` | `30000` | Control API connection timeout |
 
@@ -354,4 +356,4 @@ These apply when a backend provides a `health_check` object and omits individual
 
 - [Configuration Reference](/docs/configuration/reference)
 - [Configuration Examples](/docs/configuration/examples)
-- [Production Readiness](/docs/operations/production-readiness)
+- [Production Checklist](/docs/deployment/production#production-checklist)

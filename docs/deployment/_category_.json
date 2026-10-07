@@ -1,5 +1,9 @@
 {
-  "label": "Deployment",
-  "position": 8,
-  "link": {"type": "generated-index"}
+  "label": "Deploy Impulse",
+  "position": 4,
+  "link": {
+    "type": "generated-index",
+    "title": "Deploy Impulse",
+    "description": "Production rollout and migration guidance."
+  }
 }

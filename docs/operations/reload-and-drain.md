@@ -1,10 +1,12 @@
 # Reload and Drain
 
-This document explains which changes activate live, which changes require a restart, and what operators should expect from reload, rollback, cert reload, and drain workflows.
+This page distinguishes live activation from restart, reload, rollback,
+certificate reload, and drain workflows.
 
 ## Core Rule
 
-Impulse does not patch runtime state in place. It prepares a complete next runtime generation and swaps it atomically when the change is compatible.
+Impulse does not patch runtime state in place. It prepares a complete runtime
+generation and swaps it atomically when the change is compatible.
 
 That means:
 
@@ -81,7 +83,10 @@ It does not:
 
 Use it for certificate rotation when only the cert or trust material changed.
 
-Upstream client certificates, upstream CA bundles, and other secret-backed upstream TLS material are never rotated through `reload-certs` — they are generation-owned and go through `validate`/`preview`/`activate` instead. See [Secret and Certificate Rotation](/docs/operations/secret-and-cert-rotation) for the full rotation and rollback runbook.
+Upstream client certificates, certificate authority (CA) bundles, and other secret-backed upstream TLS
+material are generation-owned. Rotate them through `validate`, `preview`, and
+`activate`, not `reload-certs`. See
+[Secret and Certificate Rotation](/docs/operations/secret-and-cert-rotation).
 
 ## Rollback
 
@@ -171,7 +176,6 @@ If drain times out:
 ## Related Pages
 
 - [Production Deployment](/docs/deployment/production)
-- [Production Readiness](/docs/operations/production-readiness)
 - [Runbook](/docs/operations/runbook)
 - [Secret and Certificate Rotation](/docs/operations/secret-and-cert-rotation)
 - [Control API Reference](/docs/reference/control-api-reference)

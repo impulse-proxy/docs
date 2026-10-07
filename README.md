@@ -30,6 +30,9 @@ This generates the production site in the `build` directory.
 
 ## Deployment
 
-Pushes to `main` are deployed to GitHub Pages by the workflow in
-`.github/workflows/deploy.yml`. In the repository's **Settings → Pages**, set
-the source to **GitHub Actions**.
+The Docusaurus configuration targets the `gh-pages` deployment branch at
+<https://impulse-proxy.github.io/docs/>. This repository does not currently
+contain a GitHub Actions deployment workflow, so pushing to `main` does not by
+itself publish the site. For manual Docusaurus deployment, configure Pages to
+deploy from the root of the `gh-pages` branch. Select **GitHub Actions** as the
+Pages source only after an Actions deployment workflow has been added.

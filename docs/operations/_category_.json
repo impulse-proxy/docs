@@ -1,5 +1,9 @@
 {
-  "label": "Operations",
-  "position": 9,
-  "link": {"type": "generated-index"}
+  "label": "Operate Impulse",
+  "position": 5,
+  "link": {
+    "type": "generated-index",
+    "title": "Operate Impulse",
+    "description": "Runtime control, rollout, observability, capacity, rotation, and incident response."
+  }
 }

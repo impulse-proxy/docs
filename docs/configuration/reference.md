@@ -1,189 +1,65 @@
 # Configuration Reference
 
-This is the canonical configuration document for Impulse. It should answer these questions for every major configuration area:
+This page is the authority for the Impulse v0.6 configuration schema, allowed
+values, validation rules, and runtime semantics.
 
-- what the section is for
-- what fields exist
-- what values are allowed
-- what the defaults are
-- what runtime behavior the settings change
-- what operators should be careful about
+Use [Configuration Defaults](/docs/configuration/defaults) for the default
+inventory and [Configuration Examples](/docs/configuration/examples) for
+complete deployment patterns.
 
-Use [Configuration Defaults](/docs/configuration/defaults) for the exhaustive default inventory and [Configuration Examples](/docs/configuration/examples) for complete deployment patterns. Use this page when you need exact schema and semantics.
+For resilience, scoped rate-limit, and quota fields, see
+[Resilience, Rate Limits, and Quota](/docs/configuration/resilience). Redis
+deployment, rollout, and incident guidance is in
+[Distributed Quota Operations](/docs/operations/distributed-quota).
 
-For distributed quota policy examples, Redis backend posture, migration from
-legacy scoped rate limiting, and operator interpretation, see
-[Distributed Quota](/docs/operations/distributed-quota).
+## Scope
 
-## Scope Of This Reference
+This page documents the accepted YAML keys, defaults, validation constraints,
+and runtime meaning of Impulse v0.6 configuration. Unknown fields are rejected.
+For the complete default inventory, see
+[Configuration Defaults](/docs/configuration/defaults). For deployment-shaped
+files, see [Configuration Examples](/docs/configuration/examples).
 
-This page covers:
+Impulse loads YAML with `impulse --config /path/to/config.yaml`. If `--config`
+is omitted, it attempts `/etc/impulse/config.yaml`.
 
-- schema shape
-- precedence and normalization rules
-- validation behavior
-- runtime meaning of major knobs
-- the boundary between raw YAML input and runtime-normalized policy objects
+## Top-Level Configuration
 
-Default coverage now lives on [Configuration Defaults](/docs/configuration/defaults) so the full inventory can stay centralized and easier to audit against the code.
+| **Field** | **Type** | **Required** | **Default** | **Meaning** |
+| --------- | -------- | ------------ | ----------- | ----------- |
+| `version` | integer | No | `1` | Configuration schema version. Impulse v0.6 accepts only version `1`. |
+| `listen` | object | Yes | — | Single listener definition. The key is required even when `listeners` is used. |
+| `listeners` | array of objects | No | `[]` | Effective listener set when non-empty; otherwise `listen` is used. |
+| `upstream` | map of objects | Yes | — | Named upstream pools. The map must contain at least one entry. |
+| `load_balancing` | object or `null` | No | `null` | Accepted and validated, but not applied as a v0.6 runtime fallback; configure each upstream instead. |
+| `upstream_tls` | object | No | `{}` | Global backend TLS policy inherited by upstreams that omit `tls`. See [TLS Configuration](/docs/configuration/tls#upstream-backend-tls). |
+| `secrets` | object | No | `{}` | Literal and file-backed secret-provider configuration. See [Authentication and Secrets](/docs/configuration/authentication-and-secrets). |
+| `log` | object | No | `{}` | Logging level and output configuration. |
+| `performance` | object | No | `{}` | Timeouts, limits, worker settings, buffers, and backend DNS refresh. |
+| `observability` | object | No | `{}` | Metrics, tracing, Control API, and runtime-view endpoints. |
+| `resilience` | object | No | `{}` | Admission, queueing, retry, circuit-breaker, brownout, and protocol policies. |
+| `security` | object | No | `{}` | Process-security and privilege-drop settings. |
 
-This page does not change the current product behavior:
+Top-level `listen` is required by the schema. If `listeners` contains one or
+more entries, those entries are the effective listeners and the values inside
+`listen` are not validated or activated. Effective listener `(address, port)`
+pairs must be unique.
 
-- configuration hot reload is supported through the staged `POST /admin/runtime/validate`,
-  `POST /admin/runtime/preview`, and `POST /admin/runtime/activate` flow. The legacy
-  `POST /admin/runtime/reload` shortcut still exists, but it bypasses preview. Runtime-managed
-  changes are re-read, validated, and applied through an atomic runtime swap (routes, upstreams,
-  backends, timeouts, limits, resilience policies, and `log.level`). Only log format/file
-  settings, tracing config, control-plane thread counts, and listener removal / bind-address
-  changes still require a restart.
-- certificate reload (`POST /admin/runtime/reload-certs`) covers new handshakes only
-- backend transport is scheme-driven: `https://` backends use HTTP/2, `http://` backends use HTTP/1.1
+Per-upstream `tls` replaces the global `upstream_tls` policy for that upstream.
+The top-level `load_balancing` field is accepted and validated, but v0.6 does
+not apply it to upstreams. An upstream that omits its own `load_balancing` uses
+the per-upstream default, `round-robin`.
 
-## Raw Config vs Runtime Interpretation
-
-Impulse now has a clearer split between:
-
-- raw configuration schema loaded from YAML
-- normalized runtime configuration consumed by the rest of the system
-
-The raw schema is defined by the `config` module and is what this page documents field-by-field.
-
-The runtime model is defined by `crates/config/src/runtime.rs` and the domain interpreters under `crates/config/src/runtime/policies/`. Downstream crates should depend on that runtime model, not on the raw YAML shape.
-
-### Canonical runtime boundary
-
-The important runtime outputs are:
-
-- `RuntimeConfig`
-- `RuntimePolicySet`
-- `RuntimeListenerPolicySet`
-- `RuntimeUpstream`
-- `RuntimeBackendEndpoint`
-- `RuntimeLoadBalancingPolicy`
-- `RuntimeAdmissionPolicy`
-- `RuntimeAuthPolicy`
-- `RuntimeTransportPolicy`
-- `RuntimeTimeoutPolicy`
-
-These types are the validated, normalized forms that `edge`, `transport`, and `lb` actually execute against.
-
-### What normalization means in practice
-
-Normalization is where Impulse resolves and validates things such as:
-
-- listener selection precedence between `listen` and `listeners`
-- per-upstream override precedence over global defaults
-- trimming and rejection of empty strings where fields must be meaningful
-- route host and method canonicalization
-- backend endpoint parsing and transport-kind derivation
-- timeout conversion from raw millisecond fields into runtime `Duration`s
-- cross-field validation for limits, inflight caps, and watchdog/retry policy
-- route, auth, admission, backend, and load-balancing policy shaping
-
-If the raw YAML is accepted, the rest of the system should not need to reinterpret those rules again.
-
-## Reading This Reference
-
-- Start with [Configuration Examples](/docs/configuration/examples) if you need a working template.
-- Use [Configuration Defaults](/docs/configuration/defaults) when you need the effective baseline for omitted fields.
-- Read [TLS Setup](/docs/configuration/tls) before configuring production certificates or private trust roots.
-- Read [Production Readiness](/docs/operations/production-readiness) if you are deciding whether the current operational model fits your rollout requirements.
-
-## Configuration Reading Map
-
-Use this quick map before diving into field tables:
-
-| Goal | Page |
-| --- | --- |
-| Copy a working template | [Configuration Examples](/docs/configuration/examples) |
-| Check what happens when a field is omitted | [Configuration Defaults](/docs/configuration/defaults) |
-| Understand exact field semantics | this page |
-| Configure certificates and trust | [TLS Setup](/docs/configuration/tls) |
-| Understand rollout and restart implications | [Production Deployment](/docs/deployment/production) and [Production Readiness](/docs/operations/production-readiness) |
-
-## Configuration File Format
-
-Impulse uses YAML configuration loaded with:
-
-```bash
-impulse --config /path/to/config.yaml
-```
-
-If `--config` is omitted, Impulse attempts `/etc/impulse/config.yaml`.
-
-## Canonical Top-Level Shape
+### Minimal Complete Configuration
 
 ```yaml
 version: 1
-
-listen:
-  protocol: http3
-  address: "0.0.0.0"
-  port: 9889
-  tls:
-    cert: "/etc/impulse/certs/fullchain.pem"
-    key: "/etc/impulse/certs/privkey.pem"
-
-upstream_tls:
-  verify_certificates: true
-  strict_sni: true
-
-upstream:
-  default:
-    route:
-      path_prefix: "/"
-    backends:
-      - id: "backend1"
-        address: "backend.internal.example:8443"
-        weight: 100
-
-log:
-  level: info
-  format: plain
-```
-
-## Top-Level Keys At A Glance
-
-| Key | Required | Meaning |
-| --- | --- | --- |
-| `version` | No | Schema version; defaults to `1` |
-| `listen` | Yes | Single-listener definition |
-| `listeners` | No | Multi-listener override for the top-level `listen` block |
-| `upstream_tls` | No | Global TLS policy for HTTPS backends |
-| `upstream` | Yes | Named route and backend pools |
-| `load_balancing` | No | Global fallback load-balancing policy |
-| `log` | No | Logging policy |
-| `performance` | No | Timeouts, limits, worker model, and buffer sizing |
-| `resilience` | No | Admission, queueing, circuit breaker, retry, brownout, and protocol policy |
-| `observability` | No | Metrics, control API, tracing, and related surfaces |
-| `security` | No | Privilege-drop behavior |
-
-## Common Configuration Patterns
-
-Use these snippets as starting points before moving to the field-by-field sections below.
-
-### Pattern Comparison
-
-| Goal | Recommended shape | Why |
-| --- | --- | --- |
-| one public listener and one simple upstream | top-level `listen` plus one `upstream` | smallest production-capable shape |
-| multiple listener addresses or identities | `listeners[]` | explicit multi-listener runtime model |
-| cleartext backend for local or internal services | `http://host[:port]` backend address | avoids accidentally opting into HTTPS defaults |
-| private upstream trust roots | global `upstream_tls` or per-upstream `tls` override | keeps verification enabled while using private CA material |
-| contract-style request limiting | `resilience.quota` | keeps quota separate from scoped rate limiting and overload |
-
-### Minimal Public Edge
-
-```yaml
-version: 1
-
 listen:
   address: "0.0.0.0"
   port: 9889
   tls:
-    cert: "/etc/impulse/certs/fullchain.pem"
-    key: "/etc/impulse/certs/privkey.pem"
-
+    cert: "/etc/impulse/tls/server.crt"
+    key: "/etc/impulse/tls/server.key"
 upstream:
   app:
     route:
@@ -193,992 +69,129 @@ upstream:
         address: "https://app.internal.example:8443"
 ```
 
-### Local Development With Cleartext Backend
+## Listener Configuration
+
+The `listen` object and every `listeners[]` entry use the same schema. Each
+effective listener creates a native QUIC listener and its bootstrap listener.
+
+| **Field** | **Type** | **Required** | **Default** | **Meaning** |
+| --------- | -------- | ------------ | ----------- | ----------- |
+| `protocol` | string | No | `http3` | Listener protocol. The only accepted value is the case-sensitive string `http3`. |
+| `address` | string | No | `0.0.0.0` | Non-empty bind address. |
+| `port` | integer | No | `9889` | Bind port in the range `1`–`65535`. |
+| `tls` | object | No | `{}` | Listener TLS identities and optional client authentication. A valid effective listener must define a complete TLS identity. |
+
+The bootstrap listener accepts HTTP/1.1 and HTTP/2 traffic and advertises the
+native QUIC listener with `Alt-Svc`. Both listener paths use the same routes,
+upstreams, load balancing, and backend health state.
+
+### Listener TLS
+
+| **Field** | **Type** | **Required** | **Default** | **Meaning** |
+| --------- | -------- | ------------ | ----------- | ----------- |
+| `cert` | string | Conditionally | `""` | Default certificate PEM path. Must be paired with `key`. |
+| `key` | string | Conditionally | `""` | Default private-key PEM path. Must be paired with `cert`. |
+| `certificates` | array of objects | No | `[]` | Exact-SNI certificate identities. Required when the default `cert`/`key` pair is absent. |
+| `certificates[].server_name` | string | Yes | — | Exact DNS hostname used for SNI selection. Wildcards and ports are rejected. |
+| `certificates[].cert` | string | Yes | — | Certificate PEM path for this identity. |
+| `certificates[].key` | string | Yes | — | Private-key PEM path for this identity. |
+| `client_auth` | object | No | `{}` | Downstream mutual-TLS policy. |
+| `client_auth.enabled` | boolean | No | `false` | Enables client-certificate verification. |
+| `client_auth.require_client_cert` | boolean | No | `false` | Rejects clients without a certificate. Requires `enabled: true`. |
+| `client_auth.ca_file` | string or `null` | Conditionally | `null` | Client CA PEM path. Required when client authentication is enabled. |
+
+Certificate and key files must be readable PEM files no larger than 1 MiB.
+Normalized SNI names must be unique. Certificate selection uses an exact SNI
+match first, then the default `cert`/`key` pair, then the first
+`certificates[]` entry. An unmatched or absent SNI therefore uses the default
+identity. Certificate reload affects new handshakes, not established
+connections.
+
+Downstream SNI normalization, SAN coverage, optional and required client-auth
+behavior, and atomic reload semantics are documented in
+[TLS Configuration](/docs/configuration/tls#downstream-listener-tls).
 
 ```yaml
-version: 1
-
-listen:
-  address: "127.0.0.1"
-  port: 9889
-  tls:
-    cert: "certs/localhost.crt"
-    key: "certs/localhost.key"
-
-upstream:
-  local_app:
-    route:
-      path_prefix: "/"
-    backends:
-      - id: "app-local"
-        address: "http://127.0.0.1:8080"
-```
-
-### Private CA Upstream
-
-```yaml
-upstream_tls:
-  verify_certificates: true
-  strict_sni: true
-  ca_file: "/etc/impulse/pki/internal-ca.pem"
-
-upstream:
-  internal_api:
-    route:
-      host: "api.example.internal"
-      path_prefix: "/"
-    backends:
-      - id: "internal-api-1"
-        address: "https://api.internal.example:9443"
-```
-
-## Common Top-Level Mistakes
-
-- configuring `listeners[]` and then expecting the top-level `listen` block to stay active at runtime
-- using backend shorthand when cleartext `http://` was intended
-- exposing the Control API on a non-loopback address without strong access controls
-- turning off upstream certificate verification without treating it as an explicit break-glass choice
-- increasing inflight, body, or queue limits without validating backend and host capacity
-
-## Runtime Normalization And Precedence
-
-Impulse normalizes configuration into a single runtime model before it serves traffic.
-
-Precedence and interpretation rules:
-
-1. If `listeners[]` is non-empty, it is the only effective listener set.
-2. The top-level `listen` block is used only when `listeners[]` is absent or empty.
-3. Per-upstream TLS settings override global `upstream_tls`.
-4. Per-upstream load-balancing settings override the top-level `load_balancing` fallback.
-5. Certificate reload updates listener TLS material for future handshakes; it does not rewrite the already-running route or upstream model.
-
-## Runtime Interpretation Domains
-
-The runtime interpreter is now decomposed by policy domain. That split is important because it defines where runtime behavior is shaped and validated.
-
-### Listener and listener-TLS interpretation
-
-The listener interpreter resolves:
-
-- whether `listen` or `listeners[]` is authoritative
-- listener source identity
-- listener bind conflicts
-- default TLS identity and SNI identities
-- listener-scoped TLS reload inventory
-
-This produces runtime listener types such as:
-
-- `RuntimeListener`
-- `RuntimeListenerTls`
-- `ListenerRuntimeConfig`
-
-### Timeout interpretation
-
-Timeout interpretation converts raw timeout fields into the canonical runtime timeout policy:
-
-- backend request timeout
-- backend connect timeout
-- backend body idle and total timeouts
-- shutdown drain timeout
-- client body idle timeout
-- backend DNS refresh interval
-- QUIC idle timeout
-
-Cross-field ordering is validated here rather than by data-plane callers.
-
-### Transport interpretation
-
-Transport interpretation shapes:
-
-- worker and control-plane thread counts
-- shard layout
-- queue capacities
-- UDP buffer sizing
-- inflight limits
-- backend connection reuse policy
-- DNS refresh enablement
-- body-size and prebuffer limits
-
-This produces:
-
-- `RuntimeTransportPolicy`
-- `RuntimeConnectionLimits`
-- `RuntimeBackendConnectionPolicy`
-
-### Auth interpretation
-
-Auth interpretation shapes:
-
-- API key auth policy
-- JWT auth policy
-- external auth policy
-- external auth failure mode
-- external auth request-header shaping
-
-This produces runtime auth types such as:
-
-- `RuntimeAuthPolicy`
-- `RuntimeApiKeyAuth`
-- `RuntimeJwtAuth`
-- `RuntimeExternalAuth`
-
-### Admission and rate-limit interpretation
-
-Admission interpretation shapes:
-
-- brownout policy
-- overload and route queue policy
-- scoped rate-limit rules
-- watchdog-related admission policy
-
-This produces:
-
-- `RuntimeAdmissionPolicy`
-- `RuntimeRateLimitPolicy`
-- `RuntimeScopedRateLimitPolicy`
-- `RuntimeBrownoutPolicy`
-
-### Backend interpretation
-
-Backend interpretation shapes:
-
-- canonical backend endpoint
-- authority host and port
-- hostname vs IP-literal classification
-- runtime backend transport kind
-- backend TLS policy
-- backend DNS policy
-- backend health-check policy
-
-This produces:
-
-- `RuntimeBackendEndpoint`
-- `RuntimeBackendTlsPolicy`
-- `RuntimeBackendDnsPolicy`
-- `RuntimeBackendHealthCheck`
-
-### Load-balancing interpretation
-
-Load-balancing interpretation shapes:
-
-- canonical strategy
-- request-key extraction spec
-- alternate-backend behavior
-
-This produces:
-
-- `RuntimeLoadBalancingPolicy`
-- `RuntimeLoadBalancingStrategy`
-- `RuntimeRequestKeySpec`
-
-### Resilience and watchdog interpretation
-
-Resilience interpretation shapes:
-
-- retry budget policy
-- hedge policy
-- circuit breaker policy
-- watchdog runtime policy
-
-This produces:
-
-- `RuntimeRetryBudgetPolicy`
-- `RuntimeHedgingPolicy`
-- `RuntimeCircuitBreakerPolicy`
-- `RuntimeWatchdogPolicy`
-
-## How To Read Field Semantics
-
-For each setting on this page, keep the following distinction in mind:
-
-- raw schema semantics tell you what can be written in YAML
-- runtime semantics tell you what the interpreter will actually execute after normalization
-
-Examples:
-
-- a backend address string is raw input; `RuntimeBackendEndpoint` is the executed form
-- a timeout field in milliseconds is raw input; `RuntimeTimeoutPolicy` is the executed form
-- a `load_balancing.key` string is raw input; `RuntimeRequestKeySpec` is the executed form
-- auth and admission nested objects are raw input; `RuntimeAuthPolicy` and `RuntimeAdmissionPolicy` are the executed forms
-
-## Production-Safe Defaults
-
-The configuration model is intentionally safe-by-default in several important areas:
-
-- native ingress defaults to HTTP/3
-- HTTPS upstreams verify certificates by default
-- upstream SNI is enabled by default
-- bootstrap listener TLS is always tied to configured listener identity
-- request and response paths are bounded by explicit timeout and size controls
-
-Treat the following settings as high-risk when changed:
-
-- `upstream_tls.verify_certificates: false`
-- broad increases to inflight or body-size limits without capacity validation
-- enabling public exposure of the control API
-- route or listener changes that rely on restart without a drain-and-rollback plan
-
-## Complete Example Configurations
-
-For complete examples, use [Configuration Examples](/docs/configuration/examples).
-
-## Top-Level Configuration
-
-### version
-
-Configuration schema version.
-
-- Current version: `1`
-- Supported versions: `1`
-- Backward-compatibility policy: unsupported versions are rejected at load time, and version-specific migration hooks are used when introducing future schema versions.
-
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| `version` | integer | No | 1 | Configuration schema version |
-
-### listen
-
-Server listening configuration. Defines the protocol, address, and port for incoming client connections. Used as the single listener when `listeners` is absent or empty.
-
-Runtime interpretation:
-
-- lowered into `RuntimeListener` plus `RuntimeListenerTls`
-- then wrapped into `ListenerRuntimeConfig` with normalized timeout and transport policy
-- ignored for runtime listener selection when `listeners[]` is non-empty
-
-### listeners
-
-Optional multi-listener array. When set, overrides the top-level `listen` block. Each entry is an independent listener with its own address, port, and TLS identity. Impulse spawns a separate QUIC worker group and bootstrap TLS listener per entry.
-
-Runtime interpretation:
-
-- becomes the authoritative listener set when non-empty
-- each entry is normalized independently
-- duplicate bind combinations are rejected before startup or reload commit
-
-### Runtime Normalization And Precedence
-
-Impulse normalizes configuration into one canonical runtime model before any listener starts.
-
-Precedence rules:
-
-1. `listeners[]` is the only effective listener set when it is non-empty.
-2. The top-level `listen` block is only used when `listeners[]` is empty.
-3. Listener TLS fallback order is:
-   1. exact SNI match in `listen.tls.certificates`
-   2. legacy `listen.tls.cert` + `listen.tls.key` when configured
-   3. otherwise the first `listen.tls.certificates[]` entry becomes the default identity
-4. Upstream TLS precedence is:
-   1. `upstream.<name>.tls`
-   2. global `upstream_tls`
-5. Listener certificate reload updates listener TLS material for new handshakes through `observability.control_api.reload_certs_path` without restarting the process. Existing QUIC connections and existing bootstrap TLS sessions keep the certificate and client-auth state that they already negotiated.
-
-Startup rejects ambiguous or contradictory combinations, including duplicate effective listener binds, duplicate normalized route matchers, partial legacy listener cert/key pairs, invalid or duplicate SNI `server_name` entries, `host_policy.host` outside `mode: rewrite`, and `CONNECT` routing/policy conflicts.
-
-### upstream
-
-Named upstream pool definitions. Each key represents a unique upstream pool with its own routing rules, load balancing strategy, and backend servers.
-
-Runtime interpretation:
-
-- lowered into `RuntimeUpstream`
-- route matching becomes `RuntimeRouteMatchPolicy`
-- backend entries become `RuntimeBackend` plus `RuntimeBackendEndpoint`
-- effective upstream TLS, auth, admission, and load-balancing policy are resolved here
-
-### load_balancing
-
-Optional global fallback for upstream load balancing. If an upstream omits `upstream.<name>.load_balancing`, the top-level `load_balancing` value is applied to that upstream during config load.
-
-Runtime interpretation:
-
-- global fallback only
-- each effective upstream receives a canonical `RuntimeLoadBalancingPolicy`
-- request key strings are parsed into `RuntimeRequestKeySpec`
-
-### log
-
-Logging configuration. Controls log level and output formatting.
-
-Runtime interpretation:
-
-- `log.level` participates in live reload
-- log sink shape such as file output and format is treated as startup-owned and may require restart
-
-## Default Values
-
-Impulse has a large number of defaults spread across helper functions and `Default` implementations. The central inventory now lives on [Configuration Defaults](/docs/configuration/defaults).
-
-Use that page when you need:
-
-- the full list of fields that may be omitted
-- the exact value applied for omitted fields
-- the difference between `null`, empty collections, empty strings, and structured section defaults
-
-This reference page keeps the schema and semantics, while [Configuration Defaults](/docs/configuration/defaults) owns the exhaustive default matrix.
-
-## Validation Model
-
-Validation happens during runtime interpretation, not lazily in downstream crates.
-
-Important validation categories include:
-
-- invalid listener bind combinations
-- invalid or contradictory TLS identity configuration
-- duplicate normalized route matchers
-- invalid backend endpoint addresses
-- unsupported load-balancing strategies or key specs
-- zero or out-of-range timeout and limit values
-- illegal cross-field timeout ordering
-- unsupported watchdog or auth policy combinations
-
-The expected downstream contract is:
-
-- if `RuntimeConfig::from_config(...)` succeeds, the runtime receives canonical and validated policy objects
-- data-plane and control-plane crates should consume those objects rather than repeat raw-schema validation
-
-## Listen Configuration
-
-Configures the listening interface for incoming client connections. HTTP/3 requires TLS configuration.
-
-Use this section when you need to decide:
-
-- where Impulse binds
-- which TLS identity it serves
-- whether one listener or multiple listeners are needed
-
-### Properties
-
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| `protocol` | string | No | `http3` | Native ingress protocol for the data plane (HTTP/3 over QUIC) |
-| `address` | string | No | `0.0.0.0` | IP address to bind to |
-| `port` | integer | No | `9889` | Port to bind to |
-| `tls` | object | Yes | - | TLS configuration (required for HTTP/3) |
-
-### Protocol Values
-
-- `http3`: HTTP/3 over QUIC (recommended)
-
-Impulse also exposes a TLS bootstrap ingress for HTTP/1.1 and HTTP/2 clients. This compatibility path is primarily used for browser interoperability and advertising `Alt-Svc` so clients can upgrade to HTTP/3. Backend selection on the bootstrap path uses the same route-resolution, load-balancing strategy, and health-aware eligibility rules as the native QUIC ingress.
-
-### TLS Configuration
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `cert` | string | Conditionally | Legacy/default TLS certificate path. Required with `key` when no `certificates` entries are configured |
-| `key` | string | Conditionally | Legacy/default TLS private key path. Required with `cert` when no `certificates` entries are configured |
-| `certificates` | array | No | SNI certificate entries |
-| `certificates[].server_name` | string | Yes | Exact SNI hostname (DNS name) to match |
-| `certificates[].cert` | string | Yes | Certificate path for that SNI hostname |
-| `certificates[].key` | string | Yes | Private key path for that SNI hostname |
-
-Certificate selection order:
-
-1. Exact SNI match in `listen.tls.certificates`.
-2. Fallback to `listen.tls.cert`/`listen.tls.key` when configured.
-3. If legacy pair is not configured, fallback to the first entry in `listen.tls.certificates`.
-
-Operational notes:
-
-- If SNI is missing or unmatched, Impulse serves the default identity rather than rejecting the handshake.
-- `listen.tls.certificates[].server_name` must be covered by the mapped certificate SANs or startup fails.
-- Impulse exports downstream certificate expiry gauges:
-  - `impulse_downstream_tls_certificate_not_after_seconds`
-  - `impulse_downstream_tls_certificate_days_remaining`
-- Certificate reload affects new QUIC and bootstrap TLS handshakes only. Existing connections continue with the TLS session they already negotiated.
-- Downstream TLS metrics also include:
-  - `impulse_downstream_tls_handshake_failure_total{listener,reason}`
-  - `impulse_downstream_tls_certificate_selection_total{listener,selection}`
-  - `impulse_downstream_tls_alpn_total{listener,protocol}`
-- Important `reason` labels are:
-  - `missing_client_cert`
-  - `invalid_client_cert`
-  - `expired_client_cert`
-  - `unknown_issuer`
-  - `alpn`
-  - `handshake`
-
-### Examples
-
-```yaml
-# Standard HTTP/3 configuration
 listen:
   protocol: http3
   address: "0.0.0.0"
   port: 9889
   tls:
-    cert: "/etc/impulse/certs/server.crt"
-    key: "/etc/impulse/certs/server.key"
-
-# Localhost-only development
-listen:
-  protocol: http3
-  address: "127.0.0.1"
-  port: 9889
-  tls:
-    cert: "certs/localhost.crt"
-    key: "certs/localhost.key"
-
-# Multi-domain SNI certificates with legacy fallback
-listen:
-  protocol: http3
-  address: "0.0.0.0"
-  port: 9889
-  tls:
-    cert: "/etc/impulse/certs/default.crt"
-    key: "/etc/impulse/certs/default.key"
     certificates:
       - server_name: "api.example.com"
-        cert: "/etc/impulse/certs/api.crt"
-        key: "/etc/impulse/certs/api.key"
-      - server_name: "www.example.com"
-        cert: "/etc/impulse/certs/www.crt"
-        key: "/etc/impulse/certs/www.key"
+        cert: "/etc/impulse/tls/api.crt"
+        key: "/etc/impulse/tls/api.key"
 ```
 
-### Multi-Listener Configuration
+## Upstream TLS
 
-Use `listeners` instead of `listen` when you need multiple independent listeners — for example, a public-facing port and a private/internal port with different TLS identities.
+The top-level `upstream_tls` policy applies to each upstream that omits its own
+`tls` object. A present `upstream.<name>.tls` object replaces the complete
+global policy rather than merging with it. These settings affect only
+`https://` backends.
 
-`listeners` and `listen` share the same per-entry schema. When `listeners` is set, the top-level `listen` block is ignored for runtime listener selection and listener validation.
+| **Field** | **Type** | **Required** | **Default** | **Meaning** |
+| --------- | -------- | ------------ | ----------- | ----------- |
+| `verify_certificates` | boolean | No | `true` | Verifies the backend certificate chain and identity. |
+| `strict_sni` | boolean | No | `true` | Sends the backend hostname as SNI; disabling it does not disable certificate verification. |
+| `ca_file` | string or `null` | No | `null` | PEM CA bundle added to the built-in WebPKI roots. |
+| `ca_dir` | string or `null` | No | `null` | Directory of `.pem`, `.crt`, or `.cer` CA files added to the built-in roots. |
+| `client_certificate` | string or `null` | Conditionally | `null` | PEM client-certificate chain path; mutually exclusive with `client_certificate_ref`. |
+| `client_certificate_ref` | object or `null` | Conditionally | `null` | Secret reference for the client-certificate chain. |
+| `client_key` | string or `null` | Conditionally | `null` | PEM client-key path; mutually exclusive with `client_key_ref`. |
+| `client_key_ref` | object or `null` | Conditionally | `null` | Secret reference for the client key. |
 
-| Shape | Use when | Runtime effect |
-| --- | --- | --- |
-| `listen` | exactly one listener is needed | one active listener definition |
-| `listeners[]` | more than one listener is needed | `listen` is ignored and the array becomes the active listener set |
-
-```yaml
-# Single listener — use the top-level listen block (default)
-listen:
-  protocol: http3
-  address: "0.0.0.0"
-  port: 9889
-  tls:
-    cert: "/etc/impulse/certs/fullchain.pem"
-    key: "/etc/impulse/certs/privkey.pem"
-
-# Multi-listener — independent public and internal listeners
-listeners:
-  - protocol: http3
-    address: "0.0.0.0"
-    port: 9889
-    tls:
-      cert: "/etc/impulse/certs/public-fullchain.pem"
-      key: "/etc/impulse/certs/public-privkey.pem"
-  - protocol: http3
-    address: "10.0.0.1"
-    port: 9890
-    tls:
-      cert: "/etc/impulse/certs/internal-fullchain.pem"
-      key: "/etc/impulse/certs/internal-privkey.pem"
-```
-
-Each listener entry shares the same upstream routing table — route matching, load balancing, and health checks are global across all listeners.
-
-### Common Mistakes
-
-- assuming `listeners[]` adds to the top-level `listen` block instead of replacing it at runtime
-- providing only `cert` or only `key` in the legacy pair
-- expecting certificate reload to change active connections rather than only future handshakes
-- forgetting that listener changes can still cross restart boundaries depending on bind topology
-
-## Upstream Configuration
-
-Upstreams define groups of backends with routing rules and load-balancing strategies. Each upstream is identified by a unique name and contains route criteria, load-balancing configuration, and backend definitions.
-
-Use this section when you need to decide:
-
-- how requests match a route
-- which upstream handles which traffic
-- how backend addresses and health checks are defined
-- how host and forwarded-header policy are applied
-
-### Structure
+Client certificate and key sources must form a complete pair and require at
+least one HTTPS backend. Inline paths and references may be mixed across the
+pair, but a field and its `_ref` counterpart cannot both be set. CA material,
+client identities, verification semantics, examples, and activation behavior
+are documented in
+[TLS Configuration](/docs/configuration/tls#upstream-backend-tls).
 
 ```yaml
 upstream:
-  pool_name:
-    load_balancing: <LoadBalancing>
-    route: <RouteMatch>
-    backends: [<Backend>]
-```
-
-### Properties
-
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| `load_balancing` | object | No | round-robin | Per-upstream load balancing algorithm configuration |
-| `route` | object | Yes | - | Route matching criteria |
-| `backends` | array | Yes | - | List of backend servers |
-| `host_policy` | object | No | `pass-through` | Controls how the `Host`/`:authority` header is set on upstream requests |
-| `tls` | object | No | inherits `upstream_tls` | Per-upstream TLS policy override (verify_certificates, strict_sni, ca_file, ca_dir); wins over global `upstream_tls` when set |
-| `forwarded_headers` | object | No | `overwrite` | Controls `X-Forwarded-For` forwarding behavior |
-
-### Route Matching
-
-Route matching determines which upstream handles a request. Routes are evaluated by longest-prefix matching across all configured upstreams, selecting the route with the most specific (longest) path prefix.
-
-#### RouteMatch Properties
-
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| `host` | string | No | - | Host matcher. Supports exact hosts (`api.example.com`) and leading-wildcard suffix patterns (`*.example.com`) |
-| `path_prefix` | string | No | - | Path prefix to match (e.g., `/api`) |
-| `method` | string | No | - | HTTP method to match (case-insensitive, e.g. `GET`, `POST`) |
-
-Route matching rules:
-
-1. If `host` is specified:
-   - Exact form: request Host must match exactly (case-insensitive after normalization)
-   - Wildcard form: `*.example.com` matches subdomains like `api.example.com`, but not the bare apex `example.com`
-2. If `path_prefix` is specified, the request path must start with the prefix
-3. If both are specified, both conditions must match
-4. Routes are evaluated by longest-prefix matching - the route with the most specific (longest) path prefix is selected
-5. For equal-length prefixes, ties are deterministic:
-   - host-specific routes win over host-agnostic routes
-   - exact-host matches win over wildcard-host matches
-   - among wildcard matches, longer suffixes win (`*.a.example.com` beats `*.example.com`)
-   - method-specific routes win over method-agnostic routes
-   - then lexicographically smaller upstream name wins
-
-#### Route Examples
-
-```yaml
-# Host-based routing
-upstream:
-  api_pool:
-    route:
-      host: "api.example.com"
-    backends: [...]
-
-  web_pool:
-    route:
-      host: "www.example.com"
-    backends: [...]
-
-# Wildcard host routing
-upstream:
-  tenant_pool:
-    route:
-      host: "*.example.com"
-      path_prefix: "/api"
-    backends: [...]
-
-# Path-based routing
-upstream:
-  api_pool:
-    route:
-      path_prefix: "/api"
-    backends: [...]
-
-  admin_pool:
-    route:
-      path_prefix: "/admin"
-    backends: [...]
-
-  default_pool:
+  private_api:
     route:
       path_prefix: "/"
-    backends: [...]
-
-# Combined host and path routing
-upstream:
-  api_v2_pool:
-    route:
-      host: "api.example.com"
-      path_prefix: "/v2"
-    backends: [...]
-
-  api_v1_pool:
-    route:
-      host: "api.example.com"
-      path_prefix: "/v1"
-    backends: [...]
-```
-
-### Backend Configuration
-
-Each backend represents an upstream server that can handle requests.
-
-#### Backend Properties
-
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| `id` | string | Yes | - | Unique identifier for the backend |
-| `address` | string | Yes | - | Backend server address. Accepted forms: `host:port`, `host` (defaults to `https://host:443`), `https://host[:port]`, `http://host[:port]` |
-| `weight` | integer | No | `100` | Relative traffic share for supported algorithms; custom values are rejected for `least-connections` and `latency-aware` |
-| `health_check` | object | No | - | Health check configuration. Omit to disable active health polling — backend starts and stays healthy. |
-
-#### Backend Address Forms
-
-| Address form | Interpreted as | Typical use |
-| --- | --- | --- |
-| `https://api.internal:8443` | HTTPS upstream over HTTP/2 | standard secure production upstream |
-| `http://127.0.0.1:8080` | cleartext HTTP/1.1 upstream | local development or internal cleartext service |
-| `api.internal:8443` | shorthand for HTTPS on explicit port | secure upstream with short config |
-| `api.internal` | shorthand for `https://api.internal:443` | secure upstream using default port |
-
-**Address format notes:**
-- `host:port` or `host` — shorthand, treated as `https://host:port` (port defaults to `443`)
-- `https://host[:port]` — TLS upstream; port defaults to `443` if omitted
-- `http://host[:port]` — cleartext HTTP/1.1 upstream; port defaults to `80` if omitted. Mixed `http://` and `https://` backends are supported within the same upstream.
-
-#### Health Check Configuration
-
-Health checks monitor backend availability and automatically remove unhealthy backends from the pool.
-
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| `path` | string | No | `/health` | HTTP path for health check requests |
-| `interval` | integer | No | `5000` | Health check interval in milliseconds |
-| `timeout_ms` | integer | No | `1000` | Health check timeout in milliseconds |
-| `failure_threshold` | integer | No | `3` | Consecutive failures before marking unhealthy |
-| `success_threshold` | integer | No | `2` | Consecutive successes before marking healthy |
-| `cooldown_ms` | integer | No | `5000` | Cooldown period after marking unhealthy (milliseconds) |
-
-Health check behavior:
-
-1. Health checks are performed at the specified `interval`
-2. A backend is marked unhealthy after `failure_threshold` consecutive failures
-3. An unhealthy backend enters cooldown for `cooldown_ms` milliseconds
-4. After cooldown, health checks resume
-5. A backend is marked healthy after `success_threshold` consecutive successes
-
-#### Backend Examples
-
-```yaml
-# Minimal backend — no health check (backend stays permanently healthy)
-backends:
-  - id: "backend1"
-    address: "https://example.com"
-
-# Minimal backend with health check
-backends:
-  - id: "backend1"
-    address: "10.0.1.10:8080"
-    health_check:
-      path: "/health"
-
-# Weighted backend with custom health checks (`round-robin`, `random`, `consistent-hash`, or `sticky-cid`)
-backends:
-  - id: "backend1"
-    address: "10.0.1.10:8080"
-    weight: 100
-    health_check:
-      path: "/api/health"
-      interval: 10000
-      timeout_ms: 2000
-      failure_threshold: 5
-      success_threshold: 3
-      cooldown_ms: 10000
-
-  - id: "backend2"
-    address: "10.0.1.11:8080"
-    weight: 200
-    health_check:
-      path: "/api/health"
-      interval: 10000
-
-# Multiple backends with different health endpoints
-backends:
-  - id: "primary"
-    address: "10.0.1.10:8080"
-    weight: 150
-    health_check:
-      path: "/status"
-      interval: 5000
-
-  - id: "secondary"
-    address: "10.0.1.11:8080"
-    weight: 100
-    health_check:
-      path: "/healthz"
-      interval: 5000
-```
-
-For backend weights:
-
-- `consistent-hash`, `sticky-cid`, `round-robin`, and `random` honor relative weight
-- `least-connections` and `latency-aware` are intentionally non-weighted
-- validation rejects any `least-connections` or `latency-aware` backend weight other than `100`
-
-### Host Policy
-
-Controls how the `Host` / `:authority` header is set on requests forwarded to the upstream.
-
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| `mode` | string | No | `pass-through` | Header rewrite mode: `pass-through`, `rewrite`, or `upstream` |
-| `host` | string | No | - | Static host to use when `mode: rewrite`; rejected for other modes |
-
-#### Modes
-
-| Mode | Behavior |
-|------|----------|
-| `pass-through` | Forwards the original client `Host`/`:authority` unchanged to the upstream |
-| `rewrite` | Replaces the host with the value of `host` (required when using this mode) |
-| `upstream` | Uses the backend's own authority (hostname from the `address` field) |
-
-#### Examples
-
-```yaml
-upstream:
-  # Pass client host through as-is (default)
-  api_pool:
-    host_policy:
-      mode: pass-through
-    backends: [...]
-
-  # Rewrite to a static host
-  legacy_pool:
-    host_policy:
-      mode: rewrite
-      host: "legacy-origin.internal.example"
-    backends: [...]
-
-  # Use the backend's own hostname
-  direct_pool:
-    host_policy:
-      mode: upstream
-    backends: [...]
-```
-
-### Forwarded Headers Policy
-
-Controls how `X-Forwarded-For` and related forwarding headers are set on upstream requests.
-
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| `mode` | string | No | `overwrite` | Forwarding mode: `append`, `preserve`, or `overwrite` |
-
-#### Modes
-
-| Mode | Behavior |
-|------|----------|
-| `overwrite` | Replaces any inbound `X-Forwarded-For` with the client IP only (default) |
-| `append` | Appends the client IP to the existing `X-Forwarded-For` chain |
-| `preserve` | Passes the inbound `X-Forwarded-For` chain through unchanged without adding the client IP |
-
-Use `append` in multi-hop deployments where the full client IP chain must be preserved. Use `overwrite` (default) when impulse is the first edge and inbound forwarded headers should not be trusted.
-
-#### Examples
-
-```yaml
-upstream:
-  # First edge — overwrite inbound XFF with real client IP (default)
-  public_pool:
-    forwarded_headers:
-      mode: overwrite
-    backends: [...]
-
-  # Behind another trusted proxy — append to the existing chain
-  internal_pool:
-    forwarded_headers:
-      mode: append
-    backends: [...]
-
-  # Pass the inbound chain through unchanged
-  passthrough_pool:
-    forwarded_headers:
-      mode: preserve
-    backends: [...]
-```
-
-### Per-Upstream TLS Policy
-
-Each upstream can optionally override the global `upstream_tls` settings with its own TLS profile. When `tls` is omitted, the global `upstream_tls` block applies.
-
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| `verify_certificates` | bool | No | `true` | Verify upstream TLS certificates |
-| `strict_sni` | bool | No | `true` | Send backend authority host as SNI |
-| `ca_file` | string | No | - | Path to a PEM CA bundle for this upstream |
-| `ca_dir` | string | No | - | Path to a directory of PEM CA bundles for this upstream |
-
-This is useful when backends have heterogeneous trust requirements — for example, one upstream uses a private internal CA while another uses a public CA.
-
-Verification semantics:
-
-- Hostname backends verify the upstream certificate against the configured backend hostname.
-- IP-literal backends verify against the configured IP identity.
-- `strict_sni: false` disables only the SNI extension; verification still remains enabled unless `verify_certificates: false`.
-- `verify_certificates: false` disables upstream certificate validation entirely.
-
-#### Global vs Per-Upstream TLS Overrides
-
-| Configuration shape | Best for | Rule |
-| --- | --- | --- |
-| top-level `upstream_tls` | one trust posture for most or all HTTPS backends | applies unless an upstream overrides it |
-| `upstream.<name>.tls` | one upstream needs a different CA or verification mode | wins over `upstream_tls` for that upstream only |
-
-### Operational Implications
-
-- Route specificity matters more than declaration order. The longest matching path prefix wins.
-- Backend address scheme changes runtime transport behavior. `https://` selects HTTP/2 transport; `http://` selects HTTP/1.1 transport.
-- Health checks are optional. If you omit them, a backend stays eligible unless passive health signals or other runtime behavior remove it.
-- `host_policy` and `forwarded_headers` directly affect what upstream applications see.
-
-### Common Mistakes
-
-- forgetting the `http://` prefix for local or cleartext backends and accidentally opting into HTTPS defaults
-- creating overlapping routes without understanding the longest-prefix and tie-break rules
-- treating backend `id` as cosmetic only even though it appears in logs, metrics, and runtime views
-- using `forwarded_headers.preserve` on untrusted edge traffic
-
-#### Examples
-
-```yaml
-upstream_tls:
-  verify_certificates: true   # global default
-  strict_sni: true
-
-upstream:
-  # Uses global upstream_tls — no override needed
-  public_pool:
-    route:
-      path_prefix: "/api"
-    backends: [...]
-
-  # Override: trust a private CA for this upstream only
-  internal_pool:
     tls:
       verify_certificates: true
       strict_sni: true
-      ca_file: "/etc/impulse/certs/internal-ca.pem"
-    route:
-      path_prefix: "/internal"
-    backends: [...]
-
-  # Override: disable verification for a trusted dev upstream
-  dev_pool:
-    tls:
-      verify_certificates: false
-      strict_sni: false
-    route:
-      path_prefix: "/dev"
-    backends: [...]
+      ca_file: "/etc/impulse/tls/backend-ca.pem"
+      client_certificate_ref:
+        ref: "file://private-api/client-chain.pem"
+      client_key_ref:
+        ref: "file://private-api/client-key.pem"
+    backends:
+      - id: "private-api-1"
+        address: "https://private-api.internal.example:8443"
 ```
 
-## Load Balancing Configuration
+## Routing and Upstreams
 
-Load balancing determines how requests are distributed across healthy backends within an upstream. Each upstream configures its own strategy independently.
+The top-level `upstream` map defines routes, backend pools, per-upstream
+policies, and load balancing. Each entry requires a `route` and a non-empty
+`backends` array. Per-upstream load balancing defaults to `round-robin`.
 
-### Properties
+Exact host, path, method, wildcard, precedence, backend, health-check,
+request-key, strategy-alias, and weight semantics are consolidated in
+[Routing and Upstreams](/docs/configuration/routing-and-upstreams). Use
+[Load Balancing](/docs/user-guide/load-balancing) for strategy-selection
+guidance.
 
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| `type` | string | Yes | - | Load balancing algorithm |
-| `key` | string | No | - | Optional key source for `consistent-hash` and `sticky-cid` (`header:<name>`, `cookie:<name>`, `query:<name>`, `path`, `authority`, `method`, `cid`) |
+## Authentication and Secrets
 
-### Supported Algorithms
+Downstream request authentication is configured per upstream under
+`upstream.<name>.auth`. It supports API keys, local JWT verification with
+static or JWKS keys, and HTTP or OIDC-introspection external authorization.
+The top-level `secrets` object configures file-backed secret resolution used by
+supported `*_ref` fields.
 
-#### random
-
-Selects a backend randomly from all healthy backends. Weight values are currently ignored.
-
-```yaml
-upstream:
-  my_pool:
-    load_balancing:
-      type: "random"
-```
-
-#### round-robin
-
-Distributes requests evenly across all healthy backends in sequential order. Weight values are currently ignored.
-
-```yaml
-upstream:
-  my_pool:
-    load_balancing:
-      type: "round-robin"
-```
-
-#### consistent-hash
-
-Routes requests using consistent hashing. By default it hashes request authority (if present), otherwise request path, otherwise HTTP method. Set `load_balancing.key` to override key derivation.
-
-```yaml
-upstream:
-  my_pool:
-    load_balancing:
-      type: "consistent-hash"
-      key: "header:x-user-id"
-```
-
-#### least-connections
-
-Selects the healthy backend with the fewest active requests. Ties are deterministic by backend index order.
-
-```yaml
-upstream:
-  my_pool:
-    load_balancing:
-      type: "least-connections"
-```
-
-#### latency-aware
-
-Selects healthy backends using a latency score built from EWMA backend latency and active request pressure. Unsampled backends are probed first to avoid cold-start bias.
-
-```yaml
-upstream:
-  my_pool:
-    load_balancing:
-      type: "latency-aware"
-```
-
-#### sticky-cid
-
-Uses consistent hashing keyed by QUIC connection ID for connection-level stickiness. The same CID is routed to the same backend while healthy membership is stable.
-
-```yaml
-upstream:
-  my_pool:
-    load_balancing:
-      type: "sticky-cid"
-```
-
-### Algorithm Selection
-
-- Use `random` for simple stateless load distribution
-- Use `round-robin` for even distribution across backends
-- Use `consistent-hash` when session affinity or request consistency is required
-- Use `least-connections` when backend load varies significantly across requests
-- Use `latency-aware` when you want faster backends to absorb more traffic
-- Use `sticky-cid` for QUIC-connection affinity without application-level stickiness keys
-
-### Operational Implications
-
-- `round-robin` and `random` are the easiest to reason about for initial rollouts.
-- `consistent-hash` and `sticky-cid` improve affinity but make membership changes more visible to clients.
-- `least-connections` and `latency-aware` depend more heavily on live runtime signals and should be paired with good observability.
-
-### Common Mistakes
-
-- picking `consistent-hash` without a stable key that matches application behavior
-- expecting backend `weight` to influence `least-connections` or `latency-aware`; those modes are intentionally non-weighted and reject custom values
-- using `sticky-cid` to solve application-layer affinity problems that should use explicit request keys
-
-### Examples
-
-```yaml
-upstream:
-  api_pool:
-    load_balancing:
-      type: "consistent-hash"
-    route:
-      path_prefix: "/api"
-    backends: [...]
-
-  default_pool:
-    load_balancing:
-      type: "round-robin"
-    route:
-      path_prefix: "/"
-    backends: [...]
-```
+Exact fields, defaults, validation rules, failure behavior, examples, and
+reload semantics are consolidated in
+[Authentication and Secrets](/docs/configuration/authentication-and-secrets).
+Control API authentication is a separate admin-plane policy; its endpoint and
+role contract is documented in the
+[Control API Reference](/docs/reference/control-api-reference).
 
 ## Logging Configuration
 
@@ -1186,8 +199,8 @@ Controls logging output, verbosity, and destination.
 
 ### Properties
 
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
+| **Field** | **Type** | **Required** | **Default** | **Meaning** |
+| --------- | -------- | ------------ | ----------- | ----------- |
 | `level` | string | No | `info` | Log level |
 | `format` | string | No | `plain` | Output format: `plain` (human-readable) or `json` (structured) |
 | `file.enabled` | bool | No | `false` | Write logs to a file instead of stderr |
@@ -1257,8 +270,8 @@ Controls resource limits, tuning knobs, and connection-flood protection. All fie
 
 ### Properties
 
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
+| **Field** | **Type** | **Required** | **Default** | **Meaning** |
+| --------- | -------- | ------------ | ----------- | ----------- |
 | `worker_threads` | integer | No | `1` | Number of polling worker threads |
 | `control_plane_threads` | integer | No | `2` | Tokio worker threads for the control-plane runtime (startup, health checks, metrics, and other async control tasks) |
 | `reuseport` | bool | No | `true` | Enable `SO_REUSEPORT`; required when `worker_threads > 1` |
@@ -1296,11 +309,16 @@ Controls resource limits, tuning knobs, and connection-flood protection. All fie
 | `unknown_length_response_prebuffer_bytes` | integer | No | `2097152` | Max bytes buffered for unknown-length upstream responses before headers are emitted; responses exceeding this are terminated with an overload response |
 | `client_body_idle_timeout_ms` | integer | No | `10000` | Idle timeout (ms) for request-body upload progress; the stream is failed if no body bytes arrive within this period |
 
-### Connection flood protection
+### Connection Flood Protection
 
-`new_connections_per_sec` and `new_connections_burst` implement a token-bucket rate limiter on new QUIC connection accepts. The bucket starts full so legitimate burst traffic at startup is never penalised. Packets for **existing** connections are never affected by this limit — only unknown `Initial` packets that would create a new connection state entry are gated.
+`new_connections_per_sec` and `new_connections_burst` implement a token-bucket
+rate limiter on new QUIC connection accepts. The bucket starts full and permits
+the configured initial burst. The limit does not affect packets for existing
+connections; it gates only unknown `Initial` packets that create connection
+state.
 
-`max_active_connections` is a separate hard guardrail for total connection state. Use it to enforce deterministic memory limits under sustained handshake floods even when token-bucket limits allow temporary bursts.
+`max_active_connections` separately limits total connection state, including
+when the token bucket permits a temporary burst.
 
 ```yaml
 performance:
@@ -1309,7 +327,8 @@ performance:
   max_active_connections: 20000   # hard ceiling for concurrently tracked connections
 ```
 
-Set `new_connections_burst` to `1` and `new_connections_per_sec` to a low value to aggressively throttle connection floods at the cost of rejecting legitimate concurrent handshakes.
+Lower values throttle connection floods more aggressively but can reject
+legitimate concurrent handshakes.
 
 ### Examples
 
@@ -1347,261 +366,55 @@ performance:
 
 ## Resilience Configuration
 
-Controls retry budgets, circuit breaking, hedging, adaptive admission, brownout shedding, route queuing, protocol policy, and the worker watchdog. All fields are optional and fall back to production-tuned defaults.
-
-Use this section when you need to decide:
-
-- how Impulse protects itself and its backends under pressure
-- which retry and hedge behaviors are allowed
-- what request-shape rules are enforced before backend execution
-
-### adaptive_admission
-
-Dynamically adjusts the global in-flight request limit based on observed backend latency.
-
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| `enabled` | bool | No | `true` | Enable adaptive admission control |
-| `min_limit` | integer | No | `64` | Floor for the dynamic in-flight limit; must be > 0 |
-| `max_limit` | integer | No | `performance.global_inflight_limit` | Optional ceiling for the adaptive in-flight limit; must be `>= min_limit` and `<= performance.global_inflight_limit` |
-| `decrease_step` | integer | No | `16` | Amount to subtract from the limit on high-latency observation |
-| `increase_step` | integer | No | `16` | Amount to add to the limit on healthy-latency observation |
-| `high_latency_ms` | integer | No | `500` | Latency threshold (ms) above which the limit is decreased |
-
-### circuit_breaker
-
-Tracks consecutive failures per backend and opens the circuit to stop sending requests to a failing backend.
-
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| `enabled` | bool | No | `true` | Enable per-backend circuit breakers |
-| `failure_threshold` | integer | No | `3` | Consecutive failures before opening the circuit |
-| `open_ms` | integer | No | `30000` | How long (ms) the circuit stays open before probing |
-| `half_open_max_probes` | integer | No | `1` | Probe requests allowed during half-open state |
-
-### retry_budget
-
-Limits retried requests as a fraction of primary requests to prevent retry amplification.
-
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| `enabled` | bool | No | `true` | Enable retry budget enforcement |
-| `ratio_percent` | integer | No | `10` | Max retries as a percentage of primary requests (0–100) |
-| `per_route_ratio_percent` | map | No | `{}` | Per-route overrides: `{ "/api": 5 }` |
-
-### hedging
-
-Fires a speculative second request to an alternate backend when the primary is slow.
-
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| `enabled` | bool | No | `false` | Enable request hedging |
-| `delay_ms` | integer | No | `100` | Delay (ms) before firing the hedge; must be > 0 when `enabled` is true |
-| `safe_methods` | list | No | `["GET","HEAD"]` | HTTP methods eligible for hedging |
-| `route_allowlist` | list | No | `[]` | Routes eligible for hedging; empty means all routes |
-
-### brownout
-
-Brownout is a load-shedding mode that activates when the proxy is near capacity. When active, every incoming request whose upstream pool is **not** in `core_routes` is immediately rejected with `503 Service Unavailable` and a `Retry-After` header. Requests on core routes continue to be processed normally.
-
-**How it works**
-
-1. After each request is routed, Impulse samples the current global in-flight percent (active requests ÷ global limit × 100).
-2. If the sample reaches `trigger_inflight_percent`, brownout activates.
-3. Brownout stays active until the sample falls to or below `recover_inflight_percent`. The gap between the two thresholds is **hysteresis** — it prevents rapid oscillation when load is right at the boundary.
-4. While active, `impulse_brownout_active` gauge is `1` and `impulse_overload_shed_by_reason_total{reason="brownout"}` increments for every shed request.
-
-**Choosing `core_routes`**
-
-`core_routes` is a list of upstream pool names (the `id` field under `upstreams[].pool`). Routes not in this list are shed during brownout.
-
-- If `core_routes` is empty (the default), **all routes** are shed during brownout. This is safe but means brownout effectively becomes a full-stop — no requests get through.
-- List only the routes that must keep working during a partial outage: authentication, payments, health checks. Avoid listing high-volume non-critical routes or you defeat the purpose of shedding.
-- A route shed during brownout receives a `503` with the body `brownout active, non-core route shed` and a `Retry-After` hint. Clients that respect `Retry-After` will back off automatically.
-
-**Interaction with other overload mechanisms**
-
-Brownout runs after routing but before adaptive admission and circuit breakers. The order is:
-
-1. **Brownout** — shed non-core routes immediately (no backend resource consumed)
-2. **Adaptive admission** — dynamically cap total in-flight based on observed latency
-3. **Per-upstream / per-backend inflight limits** — static caps per pool and backend
-4. **Circuit breaker** — stop sending to a specific failing backend
-
-If brownout is active and shedding load, adaptive admission will also begin to recover (inflight drops → limit rises). Once the in-flight percent falls to `recover_inflight_percent`, brownout deactivates and full traffic resumes. Set `recover_inflight_percent` at least 20–30 points below `trigger_inflight_percent` to give the system time to recover before re-admitting full traffic.
-
-**Alerting**
-
-Alert on `impulse_brownout_active == 1` for more than a brief window — sustained brownout means backends are under-provisioned or a downstream dependency is slow:
-
-```yaml
-- alert: ImpulseBrownoutActive
-  expr: impulse_brownout_active == 1
-  for: 30s
-  labels:
-    severity: warning
-  annotations:
-    summary: "Impulse brownout active on {{ $labels.instance }}"
-    description: "Non-core routes are being shed. Check backend latency and inflight metrics."
-```
-
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| `enabled` | bool | No | `true` | Enable brownout shedding |
-| `trigger_inflight_percent` | integer | No | `90` | Inflight % at which brownout activates (0–100) |
-| `recover_inflight_percent` | integer | No | `60` | Inflight % at which brownout deactivates; must be `< trigger_inflight_percent` |
-| `core_routes` | list | No | `[]` | Upstream pool names exempt from shedding; empty means all routes are shed |
-
-### route_queue
-
-Per-route and global caps on queued (waiting) requests.
-
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| `default_cap` | integer | No | `512` | Per-route queue depth cap |
-| `global_cap` | integer | No | `2048` | Total queue depth cap across all routes |
-| `shed_retry_after_seconds` | integer | No | `1` | `Retry-After` header value (seconds) sent with 503 queue-shed responses |
-| `caps` | map | No | `{}` | Per-route overrides: `{ "/api": 128 }` |
-
-### protocol
-
-Request validation and early-data policy.
-
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| `allow_0rtt` | bool | No | `false` | Accept 0-RTT early data |
-| `early_data_safe_methods` | list | No | `["GET","HEAD"]` | Methods permitted in 0-RTT early data |
-| `max_headers_count` | integer | No | `128` | Maximum number of request headers |
-| `max_headers_bytes` | integer | No | `16384` | Maximum total size of request headers (bytes) |
-| `enforce_authority_host_match` | bool | No | `true` | Reject requests where `:authority` differs from `Host` |
-| `allow_connect` | bool | No | `false` | Enable CONNECT proxy tunneling |
-| `connect_allowed_ports` | list | No | `[]` | Optional CONNECT target port allowlist |
-| `connect_allowed_authorities` | list | No | `[]` | Optional exact CONNECT `host:port` allowlist |
-| `allowed_methods` | list | No | `[]` | Allowed HTTP methods; empty means all methods allowed |
-| `denied_path_prefixes` | list | No | `[]` | Path prefixes that are always rejected with 403 |
-
-Request-shape rules enforced by the runtime:
-
-- HTTP/3 requests are rejected when `:authority` and `Host` differ and `enforce_authority_host_match` is enabled.
-- `CONNECT` requires `:authority`/`Host` in `host:port` form and must also satisfy the CONNECT allowlists when enabled.
-- Native HTTP/3 ingress rejects `Upgrade` / `Connection: upgrade` style requests. WebSocket-style upgrades are only supported on the bootstrap HTTP/1.1 compatibility path, not on native H3.
-- `HEAD` responses terminate after headers even if the upstream attempted to send a body.
-
-### watchdog
-
-Monitors worker health and triggers a restart command when error rates or stall conditions exceed thresholds.
-
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| `enabled` | bool | No | `false` | Enable the worker watchdog |
-| `check_interval_ms` | integer | No | `1000` | How often (ms) the watchdog evaluates metrics |
-| `poll_stall_timeout_ms` | integer | No | `5000` | Declare a stall if the event loop hasn't polled within this window |
-| `timeout_error_rate_percent` | integer | No | `60` | Trigger if timeout errors exceed this % of requests in a window |
-| `min_requests_per_window` | integer | No | `20` | Minimum requests in a window before error-rate check applies |
-| `overload_inflight_percent` | integer | No | `95` | Trigger if in-flight % exceeds this threshold |
-| `unhealthy_consecutive_windows` | integer | No | `3` | Consecutive unhealthy windows before invoking the restart command |
-| `drain_grace_ms` | integer | No | `8000` | Grace period (ms) to drain connections before restarting |
-| `restart_cooldown_ms` | integer | No | `120000` | Minimum time (ms) between restart command invocations |
-| `restart_command` | list of strings | No | `[]` | Command invoked on restart trigger; first element is the executable, the rest are args. Avoids shell evaluation. |
-| `restart_hook` | string | No | `null` | **Deprecated and rejected at startup** — setting it is a hard config error. Use `restart_command` instead. |
-
-### Startup Validation Errors
-
-The following resilience configurations are rejected at startup with a descriptive error:
-
-| Condition | Error |
-|-----------|-------|
-| `recover_inflight_percent >= trigger_inflight_percent` | brownout hysteresis inverted |
-| `adaptive_admission.min_limit == 0` | min_limit must be > 0 |
-| `adaptive_admission.max_limit == 0` | max_limit must be > 0 when provided |
-| `adaptive_admission.max_limit < adaptive_admission.min_limit` | max_limit must be >= min_limit |
-| `adaptive_admission.max_limit > performance.global_inflight_limit` | max_limit must be `<= global_inflight_limit` |
-| `retry_budget.ratio_percent > 100` | ratio_percent must be 0–100 |
-| `hedging.enabled && delay_ms == 0` | delay_ms must be > 0 when hedging is enabled |
-
-### Example
-
-```yaml
-resilience:
-  adaptive_admission:
-    enabled: true
-    min_limit: 64
-    max_limit: 4096
-    high_latency_ms: 500
-
-  circuit_breaker:
-    enabled: true
-    failure_threshold: 3
-    open_ms: 30000
-    half_open_max_probes: 1
-
-  retry_budget:
-    enabled: true
-    ratio_percent: 10
-
-  hedging:
-    enabled: false
-    delay_ms: 100
-
-  brownout:
-    enabled: true
-    trigger_inflight_percent: 90
-    recover_inflight_percent: 60
-    core_routes:
-      - "auth_pool"
-      - "payments_pool"
-```
-
-### Operational Implications
-
-- `adaptive_admission`, `brownout`, `route_queue`, and inflight caps interact as one overload-control surface.
-- retry, hedging, and circuit breaking can protect latency or amplify backend pressure depending on how they are tuned.
-- quota and scoped rate limiting are policy-contract features; they should not be interpreted as overload behavior.
-
-### Common Mistakes
-
-- leaving `brownout.core_routes` empty and unintentionally shedding all routes during brownout
-- enabling hedging without understanding replay safety and backend amplification
-- treating retry budgets as a substitute for backend reliability work
-- mixing quota expectations with overload tuning
-
-## Observability Endpoint Hardening
-
-When enabling `observability.metrics` or `observability.control_api`, keep endpoints on loopback unless you intentionally expose them behind network controls.
-
-Use this section when you need to decide:
-
-- where metrics and the Control API should bind
-- how much runtime control to expose
-- how strongly the admin surface must be protected
-
-### Metrics Endpoint
-
-Key fields:
-
-- `observability.metrics.address` (default: `127.0.0.1`): bind address. Non-loopback addresses are rejected unless `allow_non_loopback` is explicitly enabled.
-- `observability.metrics.allow_non_loopback` (default: `false`): explicit opt-in for remote scraping. It requires `observability.control_api.tls.client_auth.mode=required`; the metrics endpoint then uses the primary listener certificate and the configured control-plane CA for mTLS.
-- `observability.metrics.max_connections` (default: `512`): concurrent connection cap.
-- `observability.metrics.connection_timeout_ms` (default: `30000`): per-connection lifetime timeout.
-
-### Control API Endpoint
-
-Key fields:
-
-- `observability.control_api.auth_token`: bearer token required for runtime, reload, reload-certs, and restart endpoints (`Authorization: Bearer <token>`).
-- `observability.control_api.reload_path` (default: `/admin/runtime/reload`): authenticated POST endpoint that re-reads the config file and applies the full configuration via an atomic runtime swap (routes, upstreams, backends, timeouts, limits, resilience policies). Startup-owned settings and listener bind/removal changes are rejected and still require a restart.
-- `observability.control_api.reload_certs_path`: authenticated POST endpoint that reloads listener certificate and client-auth CA material for new handshakes.
-- `observability.control_api.max_connections` (default: `256`): concurrent connection cap.
-- `observability.control_api.connection_timeout_ms` (default: `30000`): per-connection lifetime timeout.
-
-If `observability.control_api.address` is non-loopback, `observability.control_api.auth_token` is required.
+`resilience` contains local overload protection, retry/hedge behavior, scoped
+rate limits, distributed quota, protocol policy, and the worker watchdog.
+
+| **Field** | **Type** | **Required** | **Default** | **Meaning** |
+| --------- | -------- | ------------ | ----------- | ----------- |
+| `adaptive_admission` | object | No | object defaults | Dynamic local inflight ceiling. |
+| `route_queue` | object | No | object defaults | Per-upstream and global concurrent admission caps. |
+| `scoped_rate_limits` | array | No | `[]` | Per-instance token-bucket rules. |
+| `quota` | object | No | object defaults | In-memory or Redis-backed quota contracts. |
+| `protocol` | object | No | object defaults | Request-shape, early-data, and CONNECT policy. |
+| `circuit_breaker` | object | No | object defaults | Per-backend failure isolation. |
+| `hedging` | object | No | object defaults | Delayed speculative requests. |
+| `retry_budget` | object | No | object defaults | Retry-amplification limits. |
+| `brownout` | object | No | object defaults | Pressure-triggered non-core shedding. |
+| `watchdog` | object | No | object defaults | Worker-health and restart policy. |
+
+The exact fields, defaults, constraints, retry behavior, selector matrix,
+quota failure semantics, and complete example are in
+[Resilience, Rate Limits, and Quota](/docs/configuration/resilience). Redis
+deployment and incident guidance is intentionally separate in
+[Distributed Quota Operations](/docs/operations/distributed-quota).
+
+## Observability and Control
+
+`observability` configures the metrics listener, the HTTPS Control API,
+OpenTelemetry tracing, and route-decision transparency. `security.privileges`
+configures the post-bind Unix privilege drop.
+
+| **Field** | **Type** | **Required** | **Default** | **Meaning** |
+| --------- | -------- | ------------ | ----------- | ----------- |
+| `observability.metrics` | object | No | object defaults | Prometheus endpoint bind, path, connection limits, and remote-mTLS opt-in. |
+| `observability.control_api` | object | No | object defaults | Administrative listener, paths, TLS client auth, bearer auth, RBAC, source policy, audit, and limits. |
+| `observability.tracing` | object | No | object defaults | OTLP endpoint, service name, and sample ratio. |
+| `observability.routing` | object | No | object defaults | Route-decision logging and transparency controls. |
+| `security.privileges` | object | No | object defaults | Post-bind process user and group. |
+
+The exact fields, defaults, constraints, complete security policy, and
+privilege-dropping behavior are in
+[Observability and Control Configuration](/docs/configuration/observability-and-control).
+HTTP endpoint methods, payloads, responses, and status codes remain in the
+[Control API Reference](/docs/reference/control-api-reference); metric names
+and labels remain in the [Metrics Reference](/docs/reference/metrics-reference).
 
 ### Routing Transparency
 
 `observability.routing` enables explicit route-decision logging.
 
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
+| **Field** | **Type** | **Required** | **Default** | **Meaning** |
+| --------- | -------- | ------------ | ----------- | ----------- |
 | `enabled` | boolean | No | `false` | Emit route-decision transparency logs |
 | `include_reason` | boolean | No | `true` | Include deterministic tie-break reason in route-decision logs |
 | `expose_header` | boolean | No | `false` | Reserved toggle for downstream route-decision response headers |
@@ -1639,14 +452,13 @@ Impulse validates configuration at startup and reports errors before attempting 
 
 3. **Invalid values**
    - Port number out of range (1-65535)
-   - Invalid IP address format
    - Invalid backend address format (accepted: `host:port`, `https://host:port`, `http://host:port`, or bare `host`; scheme-default port is inferred when omitted)
-   - Duplicate backend IDs within a pool
+   - Backend weight outside `1`–`1000`
 
 4. **Configuration conflicts**
-   - Port already in use
-   - Duplicate upstream pool names
-   - Overlapping or ambiguous route definitions
+   - Duplicate effective listener `(address, port)` values
+   - Duplicate normalized route matchers
+   - Duplicate normalized backend origins
    - Brownout `recover_inflight_percent` ≥ `trigger_inflight_percent`
    - `adaptive_admission.min_limit` set to 0
    - `retry_budget.ratio_percent` > 100
@@ -1654,66 +466,51 @@ Impulse validates configuration at startup and reports errors before attempting 
 
 ### Testing Configuration
 
-Validate configuration without starting the server:
+There is no validation-only CLI flag. Running Impulse with a valid configuration
+continues into runtime initialization, binds the configured listeners, and keeps
+the process running. It does not exit after validation.
+
+Use one of these workflows instead:
+
+1. **Controlled startup:** copy the candidate config to an isolated host or
+   change every listener and observability bind to non-production addresses and
+   ports. Start Impulse in the foreground, wait for its listening/ready log,
+   then stop it with `Ctrl-C`.
+2. **Staged Control API:** on a running instance, submit the same candidate to
+   `POST /admin/runtime/validate`, then `/preview`, and finally `/activate` only
+   after reviewing the returned plan and rejected changes. Validate and preview
+   do not replace the active runtime; activate does.
+
+Controlled-startup example:
 
 ```bash
-impulse --config <path>
+impulse --config /etc/impulse/config-validation.yaml
 ```
 
-The command exits with status 0 if configuration is valid, or prints detailed error messages and exits with non-zero status if invalid.
+An unreadable or invalid explicitly supplied configuration produces a fatal
+startup error and exits with status `1`. A valid configuration has no automatic
+success exit status because the server remains running; reaching the
+listening/ready state is the success signal. Stop the isolated process after
+that signal. A later bind or runtime-initialization failure is also a failed
+startup, even if schema validation succeeded. If `--config` is omitted and the
+default `/etc/impulse/config.yaml` does not exist, Impulse exits with status `2`.
 
-## Complete Working Example
+For the staged workflow, do not treat HTTP status alone as the validation
+result: `/admin/runtime/validate` can return `200` with rejected changes. Inspect
+`candidate_status` and `rejected_changes` before previewing or activating. See
+the [Control API Reference](/docs/reference/control-api-reference#post-adminruntimevalidate)
+for request and response details.
 
-```yaml
-version: 1
+## Complete Examples
 
-listen:
-  protocol: http3
-  address: "0.0.0.0"
-  port: 9889
-  tls:
-    cert: "certs/proxy-fullchain.pem"
-    key: "certs/proxy-key-pkcs8.pem"
+Use [Configuration Examples](/docs/configuration/examples) for complete
+deployment files and
+[Routing and Upstreams](/docs/configuration/routing-and-upstreams#canonical-example)
+for the canonical routed backend-pool example.
 
-upstream:
-  api_pool:
-    load_balancing:
-      type: "consistent-hash"
+## Related Pages
 
-    route:
-      path_prefix: "/api"
-
-    backends:
-      - id: "backend1"
-        address: "https://127.0.0.1:7001"
-        weight: 100
-        health_check:
-          path: "/health"
-          interval: 5000
-
-      - id: "backend2"
-        address: "https://127.0.0.1:7002"
-        weight: 50
-        health_check:
-          path: "/status"
-          interval: 10000
-
-  default_pool:
-    load_balancing:
-      type: "round-robin"
-
-    route:
-      path_prefix: "/"
-
-    backends:
-      - id: "auth1"
-        address: "https://127.0.0.1:8001"
-        weight: 100
-        health_check:
-          path: "/health"
-          interval: 5000
-
-log:
-  level: debug
-  format: plain
-```
+- [Configuration Defaults](/docs/configuration/defaults)
+- [Configuration Examples](/docs/configuration/examples)
+- [Routing and Upstreams](/docs/configuration/routing-and-upstreams)
+- [Production Deployment](/docs/deployment/production)

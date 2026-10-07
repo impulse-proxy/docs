@@ -1,300 +1,156 @@
-# Distributed Quota And Advanced Rate-Limit Policy Contract
+# Distributed Quota Policy Contract
 
-This document defines the contract for first-class distributed quota and
-advanced rate-limit policy in Impulse.
+This page defines the behavior that Impulse v0.6 preserves across configuration,
+counter backends, admission responses, metrics, and Control API state. Use
+[Resilience, Rate Limits, and Quota](/docs/configuration/resilience) for the
+exact schema and [Distributed Quota Operations](/docs/operations/distributed-quota)
+for Redis deployment and incident handling.
 
-The runtime now ships:
+## Quota Is Not Overload
 
-- scoped per-instance rate limiting
-- distributed quota policy with route, tenant, token, and client selectors
-- burst and sustained quota contracts
-- Redis-backed distributed counters
-- explicit fail-open or fail-closed backend behavior
-- bounded local fallback when it is configured explicitly
+Quota enforces an abuse-control or commercial traffic contract. Overload
+control protects the local proxy and backend fleet from resource pressure.
+Impulse keeps them separate:
 
-Use [Distributed Quota](/docs/operations/distributed-quota) for production
-configuration, rollout guidance, and operator interpretation. This page remains
-the semantic contract that config, admission behavior, metrics, and control API
-output must continue to follow.
+- quota exhaustion is not recorded as overload
+- quota-backend failure is not recorded as overload
+- overload shedding continues when the quota backend is unavailable
+- quota and overload use separate reason and metric vocabularies
 
-## Goals
+## Policy Matching
 
-- separate quota enforcement from overload control
-- support route-, tenant-, token-, and client-scoped policy, including
-  composite selectors
-- support both short-window burst control and long-window sustained control
-- support distributed counters with explicit consistency guarantees
-- make denial and backend-failure outcomes operator-visible and stable
+Quota runs after routing, so the `route` identity is the selected upstream pool
+name. A policy applies when its `route_allowlist` is empty or contains that
+name. Every applicable policy is evaluated in configuration order.
 
-## Non-Goals
+An enforced denial or fail-closed backend failure stops evaluation. Otherwise,
+later matching policies also apply. This means multiple policies can constrain
+one request; they are not alternatives selected by policy name.
 
-- replacing local overload controls with a distributed backend
-- building a generic policy engine
-- promising multi-region globally serializable counters
-- introducing more selector dimensions than current product needs
+## Selector Contract
 
-## Quota Versus Overload
+A policy selector contains one or more of these dimensions:
 
-Quota policy and overload policy are separate subsystems with different
-operational intent.
+- `route`: selected upstream pool name
+- `tenant`: configured tenant identity source
+- `token`: configured token identity source
+- `client`: configured client identity source
 
-### Quota policy
+Composite selectors are one counter identity, not a sequence of independent
+checks. Impulse constructs components in stable `policy → route → tenant →
+token → client` order. Length-prefixing prevents ambiguous concatenation.
 
-Quota policy is an abuse-control and commercial-contract layer.
+Selector extraction has these invariants:
 
-It exists to answer:
+1. Every selected dimension must resolve for the policy to be evaluated.
+2. A missing source yields `selector_identity_missing`.
+3. A present but malformed or oversized source yields
+   `selector_identity_invalid`.
+4. The same normalized request-key source cannot populate multiple identity
+   dimensions in one selector.
+5. Route values remain readable; tenant, token, and client values are SHA-256
+   hashed before entering storage keys or bounded-cardinality telemetry.
+6. Distributed quota never silently substitutes an `unknown` identity and
+   does not use the legacy fallback behavior of scoped rate limits.
 
-- how much traffic is this tenant, token, client, or route allowed to consume
-- has a contractual burst or sustained limit been exceeded
-- should this request be denied even if the proxy and backend fleet are healthy
+The exact source compatibility matrix is in
+[Selector Composition](/docs/configuration/resilience#request-key-sources-and-selector-composition).
 
-Quota decisions are driven by policy and counter state. They are not a signal
-that the proxy is saturated.
+## Window Contract
 
-### Overload policy
+A policy defines `burst`, `sustained`, or both over the same composite key.
+Both counters use fixed windows.
 
-Overload policy is a local safety layer.
+- `burst` is the shorter spike-control window
+- `sustained` is the longer fairness or contract window
+- when both exist, the burst duration must be shorter
+- a request costs one unit
+- the request is allowed only when every configured window allows it
+- evaluation and update of all windows for one request are atomic
+- a denied request does not partially consume another window
 
-It exists to answer:
+The in-memory backend performs the decision under its per-key counter state.
+The Redis backend performs the combined decision in one atomic script. Impulse
+computes fixed-window boundaries from the proxy process wall clock and passes
+them to that script, so fleet clock synchronization is part of the deployment
+contract.
 
-- is this proxy or backend path under resource pressure
-- must the request be shed to preserve availability
+Atomicity is per policy and composite key. Impulse does not promise a globally
+serializable ledger across unrelated keys or regions; Redis topology and
+replication choices determine cross-region behavior.
 
-Overload decisions are driven by in-process resource pressure and health state.
-They must remain local to the proxy runtime and must not depend on a distributed
-counter backend.
+## Enforcement Contract
 
-### Required separation
+`enforcement: enforce` applies policy decisions. Exhausted windows and missing
+or invalid selectors return `429 Too Many Requests`. An exhausted window adds
+`Retry-After` when its reset time is known.
 
-Future implementation must preserve these rules:
+`enforcement: shadow` evaluates and records the same decisions but does not
+reject the request. Shadow mode does not turn off counter evaluation.
 
-1. Quota denial and overload shedding must use different reason vocabularies.
-2. Quota exhaustion must not be emitted as overload.
-3. Counter-backend failure must not be emitted as overload.
-4. Local overload controls must still work when the distributed quota backend is
-   unavailable.
-
-## Selector Model
-
-Quota policy evaluates a request against a canonical selector key. The supported
-selector dimensions are:
-
-- `route`
-- `tenant`
-- `token`
-- `client`
-
-### Selector dimensions
-
-`route`
-: The canonical upstream or route identity selected by routing. Quota policy is
-  attached to the routed target, not to the raw request path string alone.
-
-`tenant`
-: A normalized tenant identifier derived from authenticated request context or a
-  configured trusted identity source.
-
-`token`
-: A normalized token identifier derived from bearer-token or equivalent auth
-  context. The raw secret value must not be emitted in logs or metrics.
-
-`client`
-: A normalized client identity. This may come from configured client-id
-  headers, mTLS identity, trusted proxy identity, or canonical peer/client-IP
-  extraction depending on policy.
-
-### Composite selectors
-
-Policies may target one dimension or a composite of dimensions. Supported
-composite examples include:
-
-- `route + tenant`
-- `route + token`
-- `route + client`
-- `tenant + client`
-- `route + tenant + token`
-
-Composite selectors are treated as first-class policy keys, not as a chain of
-independent checks.
-
-### Selector normalization rules
-
-Future implementation must satisfy these invariants:
-
-1. Selector extraction must be deterministic for the same request context.
-2. Composite keys must be built from normalized component identities in stable
-   field order.
-3. Missing selector identity must not silently collapse to another identity such
-   as `unknown` unless the policy explicitly allows that behavior.
-4. Sensitive selector values, especially token-derived identities, must be
-   redacted or hashed before they appear in logs, metrics, or the control API.
-
-## Contract Model
-
-Each quota policy defines one or more windows over the same selector key. The
-initial contract model is:
-
-- `burst`
-- `sustained`
-
-### Burst contract
-
-The burst contract protects short-term spikes. It is a short window with a
-relatively higher allowance that answers:
-
-- can this selector consume a sudden spike right now
-
-### Sustained contract
-
-The sustained contract protects long-term fairness and commercial limits. It is
-a longer window with a lower average allowance that answers:
-
-- can this selector continue consuming traffic at this rate over time
-
-### Combined evaluation rules
-
-Future implementation must evaluate all configured windows for a policy as one
-logical decision.
-
-That means:
-
-1. a request is allowed only if every configured window allows it
-2. a request denied by burst must not consume sustained allowance
-3. a request denied by sustained must not consume burst allowance
-4. the counter backend must evaluate and update the windows atomically for a
-   single request decision
-
-## Backend Failure Semantics
-
-Distributed quota evaluation requires an explicit backend-failure policy.
-Backend-failure behavior must never be implicit.
-
-The supported modes are:
-
-- `fail_open`
-- `fail_closed`
-
-### `fail_open`
-
-If quota evaluation cannot complete because the distributed backend is
-unavailable, times out, or returns an internal evaluation error:
-
-- the request is allowed to continue
-- the request is marked as quota-degraded in observability surfaces
-- the backend failure must be recorded in metrics, logs, and control API state
-
-`fail_open` protects availability at the cost of temporary contract drift.
-
-### `fail_closed`
-
-If quota evaluation cannot complete because the distributed backend is
-unavailable, times out, or returns an internal evaluation error:
-
-- the request is denied
-- the deny reason must name the backend failure cause explicitly
-- the denial must not be emitted as overload
-
-`fail_closed` protects contract strictness at the cost of availability.
-
-### HTTP status expectations
-
-Future implementation must separate exhausted quota from failed quota
-evaluation:
-
-- quota exhaustion returns `429 Too Many Requests`
-- fail-closed backend evaluation failure returns `503 Service Unavailable`
-
-This prevents operators and clients from confusing policy exhaustion with
-backend dependency failure.
-
-## Exact Deny-Reason Vocabulary
-
-The deny-reason vocabulary for distributed quota policy is locked to the
-following canonical values:
+Canonical policy-denial reasons are:
 
 - `burst_quota_exhausted`
 - `sustained_quota_exhausted`
 - `selector_identity_missing`
 - `selector_identity_invalid`
+
+## Backend-Failure Contract
+
+Counter-backend failures have three canonical reasons:
+
 - `backend_timeout`
 - `backend_unavailable`
 - `backend_error`
 
-### Meaning of each reason
+`backend_failure_policy: fail_open` admits the request and records a degraded
+quota outcome. `fail_closed` rejects it with `503 Service Unavailable`. Neither
+result is an overload decision.
 
-`burst_quota_exhausted`
-: The request would exceed the configured short-window burst contract.
+An explicitly configured Redis local fallback is tried before fail-open or
+fail-closed handling, and only for timeout or unavailable failures. A fallback
+decision uses bounded per-instance counters and the same policy windows. It is
+reported with a degraded backend mode so operators can distinguish it from a
+healthy Redis decision. Protocol, script, and other backend errors do not enter
+fallback.
 
-`sustained_quota_exhausted`
-: The request would exceed the configured long-window sustained contract.
+## Counter and Capacity Contract
 
-`selector_identity_missing`
-: The policy requires one or more selector dimensions that could not be derived
-  from the request context.
+- The default `in_memory` backend is process-local and bounded to 4,096 active
+  buckets.
+- Redis concurrency is bounded by `backend.max_inflight`.
+- Local fallback capacity is bounded by `local_fallback.max_entries`.
+- Capacity exhaustion is a backend-unavailable condition and follows the
+  configured backend-failure policy when no usable fallback remains.
+- Key prefixes isolate environments and policy deployments; changing a prefix
+  starts a distinct counter namespace.
 
-`selector_identity_invalid`
-: The required selector dimension was present but failed normalization or trust
-  validation.
+## Operator-Visible Contract
 
-`backend_timeout`
-: The distributed quota backend did not answer within the configured evaluation
-  timeout.
+The runtime exposes the configured policies, intended backend, availability,
+degraded state, failure mode, and recent backend errors. The stable metric
+families are:
 
-`backend_unavailable`
-: The distributed quota backend could not be reached or was not ready for
-  evaluation.
+- `impulse_quota_policy_outcomes_total{policy,decision,reason,selector_dimensions,backend_mode}`
+- `impulse_quota_backend_health_total{backend_mode,reason}`
 
-`backend_error`
-: The distributed quota backend responded, but the evaluation failed due to an
-  internal or protocol-level error.
+The decision vocabulary distinguishes allowed, denied, shadow-denied,
+failed-open, and failed-closed outcomes. Backend mode distinguishes healthy
+in-memory or Redis decisions from Redis local-fallback decisions.
 
-No other deny-reason strings may be introduced for this subsystem without
-updating this contract first.
+These distinctions are part of the contract: a dashboard or log pipeline must
+not collapse quota exhaustion, quota dependency failure, and overload shedding
+into one generic rejection category.
 
-## Consistency Expectations For Distributed Counters
+## Compatibility Boundary
 
-Impulse's distributed quota layer is intended to provide strong-enough
-per-selector contract enforcement, not globally serialized traffic accounting
-across every deployment topology.
+The current contract intentionally supports only route, tenant, token, and
+client dimensions, and only burst and sustained windows. Adding a selector
+dimension, window type, deny reason, or backend protocol version requires an
+explicit contract and observability update.
 
-Future implementation must meet these consistency expectations:
+## Related Pages
 
-1. Counter evaluation for one request against one policy key must be atomic
-   across all configured windows for that key.
-2. Two concurrent requests for the same policy key must not both be allowed if
-   doing so would exceed a limit that a single atomic backend decision could
-   prevent.
-3. A successful allow decision must commit the corresponding counter update as
-   part of the same backend operation.
-4. The proxy must not depend on local wall-clock time as the source of truth for
-   distributed window rollover if the backend provides the authoritative timing.
-5. Cross-key fairness is best-effort. The contract is per selector key, not a
-   globally serializable ledger across unrelated keys.
-6. Multi-region deployments may observe replication lag or region-local drift
-   unless the selected backend guarantees stronger coordination. This is an
-   operator tradeoff, not a hidden implementation detail.
-
-## Required Operator Visibility
-
-When this feature is implemented, the following must be visible:
-
-- which quota policy matched
-- which selector dimensions were used
-- whether the request was allowed, quota-denied, or degraded by backend failure
-- the exact deny reason when denied
-- whether backend failure handling is `fail_open` or `fail_closed`
-- whether the distributed quota backend is healthy, degraded, or unavailable
-
-## Implementation Guardrails
-
-The implementation that follows this contract should stay within these
-boundaries:
-
-- keep overload control local
-- keep selector extraction centralized and reusable
-- keep distributed backend logic behind a narrow counter-evaluation interface
-- do not add more selector dimensions or quota-window types until there is a
-  concrete product need
-
-That keeps the first implementation useful without turning the proxy into a
-generic external policy platform.
+- [Resilience, Rate Limits, and Quota](/docs/configuration/resilience)
+- [Operating Distributed Quota](/docs/operations/distributed-quota)
+- [Metrics Reference](/docs/reference/metrics-reference#quota)

@@ -1,215 +1,122 @@
-# Docker Installation
+# Docker
 
-This page is the fastest way to run Impulse in containers and verify startup and first proxied traffic. Metrics and the control API are disabled by default for a safer container baseline.
+This page answers one question: **how do I run the Impulse container?**
 
-## Prerequisites
+## Image Availability
 
-- [Docker](https://docs.docker.com/get-docker/) 24+ (or Docker Desktop)
-- [Docker Compose](https://docs.docker.com/compose/install/) v2 plugin (bundled with Docker Desktop)
+The Impulse v0.6 repository does not define a registry-publication
+workflow or a public image reference. Do not guess a Docker Hub or GHCR image
+name: an image with the same project name may be unrelated. The supported v0.6
+container artifact is the production Dockerfile under `packaging/docker/`,
+which produces the local image `impulse:packaging`.
 
-## Choose Your Docker Path
+When an official release publishes a container, use the exact immutable tag or
+digest listed on that release. The run contract below remains the same: mount a
+configuration at `/etc/impulse/config.yaml`, mount its certificate files, and
+publish both UDP and TCP for the listener port.
 
-- Want the fastest container evaluation path: use the provided Compose stack plus a small demo backend
-- Want to run only the Impulse container: use the single-container commands later in this page
-- Want full host and production guidance: use [Production Deployment](/docs/deployment/production)
+## Build the Packaged Image
 
-## Quick Start with Docker Compose
+From an existing Impulse source checkout:
 
-The fastest working container path is:
-
-1. use the provided Compose stack
-2. point the default upstream at a demo backend
-3. verify startup and first proxied traffic
-
-**1. Clone the repository:**
-
-```bash
-git clone https://github.com/impulse-proxy/impulse.git
-cd impulse
-```
-
-**2. Use the repo development certificates for local testing.**
-
-The packaged Compose file already mounts `certs/proxy-cert.pem` and `certs/proxy-key-pkcs8.pem` from the repository.
-
-For real deployments, replace them with your own certificate material and follow [TLS Setup](/docs/configuration/tls).
-
-**3. Start a small demo backend:**
+Run Docker commands as a user authorized to access the Docker daemon. Do not
+add `sudo` by default; use the host's documented Docker access policy.
 
 ```bash
-docker run -d --name impulse-demo-backend --rm -p 8080:80 nginx:alpine
+./packaging/docker/scripts/build-image.sh
 ```
 
-**4. Edit the config to point at that backend:**
+This builds `packaging/docker/Dockerfile` and tags the result
+`impulse:packaging`. The image runs as UID `10001`, uses
+`/var/lib/impulse` as its working directory, and starts:
 
-Open `packaging/docker/config.docker.yaml` and replace the upstream address:
-
-```yaml
-upstream:
-  default:
-    backends:
-      - id: "default-backend"
-        address: "http://host.docker.internal:8080"
+```text
+/usr/local/bin/impulse --config /etc/impulse/config.yaml
 ```
 
-If you are on Linux, replace `host.docker.internal` with a reachable host-gateway address or run the backend in the same Compose project and use its service name.
+## Provide Configuration and Certificates
 
-The shipped Docker config keeps the metrics and control API disabled and does
-not publish their ports by default. If you need the control API, enable it and
-configure a real token (or mTLS) before starting the stack; placeholder tokens
-are rejected by configuration validation:
+Use `packaging/docker/config.docker.yaml` as the container-specific starting
+point, or mount a configuration prepared from
+[Configuration Examples](/docs/configuration/examples). The single minimal
+learning configuration lives in the
+[Quickstart](/docs/getting-started/quickstart#2-create-the-minimal-configuration);
+it is not duplicated here because container paths and backend reachability must
+match your deployment.
 
-```yaml
-observability:
-  metrics:
-    enabled: true
-    address: "0.0.0.0"
-  control_api:
-    enabled: true
-    address: "0.0.0.0"
-    auth_token: "<generate-a-unique-secret>"
-```
+Requirements:
 
-**5. Start the stack:**
+- the config file is readable at `/etc/impulse/config.yaml`
+- every certificate, key, certificate authority (CA), and file-backed secret path resolves inside the
+  container
+- the configured backend is reachable from the container network; container
+  loopback refers to the Impulse container itself
+- mounted files are readable by UID `10001`, unless you deliberately override
+  the image user
+
+The packaged development configuration expects certificate filenames from the
+repository `certs/` directory. Replace those files and paths for real use.
+
+## Run One Container
+
+From the repository root, the packaged development inputs run as:
 
 ```bash
-docker compose -f packaging/docker/docker-compose.yml up -d --build
-```
-
-**6. Verify startup and first traffic:**
-
-```bash
-# The default Compose stack publishes only the proxy listener.
-docker compose -f packaging/docker/docker-compose.yml ps
-
-# First proxied request
-curl --http3-only -k https://127.0.0.1:9889/
-```
-
-The default stack does not publish ports `9901` or `9902`, and the mounted
-configuration keeps metrics and the control API disabled. To expose them for a
-local diagnostic session, set both observability addresses to `0.0.0.0`, enable
-the endpoints, configure a unique control-API token, and add these Compose port
-mappings before starting the stack:
-
-```yaml
-ports:
-  - "9901:9901"
-  - "9902:9902"
-```
-
-Do not expose these ports on an untrusted network.
-
-**Stop the stack:**
-
-```bash
-docker compose -f packaging/docker/docker-compose.yml down
-docker rm -f impulse-demo-backend 2>/dev/null || true
-```
-
-## Running a Single Container
-
-If you prefer to manage the container directly:
-
-```bash
-docker build -t impulse:latest -f packaging/docker/Dockerfile .
-
-docker run -d \
+docker run --rm \
   --name impulse \
   -p 9889:9889/udp \
   -p 9889:9889/tcp \
   -v "$(pwd)/packaging/docker/config.docker.yaml:/etc/impulse/config.yaml:ro" \
   -v "$(pwd)/certs:/etc/impulse/certs:ro" \
-  --restart unless-stopped \
-  impulse:latest
+  impulse:packaging
 ```
 
-## Ports
+Publishing both protocols is intentional: UDP serves the native QUIC listener,
+while TCP serves the bootstrap HTTP/1.1 and HTTP/2 listener on the same port.
+The packaged configuration disables the optional metrics and Control API
+listeners, so ports `9901` and `9902` are not published.
 
-| Port | Protocol | Purpose |
-|------|----------|---------|
-| 9889 | UDP + TCP | QUIC / HTTP3 proxy listener |
-| 9901 | TCP (optional) | Prometheus metrics endpoint; disabled/unpublished by default |
-| 9902 | TCP (optional) | Control API (health, ready, admin); disabled/unpublished by default |
+The placeholder backend in `config.docker.yaml` is container-local. Startup can
+succeed without it, but proxied traffic cannot. Point it at a service on the
+same Docker network or another address reachable from the container before
+testing traffic.
 
-## Using a Custom Config
+## Run with Compose
 
-Mount your own config file instead of the default:
-
-```bash
-docker run -d \
-  --name impulse \
-  -p 9889:9889/udp -p 9889:9889/tcp \
-  -p 9901:9901 -p 9902:9902 \
-  -v "/path/to/your/config.yaml:/etc/impulse/config.yaml:ro" \
-  -v "/path/to/your/certs:/etc/impulse/certs:ro" \
-  --restart unless-stopped \
-  impulse:latest
-```
-
-See `packaging/docker/config.docker.yaml` for the packaged container reference config.
-
-## Building the Image
-
-A helper script is provided to build and tag the image:
+The repository Compose file builds the same image, mounts the same packaged
+configuration and certificates, and publishes only the proxy listener:
 
 ```bash
-# Default tag: impulse:packaging
-./packaging/docker/scripts/build-image.sh
-
-# Custom tag
-./packaging/docker/scripts/build-image.sh impulse:1.0.0
-```
-
-## Smoke Test
-
-Run the bundled smoke test to verify the image builds, starts, and preserves the secure default port exposure:
-
-```bash
-./packaging/docker/scripts/smoke-test.sh
-```
-
-This validates:
-- Image builds and the container remains running
-- The secure default does not publish optional observability ports
-- Container logs show a clean runtime startup
-
-## Logs
-
-```bash
-# Follow live logs
-docker logs -f impulse
-
-# With Compose
+docker compose -f packaging/docker/docker-compose.yml up -d --build
 docker compose -f packaging/docker/docker-compose.yml logs -f impulse
 ```
 
-By default, the container logs to stdout/stderr. To persist logs to a file, set in your config:
-
-```yaml
-log:
-  file:
-    enabled: true
-    path: /var/log/impulse/impulse.log
-```
-
-And mount a volume for `/var/log/impulse/`.
-
-## Upgrading
+Stop it with:
 
 ```bash
-# Rebuild the image from latest source
-docker compose -f packaging/docker/docker-compose.yml up -d --build
-
-# Or for a single container
-docker build -t impulse:latest -f packaging/docker/Dockerfile .
-docker rm -f impulse
-docker run -d ...   # same run command as before
+docker compose -f packaging/docker/docker-compose.yml down
 ```
 
-## What to Read Next
+The Compose service overrides the runtime user to root. Review that
+choice before production; the image itself defaults to UID `10001`.
 
-- [Quickstart](/docs/tutorials/quickstart) - fastest local non-container first run
-- [Installation](/docs/getting-started/installation) - install Impulse directly on a host
-- [Minimum Production](/docs/getting-started/minimum-production) - minimum safe production posture
-- [Production Deployment](/docs/deployment/production) - full deployment guidance
+## Production Boundaries
+
+- Pin an official image by version or digest when registry publication exists;
+  do not deploy a floating tag.
+- Keep configuration, certificates, keys, and secret files in read-only mounts.
+- Do not expose metrics or the Control API merely by publishing their ports.
+  Configure their bind addresses, TLS, authentication, and network boundary as
+  described in
+  [Observability and Control Configuration](/docs/configuration/observability-and-control).
+- Send container logs to stdout/stderr unless your platform has a deliberate
+  file-volume and rotation policy.
+- Use [Production Deployment](/docs/deployment/production) before serving real
+  traffic.
+
+## Related Pages
+
+- [Quickstart](/docs/getting-started/quickstart)
+- [Installation](/docs/getting-started/installation)
+- [Configuration Examples](/docs/configuration/examples)
+- [Production Deployment](/docs/deployment/production)

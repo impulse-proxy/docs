@@ -1,5 +1,9 @@
 {
-  "label": "User Guide",
-  "position": 5,
-  "link": {"type": "generated-index"}
+  "label": "Traffic Guides",
+  "position": 4,
+  "link": {
+    "type": "generated-index",
+    "title": "Traffic Guides",
+    "description": "Task-focused guidance for traffic-selection behavior."
+  }
 }

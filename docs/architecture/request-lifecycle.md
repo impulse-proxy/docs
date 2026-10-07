@@ -1,319 +1,142 @@
 # Request Lifecycle
 
-This document describes the canonical request path through Impulse. It explains the product flow that both ingress paths should follow after intake: shared admission, auth, routing, transport execution, response normalization, streaming guardrails, and outcome recording.
+This page describes the current request path shared by the native QUIC and
+bootstrap ingress adapters. It focuses on decision ownership rather than wire
+or source-level detail.
+
+## Flow
+
+```mermaid
+flowchart LR
+    intake["Ingress intake and validation"] --> route["Route resolution"]
+    route --> select["Backend selection"]
+    select --> preauth["Selected policy and pre-auth admission"]
+    preauth --> auth["External auth when configured"]
+    auth --> postauth["Post-auth admission"]
+    postauth --> build["Canonical request build"]
+    build --> execute["Transport execution, retry, hedge"]
+    execute --> normalize["Response normalization and guardrails"]
+    normalize --> writeback["Protocol-specific writeback"]
+    writeback --> outcome["Outcome and backend feedback"]
+```
+
+Route and backend resolution happen before route-scoped policy evaluation so
+Impulse knows which upstream policy, pool, and bounded observability identity
+apply. A locally rejected request does not proceed to backend dispatch; any
+selection accounting is finalized by the outcome path.
+
+## Ownership at a Glance
+
+| Concern | Owner | Boundary |
+| --- | --- | --- |
+| Downstream parsing and wire validation | `impulse-edge::quic_listener` native or bootstrap adapter | Produces normalized method, path, authority, headers, body mode, peer identity, and timing context |
+| Shared protocol limits and body guardrails | `impulse-edge::runtime::connection` and resilience policy | Returns typed allow, reject, timeout, and size-limit decisions; adapters serialize them |
+| Route resolution | `impulse-edge::request_pipeline` over `edge::routing` | Matches method, path, and authority to one upstream |
+| Backend selection | Edge forwarding service using `impulse-lb` pools | Selects an eligible backend and starts per-pool accounting |
+| Admission and authentication | `quic_listener::admission`, `edge::resilience`, and shared request-policy services | Evaluates local auth, rate limits, brownout, external auth, quota, and inflight protection in their defined phases |
+| Request construction and response normalization | `impulse-bridge` | Applies host/forwarded-header policy and hides protocol-specific H1/H2 request builders |
+| Retry and hedge orchestration | `impulse-edge` forwarding | Decides whether another attempt is allowed and selects an alternate backend |
+| Backend protocol execution | `impulse-transport` | Executes the chosen backend as HTTP/1.1 or HTTP/2 behind one façade |
+| Terminal outcome and backend feedback | `impulse-edge::runtime::connection::outcome` with adapter observation glue | Records canonical route/backend results and applies typed lifecycle feedback |
+
+## 1. Ingress Intake and Validation
+
+The native adapter owns UDP, QUIC/TLS, HTTP/3 connection and stream state. The
+bootstrap adapter owns TCP/TLS, HTTP/1.1 or HTTP/2 request intake, and
+HTTP/1.1-specific upgrade detection.
+
+Each adapter validates its wire contract and produces the HTTP semantics needed
+by shared services. Connection, stream, and Hyper objects remain adapter-local;
+they are not shared request-policy types.
+
+## 2. Route Resolution and Backend Selection
+
+The shared route service matches the validated method, path, and authority
+against the active generation's route index. It returns the upstream identity
+and match metadata. Edge forwarding then asks the upstream pool to select an
+eligible backend using the configured balancing strategy and request-key input.
+
+`impulse-lb` owns algorithms, eligibility flags, and pool accounting. It does
+not own request parsing, routing precedence, auth, or transport execution.
+
+## 3. Selected Policy and Admission
+
+The chosen upstream supplies the request policy. Pre-auth admission evaluates
+local API-key and JSON Web Token (JWT) policy, brownout, and scoped rate
+limiting. External
+authorization runs next when configured. Post-auth admission applies quota,
+route/global/upstream/backend inflight protection, queueing, circuit state, and
+adaptive admission as applicable.
+
+Admission services return typed decisions. Native and bootstrap adapters retain
+only response serialization and protocol lifecycle duties; they should not
+invent different policy semantics.
+
+## 4. Canonical Upstream Request
+
+After admission, `impulse-bridge` builds the upstream request for the selected
+backend transport. It owns:
+
+- host-policy and forwarded-header application
+- auth-approved header mutations
+- hop-by-hop request-header filtering
+- body-mode shaping
+- HTTP/1.1 upgrade request shaping
+- the internal H1 and H2 request builders
+
+Edge supplies the normalized request, selected endpoint, and resolved policy;
+it does not duplicate header construction.
+
+## 5. Dispatch, Retry, and Hedge
+
+Edge owns per-attempt orchestration: inflight permits, circuit state, retry
+budget, hedge eligibility, alternate selection, and request deadlines. Each
+attempt is handed to `UpstreamTransportPool` as a backend identity plus a
+canonical request.
+
+Transport applies its connection and execution behavior and returns a canonical
+response or error. Shared classification maps that result to retryability,
+health feedback, and stable observability reasons; transport does not decide
+request policy.
+
+## 6. Response and Streaming
+
+`impulse-bridge::response` filters hop-by-hop headers and trailers and decides
+bodyless/no-content emission policy. Shared connection guardrails enforce body
+size, prebuffer, idle, and total-streaming limits.
 
-## Purpose
+The adapters then diverge only for writeback:
 
-The request path should be understandable as one ordered flow:
+- native QUIC emits headers, chunks, trailers, and terminal state on the H3
+  stream
+- bootstrap returns an HTTP/1.1 or HTTP/2 response and handles an accepted
+  HTTP/1.1 upgrade tunnel where applicable
 
-1. intake
-2. admission
-3. auth
-4. route resolution and backend selection
-5. canonical request building
-6. backend dispatch
-7. response normalization
-8. body streaming and guardrails
-9. retry and hedge evaluation when needed
-10. outcome recording
+## 7. Outcome Recording
 
-That flow should be shared conceptually across:
+Every terminal path—success, upstream failure, timeout, local rejection,
+overload, client disconnect, or response abort—must finalize through shared
+outcome semantics. The outcome layer owns route/backend metrics, pool request
+accounting, passive health feedback, retry/hedge telemetry, and canonical
+reason mapping.
 
-- QUIC ingress
-- bootstrap compatibility ingress
+Adapters provide protocol-specific facts but must not independently redefine
+what the terminal result means.
 
-The two paths differ in ingress and egress mechanics, not in core policy meaning.
+## Invariants
 
-## One Request, Two Ingress Paths
+- Equivalent native and bootstrap requests receive the same route and policy
+  decision unless the downstream protocol itself requires different behavior.
+- A route resolves to an upstream before that upstream's policy is evaluated.
+- Backend selection and transport execution remain separate decisions.
+- Only explicit `http://` backends use upstream HTTP/1.1; HTTPS and schemeless
+  backends use upstream HTTP/2 over TLS.
+- Every terminal path records an outcome once and releases its accounting and
+  admission state.
 
-The product-level rule is simple:
+## Related Pages
 
-- QUIC and bootstrap may parse requests differently
-- they should reach the same internal policy decisions for the same logical request
-- they should emit the same canonical observability reasons for the same outcome
-
-If those paths disagree semantically, the shared boundary is in the wrong place.
-
-## Main Ownership Boundaries
-
-### `edge::quic_listener`
-
-Owns ingress mechanics and request orchestration.
-
-It is responsible for:
-
-- accepting traffic
-- creating request envelopes
-- invoking shared policy layers in order
-- coordinating transport execution
-- writing results back to the client protocol
-
-### `edge::runtime::connection`
-
-Owns request-path shared policy and accounting helpers that are runtime concerns rather than ingress mechanics.
-
-This includes:
-
-- body guardrails
-- outcome classification and recording
-- stream terminal-state vocabulary
-
-### `bridge`
-
-Owns canonical request building and response normalization.
-
-It is responsible for:
-
-- upstream request construction
-- host and forwarded-header policy application
-- canonical response/header normalization
-- websocket and upgrade helper logic
-
-### `transport`
-
-Owns backend protocol execution.
-
-It is responsible for:
-
-- runtime-selected H1/H2 dispatch
-- connection reuse
-- transport-level timeouts
-- backend client rotation
-
-### `lb`
-
-Owns load-balancing substrate and pool accounting primitives.
-
-It is not where request-path orchestration should live.
-
-## Step 1: Intake
-
-The request path begins in an ingress-specific intake layer.
-
-### QUIC intake
-
-QUIC intake owns:
-
-- packet processing
-- QUIC connection lifecycle
-- HTTP/3 stream establishment
-- request envelope creation from stream headers and body chunks
-
-### Bootstrap intake
-
-Bootstrap intake owns:
-
-- HTTP request acceptance
-- method/path/authority extraction
-- compatibility-path validation
-- websocket upgrade detection
-
-By the end of intake, the system should have a canonical request envelope or request context, not a partially interpreted protocol object scattered across multiple branches.
-
-## Step 2: Admission
-
-Admission is the first shared policy gate.
-
-Admission covers:
-
-- quota and scoped rate-limit decisions
-- overload and brownout shedding
-- route-level policy rejection
-- local auth prerequisites where applicable
-- permit acquisition and admission execution checks
-
-Admission should produce typed policy results, not direct response I/O decisions scattered across intake code.
-
-Both QUIC forwarding and bootstrap compatibility code should route these checks through the same admission layer.
-
-Quota and overload are intentionally separate:
-
-- quota describes contract or entitlement enforcement
-- overload describes runtime self-protection
-
-They may both reject a request, but they should not collapse into one policy meaning.
-
-## Step 3: Auth Decisions
-
-If external auth is configured, the request enters the shared auth decision layer.
-
-This layer owns:
-
-- timeout handling
-- fail-open vs fail-closed policy
-- allow/deny/challenge/redirect mapping
-- allowlist filtering
-- header mutation validation and safety checks
-- OIDC helper checks where configured
-
-Ingress-specific code should only orchestrate the auth request and apply the shared auth decision result.
-
-## Step 4: Route Resolution and Backend Selection
-
-After admission and auth, the request enters the shared resolution pipeline.
-
-Resolution covers:
-
-- listener-aware route matching
-- host and path-based route matching
-- upstream lookup
-- load-balancing strategy selection
-- canonical load-balancing key extraction
-- backend selection
-- backend-selection logging and telemetry
-
-The result of this phase should be a typed resolved target, not a mix of route, upstream, and backend values reconstructed later by dispatch code.
-
-## Step 5: Canonical Request Building
-
-Once a backend is selected, ingress code shapes the request into the canonical bridge input.
-
-This phase covers:
-
-- method/path/authority transfer
-- body mode decisions
-- host policy application
-- forwarded-header policy application
-- websocket tunnel request shaping
-
-`bridge` owns the canonical request-building contract. Listener code should assemble inputs, not reimplement header policy.
-
-## Step 6: Backend Dispatch
-
-Backend dispatch means handing the canonical upstream request to transport.
-
-Edge-owned dispatch logic still owns:
-
-- retry and hedge orchestration
-- upstream inflight coordination
-- admission-related dispatch constraints
-- backend-target bookkeeping for observations
-
-But edge should not re-decide protocol execution details. At this point it should effectively say:
-
-- send this canonical request to this backend
-
-Transport decides how that backend is executed according to the runtime-selected backend transport kind.
-
-## Step 7: Response Normalization
-
-When an upstream response arrives, it is normalized before downstream emission.
-
-This shared layer covers:
-
-- hop-by-hop header stripping
-- connection-token filtering
-- trailer normalization and conversion
-- content-length and content-type shaping
-- HEAD/bodyless/no-content behavior
-
-`bridge::response` is the canonical surface for this. QUIC and bootstrap should differ only in how they emit the normalized result downstream.
-
-## Step 8: Streaming and Guardrails
-
-After headers are normalized, response and request bodies continue under shared guardrail policy.
-
-This layer covers:
-
-- request body idle timeout
-- request total body timeout
-- response body idle timeout
-- response total streaming timeout
-- body size-cap enforcement
-- unknown-length prebuffer limits
-- chunk emission policy
-- progressive emission eligibility
-
-The guardrail layer lives in `edge::runtime::connection::guardrails`.
-
-Ingress-specific code owns:
-
-- polling
-- wakeups
-- channel and stream progression
-- actual downstream chunk emission mechanics
-
-It should not own the meaning of timeout and size-cap policy.
-
-## Step 9: Error Classification, Retry, and Hedge Policy
-
-When upstream execution fails or stalls, the request path uses shared classification and retry policy.
-
-This layer covers:
-
-- upstream error classification
-- retryability interpretation
-- retry denial reasons
-- hedge trigger and suppression rules
-- alternate backend selection
-- canonical telemetry reason vocabularies
-
-This allows forwarding code to orchestrate retries and hedges without owning raw error inspection logic itself.
-
-## Step 10: Outcome Recording
-
-Every terminal request path should flow through shared outcome recording.
-
-This covers:
-
-- route outcome classification
-- backend outcome classification
-- metrics recording
-- overload and rejection reason mapping
-- backend accounting hooks
-- backend health feedback hooks
-
-This is important because request paths should not each invent their own answer to “what happened.”
-
-## QUIC vs Bootstrap Differences
-
-Both paths should pass through the same policy layers in the same order.
-
-They intentionally differ only in:
-
-- ingress parsing and protocol setup
-- downstream response/writeback mechanics
-- websocket and upgrade mechanics on bootstrap
-- QUIC-specific stream progression details
-
-If a new policy exists only in one path, it usually belongs in a shared layer instead.
-
-## Routing, Transport, and Lifecycle Relationship
-
-The request path depends on three adjacent subsystems:
-
-- routing decides which upstream and backend should receive the request
-- transport decides how that backend request is executed on the wire
-- backend lifecycle decides how request feedback changes backend health and operator-visible state
-
-Those concerns are related, but they should not collapse into one module.
-
-## Contributor Rules
-
-When adding a new request-path feature:
-
-- put ingress mechanics in `quic_listener` or `bootstrap`
-- put shared policy in admission/auth/resolution/runtime layers
-- put canonical request/response shaping in `bridge`
-- put backend protocol execution in `transport`
-- put shared terminal observation and accounting in `runtime::connection::outcome`
-
-Do not:
-
-- add protocol-specific branching in edge when transport owns it
-- duplicate request header policy in listener code
-- classify terminal outcomes independently in multiple request paths
-
-## Mental Model
-
-The shortest correct model is:
-
-- ingress produces a canonical request context
-- shared policy decides whether and where it goes
-- bridge shapes it
-- transport executes it
-- bridge normalizes the result
-- guardrails constrain streaming
-- outcome recording tells the rest of the system what happened
-
-That is the data-plane contract contributors should preserve.
+- [Architecture Overview](/docs/architecture/overview)
+- [Transport and Backend Lifecycle](/docs/architecture/transport-and-backend-lifecycle)
+- [Runtime Generation and Configuration Lifecycle](/docs/architecture/runtime-generation)
+- [Routing and Upstreams](/docs/configuration/routing-and-upstreams)
