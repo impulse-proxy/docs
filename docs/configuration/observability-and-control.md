@@ -160,7 +160,7 @@ Duplicate literal tokens cannot assign conflicting roles or actors. The legacy
 `admin`; new configuration should use `auth.bearer_tokens`.
 
 Secret-reference syntax, resolution, and reload behavior are documented in
-[Authentication and Secrets](/docs/configuration/authentication-and-secrets#secret-references).
+[Authentication and Secrets](/docs/configuration/authentication-and-secrets#secret-providers-and-references).
 
 When bearer and mTLS identities are both presented and both yield actor IDs,
 the IDs must match. The effective role is limited to the less-privileged role

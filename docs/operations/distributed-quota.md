@@ -8,7 +8,7 @@ the schema. Use:
   for fields, defaults, constraints, and examples
 - [Quota Policy Contract](/docs/architecture/quota-policy-contract) for stable
   selector, counter, response, and observability semantics
-- [Metrics Reference](/docs/reference/metrics-reference#quota-metrics) for exact
+- [Metrics Reference](/docs/reference/metrics-reference#quota) for exact
   metric names and labels
 
 ## When Redis Is Appropriate
