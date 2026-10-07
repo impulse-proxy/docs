@@ -10,7 +10,7 @@ for exact field defaults and constraints. Use the
 [Metrics Reference](/docs/reference/metrics-reference) for metric types, units,
 and labels.
 
-## Start With a Workload Model
+## Start with a Workload Model
 
 Record these inputs before changing limits:
 
@@ -23,7 +23,7 @@ Record these inputs before changing limits:
 - backend connect and response latency distributions, timeout rates, and pool
   size
 - HTTP/3, HTTP/2, and HTTP/1.1 traffic proportions
-- TLS handshake and mTLS volume
+- TLS handshake and mutual TLS (mTLS) volume
 - auth, quota, retry, hedge, tracing, and log policy enabled for the test
 - route/upstream/backend distribution and expected hot keys
 - drain duration and long-lived tunnel behavior

@@ -5,7 +5,7 @@ of the [Configuration Reference](/docs/configuration/reference). The main
 configuration reference remains authoritative for the schema; this page keeps
 the traffic-selection rules together in one place.
 
-## Upstream schema
+## Upstream Schema
 
 The top-level `upstream` value is a non-empty map. Each key is an upstream pool
 name used by routing, metrics, runtime views, and policies such as brownout
@@ -16,7 +16,7 @@ name used by routing, metrics, runtime views, and policies such as brownout
 | `route` | object | Yes | — | Request matcher for this upstream. |
 | `backends` | array of objects | Yes | — | Non-empty backend pool. |
 | `load_balancing` | object | No | `{ type: round-robin, key: null }` | Backend-selection policy for this upstream. |
-| `auth` | object | No | `{}` | API-key, JWT, external-auth, scope, and role policy for this route. See [Authentication and Secrets](/docs/configuration/authentication-and-secrets). |
+| `auth` | object | No | `{}` | API-key, JSON Web Token (JWT), external-auth, scope, and role policy for this route. See [Authentication and Secrets](/docs/configuration/authentication-and-secrets). |
 | `host_policy` | object | No | `{ mode: pass_through, host: null }` | Upstream `Host`/`:authority` selection. |
 | `forwarded_headers` | object | No | `{ mode: overwrite }` | `Forwarded` and `X-Forwarded-*` handling. |
 | `tls` | object or `null` | No | `null` | Complete per-upstream TLS override. `null` inherits `upstream_tls`. |
@@ -25,7 +25,7 @@ Upstream names must be non-empty. The top-level `load_balancing` field is not
 a fallback in v0.6; each upstream either configures its own policy or uses
 `round-robin`.
 
-## Route matching
+## Route Matching
 
 | **Field** | **Type** | **Required** | **Default** | **Meaning** |
 | --------- | -------- | ------------ | ----------- | ----------- |
@@ -36,7 +36,7 @@ a fallback in v0.6; each upstream either configures its own policy or uses
 All configured fields must match the request. A method alone does not make a
 valid route.
 
-### Host behavior
+### Host Behavior
 
 - Matching is case-insensitive.
 - Configuration and request hosts are trimmed and normalized to lowercase.
@@ -48,7 +48,7 @@ valid route.
 - Only one leading `*.` wildcard is accepted. Embedded wildcards, whitespace,
   paths, queries, and fragments are rejected.
 
-### Path behavior
+### Path Behavior
 
 - Routing uses the URI path and ignores the query component.
 - Prefixes match on segment boundaries. `/api` matches `/api` and
@@ -58,14 +58,14 @@ valid route.
   `/%61pi` is routed as `/api`. Ambiguous encodings and path forms are rejected
   by request validation.
 
-### Method behavior
+### Method Behavior
 
 The configured method is trimmed and normalized to uppercase. Request matching
 is therefore case-insensitive. An omitted, `null`, empty, or whitespace-only
 value means any method. Use valid HTTP method tokens such as `GET`, `POST`, or
 `DELETE`.
 
-### Selection precedence
+### Selection Precedence
 
 Declaration order does not choose a route. When more than one route matches,
 Impulse applies these tie-breakers in order:
@@ -79,14 +79,14 @@ Impulse applies these tie-breakers in order:
 
 Duplicate normalized `(host, path_prefix, method)` matchers are rejected.
 
-## Load-balancing schema
+## Load-Balancing Schema
 
 | **Field** | **Type** | **Required** | **Default** | **Meaning** |
 | --------- | -------- | ------------ | ----------- | ----------- |
 | `type` | string | No | `round-robin` | Strategy name or accepted alias. Values are matched case-insensitively; surrounding whitespace is not accepted. |
 | `key` | string or `null` | No | `null` | Request-key source used by `consistent-hash`, or by `sticky-cid` as an explicit override. |
 
-### Strategies and aliases
+### Strategies and Aliases
 
 | Strategy | Accepted values | Selection behavior |
 | -------- | --------------- | ------------------ |
@@ -101,7 +101,7 @@ Unknown strategy names are rejected. Every strategy excludes unhealthy
 backends. If no healthy backend remains, selection fails instead of sending to
 an unhealthy backend.
 
-## Request-key sources
+## Request-Key Sources
 
 Request-key specifications are trimmed and normalized to lowercase. A
 `header`, `cookie`, or `query` source must include a non-empty name after the
@@ -135,7 +135,7 @@ overrides the normal `sticky-cid` CID choice when extraction succeeds.
 Strategies other than `consistent-hash` and `sticky-cid` accept a valid `key`
 value but do not use it to choose a backend.
 
-## Backend weights
+## Backend Weights
 
 Every backend weight must be in the inclusive range `1`–`1000`; the default is
 `100`.
@@ -164,7 +164,7 @@ and selects HTTP/2 transport; HTTP defaults to port `80` and selects HTTP/1.1.
 Both protocols can appear in one upstream. Duplicate normalized origins are
 rejected across the entire configuration.
 
-### Health checks
+### Health Checks
 
 | **Field** | **Type** | **Required** | **Default** | **Meaning** |
 | --------- | -------- | ------------ | ----------- | ----------- |
@@ -185,7 +185,7 @@ Backend DNS refresh is global, under `performance`:
 | `backend_dns_refresh_enabled` | boolean | No | `false` | Enables periodic refresh for hostname backends. |
 | `backend_dns_refresh_interval_ms` | integer | No | `30000` | Refresh interval in milliseconds; must be greater than `0` even when refresh is disabled. |
 
-## Upstream request headers and TLS
+## Upstream Request Headers and TLS
 
 | **Field** | **Type** | **Required** | **Default** | **Meaning** |
 | --------- | -------- | ------------ | ----------- | ----------- |
@@ -231,7 +231,7 @@ Setting `strict_sni: false` disables SNI only; it does not disable certificate
 verification. See [TLS Configuration](/docs/configuration/tls#upstream-backend-tls)
 for CA composition, client mTLS, and activation behavior.
 
-## Canonical example
+## Canonical Example
 
 This is the only complete backend-pool example on this page. It demonstrates
 combined host, path, and method routing; an explicit request key; weighted
@@ -253,7 +253,7 @@ upstream:
       mode: overwrite
     backends:
       - id: "api-a"
-        address: "https://api-a.internal:8443"
+        address: "https://api-a.internal.example:8443"
         weight: 100
         health_check:
           path: "/ready"
@@ -263,7 +263,7 @@ upstream:
           success_threshold: 2
           cooldown_ms: 5000
       - id: "api-b"
-        address: "https://api-b.internal:8443"
+        address: "https://api-b.internal.example:8443"
         weight: 200
         health_check:
           path: "/ready"

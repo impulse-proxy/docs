@@ -17,7 +17,7 @@ kind:
 
 Backend addresses cannot contain a path, query, or fragment. HTTPS certificate
 verification is enabled by default and may use configured trust roots and an
-upstream client identity. Impulse does not currently forward to backends over
+upstream client identity. Impulse does not forward to backends over
 HTTP/3.
 
 ## Responsibility Split
@@ -30,7 +30,7 @@ HTTP/3.
 | Build the protocol-appropriate upstream request and normalize its response | `impulse-bridge` |
 | Execute HTTP/1.1 or HTTP/2, reuse connections, apply transport timeouts, and rotate clients | `impulse-transport` |
 | Coordinate resolution, health, membership, request feedback, and operator snapshots | `impulse-edge::runtime::backend` |
-| Schedule active checks and DNS refresh work | `impulse-edge::quic_listener` control/background services |
+| Schedule active checks and Domain Name System (DNS) refresh work | `impulse-edge::quic_listener` control/background services |
 
 Selection does not choose the wire implementation. It returns a backend;
 transport consumes the normalized transport kind for that backend.
@@ -83,7 +83,7 @@ The lifecycle coordinator maintains one operator-visible model assembled from:
 | Resolution | Authority host/port, address kind, resolved socket addresses, last successful refresh, and refresh generation |
 | Health | Unknown, healthy, or unhealthy with a canonical reason |
 | Membership | Active, suppressed, or removed placement state |
-| Placement | Upstream pools that currently contain the backend and their pool-local state |
+| Placement | Upstream pools that contain the backend and their pool-local state |
 
 `impulse-lb` still owns pool-local eligibility and accounting. The edge
 lifecycle layer owns typed events, transitions, merged inventory, and snapshots

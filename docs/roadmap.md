@@ -1,14 +1,15 @@
 # Roadmap
 
-This roadmap is intentionally practical. It describes possible future
-direction, not shipped behavior or a release commitment. Use
+This roadmap describes possible future direction, not shipped behavior or a
+release commitment. Use
 [Status and Limitations](/docs/reference/status-and-limitations) as the
-authority for current maturity, capability support, limitations, and GA
+authority for current maturity, capability support, limitations, and
+general-availability (GA)
 blockers.
 
 ## Near-Term Priorities
 
-These are the highest-value areas for the next phase of maturity.
+These are the near-term maturity priorities.
 
 ### 1. Close Restart-Only Configuration Gaps
 
@@ -20,7 +21,7 @@ These are the highest-value areas for the next phase of maturity.
 
 - configurable generation retention
 - automatic rollback policy for post-activation health regression
-- stronger fleet-level coordination and change attribution
+- fleet-level coordination and change attribution
 
 ### 3. Edge Runtime Refactor
 
@@ -46,7 +47,7 @@ Increase trust in the critical-path parser and protocol handling with:
 
 ## Medium-Term Priorities
 
-These areas make Impulse far more competitive as a general production reverse proxy.
+These priorities broaden the reverse-proxy feature set.
 
 ### 5. Broader Upstream Compatibility
 
@@ -63,25 +64,25 @@ These areas make Impulse far more competitive as a general production reverse pr
 
 ### 7. Operator Features
 
-- stronger fleet-level quota and state operations
+- fleet-level quota and state operations
 - broader capacity evidence across representative workloads
 - deeper runtime attribution for why requests were shed, retried, or rerouted
 - safer automated remediation for known failure classes
 
-### 8. Auth And Policy Features
+### 8. Authentication and Policy Features
 
 - broader JOSE algorithm coverage (`RS384`/`RS512`, additional ECDSA curves) and discovery-based JWKS resolution
-- stronger route-level policy controls and layered/chained auth providers
+- route-level policy controls and layered or chained authentication providers
 
-## Longer-Term Competitive Priorities
+## Longer-Term Priorities
 
-These areas are what move Impulse from “strong specialized edge proxy” toward “top-tier proxy platform.”
+These areas broaden Impulse beyond its current specialized edge-proxy scope.
 
-### 9. Discovery And Platform Integration
+### 9. Discovery and Platform Integration
 
 - richer service discovery beyond DNS refresh
 - better Kubernetes-native deployment integration
-- stronger fleet-management story
+- fleet-management workflows
 
 ### 10. Extensibility
 
@@ -92,7 +93,7 @@ These areas are what move Impulse from “strong specialized edge proxy” towar
 
 - interoperability validation across more clients and upstream stacks
 - broader production history
-- stronger release-process guarantees
+- documented release-process guarantees
 
 ## Related Pages
 

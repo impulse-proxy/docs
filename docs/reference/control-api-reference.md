@@ -5,7 +5,7 @@ request fields, response fields, and HTTP status semantics.
 
 ## Open These First
 
-Use this table when you need the fastest runtime-introspection path:
+Use this table for common runtime-introspection tasks:
 
 | Need | Endpoint |
 |---|---|
@@ -35,65 +35,70 @@ Use this table when you need the fastest runtime-introspection path:
 
 ## Common Control API Flows
 
+Replace angle-bracket placeholders with deployment-specific values.
+
 ### Read Current Runtime State
 
 ```bash
-curl -k --http1.1 \
+curl --http1.1 --cacert <path> \
   -H "Authorization: Bearer <token>" \
-  https://127.0.0.1:9902/admin/runtime
+  https://<control-host>:<port>/admin/runtime
 ```
 
 ### Validate, Preview, and Activate a Candidate
 
 ```bash
-curl -k --http1.1 -X POST \
+curl --http1.1 --cacert <path> -X POST \
   -H "Authorization: Bearer <token>" \
   -H "content-type: application/json" \
-  https://127.0.0.1:9902/admin/runtime/validate \
-  -d '{"config_path":"/etc/impulse/candidate.yaml","requested_by":"ops","reason":"preflight"}'
+  https://<control-host>:<port>/admin/runtime/validate \
+  -d '{"config_path":"<path>","requested_by":"<actor>","reason":"preflight"}'
 
-curl -k --http1.1 -X POST \
+curl --http1.1 --cacert <path> -X POST \
   -H "Authorization: Bearer <token>" \
   -H "content-type: application/json" \
-  https://127.0.0.1:9902/admin/runtime/preview \
-  -d '{"config_path":"/etc/impulse/candidate.yaml","requested_by":"ops","reason":"preview"}'
+  https://<control-host>:<port>/admin/runtime/preview \
+  -d '{"config_path":"<path>","requested_by":"<actor>","reason":"preview"}'
 
-curl -k --http1.1 -X POST \
+curl --http1.1 --cacert <path> -X POST \
   -H "Authorization: Bearer <token>" \
   -H "content-type: application/json" \
-  https://127.0.0.1:9902/admin/runtime/activate \
-  -d '{"config_path":"/etc/impulse/candidate.yaml","expected_generation":12,"requested_by":"ops","reason":"deploy"}'
+  https://<control-host>:<port>/admin/runtime/activate \
+  -d '{"config_path":"<path>","expected_generation":<generation>,"requested_by":"<actor>","reason":"deploy"}'
 ```
 
 ### Roll Back to a Retained Generation
 
 ```bash
-curl -k --http1.1 \
+curl --http1.1 --cacert <path> \
   -H "Authorization: Bearer <token>" \
-  https://127.0.0.1:9902/admin/runtime/history
+  https://<control-host>:<port>/admin/runtime/history
 
-curl -k --http1.1 -X POST \
+curl --http1.1 --cacert <path> -X POST \
   -H "Authorization: Bearer <token>" \
   -H "content-type: application/json" \
-  https://127.0.0.1:9902/admin/runtime/rollback \
-  -d '{"target_generation":11,"expected_active_generation":12,"requested_by":"ops","reason":"rollback"}'
+  https://<control-host>:<port>/admin/runtime/rollback \
+  -d '{"target_generation":<target-generation>,"expected_active_generation":<active-generation>,"requested_by":"<actor>","reason":"rollback"}'
 ```
 
 ## Protocol
 
 The Control API uses **HTTP/1.1 over TLS**. HTTP/2 is not supported.
 
-When using curl, pass `--http1.1` explicitly — curl negotiates h2 by default when connecting to a TLS endpoint and the server will reject the connection:
+When using curl, pass `--http1.1` explicitly. Curl negotiates HTTP/2 by default
+when connecting to a TLS endpoint, and the Control API rejects that connection:
 
 ```bash
-curl -k --http1.1 https://<address>:<port>/...
+curl --http1.1 --cacert <path> https://<address>:<port>/...
 ```
 
-The `-k` flag skips certificate verification for self-signed certs.
+Use a certificate authority (CA) path that verifies the configured Control API certificate. Reserve
+`--insecure` for isolated development diagnostics.
 
 ## Authentication
 
-The exact TLS, bearer-token, mTLS identity, RBAC, IP-allowlist, audit, and
+The exact TLS, bearer-token, mutual TLS (mTLS) identity, role-based access
+control (RBAC), IP-allowlist, audit, and
 connection-limit fields are defined in
 [Observability and Control Configuration](/docs/configuration/observability-and-control).
 This section describes how those settings affect HTTP requests.
@@ -118,15 +123,15 @@ Authorization: Bearer <token>
 Compatibility note:
 
 - `observability.control_api.auth_token` remains supported as the legacy single-token admin credential
-- the legacy token is mapped internally to a static admin identity so existing operators keep current restart/reload privileges during migration
+- the legacy token retains `admin` privileges
 - new deployments should prefer `observability.control_api.auth.bearer_tokens[]` with explicit roles
-- compatibility boundary: a new Impulse binary accepts legacy `auth_token` configs, but an older binary will reject configs that use the newer nested control-plane fields because `ControlApi` uses strict `deny_unknown_fields`
+- compatibility boundary: a new Impulse binary accepts legacy `auth_token` configs, but an older binary rejects configs that use the newer nested control-plane fields
 
 Default role model:
 
 - `viewer`: runtime snapshot and history reads
 - `operator`: `viewer` plus validate, preview, activate, rollback, reload, and cert reload
-- `admin`: `operator` plus restart and future destructive admin actions
+- `admin`: `operator` plus restart
 
 ## Route Access Rules
 
@@ -142,7 +147,7 @@ Default contract rules:
 - `viewer` is the minimum privileged read role
 - `operator` is the minimum non-restart mutation role
 - `admin` is required for restart
-- implementation should distinguish invalid authentication from insufficient role
+- responses distinguish invalid authentication from insufficient role
 
 ## Response Contract
 
@@ -158,7 +163,8 @@ Representative reasons returned in JSON payloads:
 - `insufficient_role`
 - `source_ip_not_allowed`
 
-When control API mTLS is configured as `required`, missing or invalid client certificates are rejected during the TLS handshake before HTTP routing. That failure does not produce an HTTP `401` or `403` response.
+When Control API mTLS is `required`, a missing or invalid client certificate
+fails during the TLS handshake and does not produce an HTTP `401` or `403`.
 
 ## Configuration Boundary
 
@@ -259,7 +265,9 @@ Purpose:
 
 - parse and validate a candidate config, and report whether it could be activated — without touching the running runtime
 
-Returns `200` with a plan describing the candidate generation, a per-domain diff, and any rejected changes. A config that cannot be activated still returns `200`; inspect `rejected_changes` and `candidate_status` rather than relying on the status code.
+Returns `200` with the candidate plan, per-domain diff, and rejected changes.
+An incompatible candidate still returns `200`; inspect `rejected_changes` and
+`candidate_status`.
 
 Accepts the same optional body fields as `/admin/runtime/reload`.
 
@@ -275,10 +283,10 @@ Default minimum role:
 Example:
 
 ```bash
-curl -k --http1.1 -X POST https://127.0.0.1:9902/admin/runtime/validate \
+curl --http1.1 --cacert <path> -X POST https://<control-host>:<port>/admin/runtime/validate \
   -H "Authorization: Bearer <token>" \
   -H "content-type: application/json" \
-  -d '{"config_path":"/etc/impulse/candidate.yaml","requested_by":"ops","reason":"preflight"}'
+  -d '{"config_path":"<path>","requested_by":"<actor>","reason":"preflight"}'
 ```
 
 ### `POST /admin/runtime/preview`
@@ -324,10 +332,10 @@ Default minimum role:
 Example:
 
 ```bash
-curl -k --http1.1 -X POST https://127.0.0.1:9902/admin/runtime/activate \
+curl --http1.1 --cacert <path> -X POST https://<control-host>:<port>/admin/runtime/activate \
   -H "Authorization: Bearer <token>" \
   -H "content-type: application/json" \
-  -d '{"config_path":"/etc/impulse/candidate.yaml","expected_generation":12,"requested_by":"ops","reason":"deploy"}'
+  -d '{"config_path":"<path>","expected_generation":<generation>,"requested_by":"<actor>","reason":"deploy"}'
 ```
 
 ### `POST /admin/runtime/rollback`
@@ -362,10 +370,10 @@ Default minimum role:
 Example:
 
 ```bash
-curl -k --http1.1 -X POST https://127.0.0.1:9902/admin/runtime/rollback \
+curl --http1.1 --cacert <path> -X POST https://<control-host>:<port>/admin/runtime/rollback \
   -H "Authorization: Bearer <token>" \
   -H "content-type: application/json" \
-  -d '{"target_generation": 3}'
+  -d '{"target_generation":<generation>}'
 ```
 
 ### `GET /admin/runtime/history`
@@ -378,7 +386,7 @@ Response shape:
 
 | Field | Type | Purpose |
 | --- | --- | --- |
-| `active_generation` | integer | The generation currently serving traffic. |
+| `active_generation` | integer | The generation serving traffic. |
 | `retained_generations` | array | Retained generation records — the state needed to choose a rollback target. |
 | `entries` | array | Operation log (validate, preview, activate, rollback), newest first. |
 
@@ -388,7 +396,7 @@ Each entry in `retained_generations`:
 | --- | --- | --- |
 | `generation` | integer | The generation number. |
 | `status` | string | One of `active`, `previous`, `failed_prepare`, `rolled_back`, `superseded`. |
-| `rollback_candidate` | bool | Whether `/admin/runtime/rollback` will accept this generation as a target. |
+| `rollback_candidate` | bool | Whether `/admin/runtime/rollback` accepts this generation as a target. |
 | `has_bundle` | bool | Whether the runtime bundle is still retained. A rollback target needs `true`. |
 | `note` | string | Present only when there is explanatory detail, e.g. why a staged prepare failed. |
 
@@ -408,9 +416,9 @@ Default minimum role:
 Example:
 
 ```bash
-curl -k --http1.1 \
+curl --http1.1 --cacert <path> \
   -H "Authorization: Bearer <token>" \
-  https://127.0.0.1:9902/admin/runtime/history
+  https://<control-host>:<port>/admin/runtime/history
 ```
 
 ### `GET /admin/runtime/history/{generation}`
@@ -419,7 +427,8 @@ Purpose:
 
 - the retained-generation record and operation entries for a single generation
 
-Returns `200` with `generation`, a single `retained_generation` object (same shape as above), and the `entries` recorded against it. Returns `404` if that generation is not retained.
+Returns `200` with `generation`, its `retained_generation`, and related
+`entries`. Returns `404` when the generation is not retained.
 
 Default minimum role:
 
@@ -435,14 +444,16 @@ Purpose:
 
 Config source:
 
-- with no request body, the reload re-reads the **currently active runtime config source**
-- on a freshly started process that source is the path passed at startup, but activating an alternate `config_path` makes that file the active source for every later reload
+- with no request body, the reload re-reads the **active runtime config source**
+- after startup, the active source is the startup path; activating another
+  `config_path` makes that path the source for later reloads
 - pass `config_path` in the body to read a different file; a successful activation makes that path the new active source
 
 Important scope note:
 
 - listener bind addresses, control API bind, and metrics bind cannot change without a restart
-- log format/file settings, tracing config (`observability.tracing.*`), and `performance.control_plane_threads` also require a restart (a reload changing them is rejected); `log.level`, however, is applied live
+- log format/file settings, tracing config (`observability.tracing.*`), and
+  `performance.control_plane_threads` require a restart; `log.level` applies live
 - in-flight requests on the old config complete normally; new requests use the new config immediately
 
 Expected use:
@@ -466,17 +477,17 @@ Optional request body:
 Example:
 
 ```bash
-curl -k --http1.1 -X POST https://127.0.0.1:9902/admin/runtime/reload \
+curl --http1.1 --cacert <path> -X POST https://<control-host>:<port>/admin/runtime/reload \
   -H "Authorization: Bearer <token>"
 ```
 
 Activating an alternate config file:
 
 ```bash
-curl -k --http1.1 -X POST https://127.0.0.1:9902/admin/runtime/reload \
+curl --http1.1 --cacert <path> -X POST https://<control-host>:<port>/admin/runtime/reload \
   -H "Authorization: Bearer <token>" \
   -H "content-type: application/json" \
-  -d '{"config_path": "/etc/impulse/canary.yaml"}'
+  -d '{"config_path":"<path>"}'
 ```
 
 ### `POST /admin/runtime/reload-certs`

@@ -1,17 +1,11 @@
 # Configuration Reference
 
-This page is the authority for the Impulse v0.6 configuration schema and its
-runtime semantics. It answers these questions for every major configuration
-area:
+This page is the authority for the Impulse v0.6 configuration schema, allowed
+values, validation rules, and runtime semantics.
 
-- what the section is for
-- what fields exist
-- what values are allowed
-- what the defaults are
-- what runtime behavior the settings change
-- what operators should be careful about
-
-Use [Configuration Defaults](/docs/configuration/defaults) for the exhaustive default inventory and [Configuration Examples](/docs/configuration/examples) for complete deployment patterns. Use this page when you need exact schema and semantics.
+Use [Configuration Defaults](/docs/configuration/defaults) for the default
+inventory and [Configuration Examples](/docs/configuration/examples) for
+complete deployment patterns.
 
 For resilience, scoped rate-limit, and quota fields, see
 [Resilience, Rate Limits, and Quota](/docs/configuration/resilience). Redis
@@ -56,7 +50,7 @@ The top-level `load_balancing` field is accepted and validated, but v0.6 does
 not apply it to upstreams. An upstream that omits its own `load_balancing` uses
 the per-upstream default, `round-robin`.
 
-### Minimal complete configuration
+### Minimal Complete Configuration
 
 ```yaml
 version: 1
@@ -72,7 +66,7 @@ upstream:
       path_prefix: "/"
     backends:
       - id: "app-1"
-        address: "https://app.internal:8443"
+        address: "https://app.internal.example:8443"
 ```
 
 ## Listener Configuration
@@ -169,7 +163,7 @@ upstream:
         ref: "file://private-api/client-key.pem"
     backends:
       - id: "private-api-1"
-        address: "https://private-api.internal:8443"
+        address: "https://private-api.internal.example:8443"
 ```
 
 ## Routing and Upstreams
@@ -315,11 +309,16 @@ Controls resource limits, tuning knobs, and connection-flood protection. All fie
 | `unknown_length_response_prebuffer_bytes` | integer | No | `2097152` | Max bytes buffered for unknown-length upstream responses before headers are emitted; responses exceeding this are terminated with an overload response |
 | `client_body_idle_timeout_ms` | integer | No | `10000` | Idle timeout (ms) for request-body upload progress; the stream is failed if no body bytes arrive within this period |
 
-### Connection flood protection
+### Connection Flood Protection
 
-`new_connections_per_sec` and `new_connections_burst` implement a token-bucket rate limiter on new QUIC connection accepts. The bucket starts full so legitimate burst traffic at startup is never penalised. Packets for **existing** connections are never affected by this limit — only unknown `Initial` packets that would create a new connection state entry are gated.
+`new_connections_per_sec` and `new_connections_burst` implement a token-bucket
+rate limiter on new QUIC connection accepts. The bucket starts full and permits
+the configured initial burst. The limit does not affect packets for existing
+connections; it gates only unknown `Initial` packets that create connection
+state.
 
-`max_active_connections` is a separate hard guardrail for total connection state. Use it to enforce deterministic memory limits under sustained handshake floods even when token-bucket limits allow temporary bursts.
+`max_active_connections` separately limits total connection state, including
+when the token bucket permits a temporary burst.
 
 ```yaml
 performance:
@@ -328,7 +327,8 @@ performance:
   max_active_connections: 20000   # hard ceiling for concurrently tracked connections
 ```
 
-Set `new_connections_burst` to `1` and `new_connections_per_sec` to a low value to aggressively throttle connection floods at the cost of rejecting legitimate concurrent handshakes.
+Lower values throttle connection floods more aggressively but can reject
+legitimate concurrent handshakes.
 
 ### Examples
 
@@ -501,7 +501,7 @@ result: `/admin/runtime/validate` can return `200` with rejected changes. Inspec
 the [Control API Reference](/docs/reference/control-api-reference#post-adminruntimevalidate)
 for request and response details.
 
-## Complete examples
+## Complete Examples
 
 Use [Configuration Examples](/docs/configuration/examples) for complete
 deployment files and

@@ -1,16 +1,18 @@
 # Secret and Certificate Rotation
 
-This page is the operator runbook for rotating listener certificates, upstream client certificates, and upstream CA trust material, and for reasoning about secret-backed config in general.
+This runbook covers listener certificates, upstream client identities,
+certificate authority (CA) trust, and secret-backed configuration.
 
-Read [Reload and Drain](/docs/operations/reload-and-drain) first if you have not already — this page assumes you understand the generation model and the difference between `reload-certs` and generation activation.
+Read [Reload and Drain](/docs/operations/reload-and-drain) for the distinction
+between `reload-certs` and generation activation.
 
 ## Which Path Applies
 
 | Material | Path | Why |
 | --- | --- | --- |
 | Downstream listener cert/key or client-auth CA content at configured paths | `POST /admin/runtime/reload-certs` | Listener-scoped hot swap; does not create a runtime generation |
-| Downstream TLS path, SNI mapping, or client-auth policy change | `validate` → `preview` → `activate` → `reload-certs` | Activates the configuration, then installs its TLS material into the live listener store |
-| Upstream client certificate/key (mTLS) | `validate` → `preview` → `activate` | Generation-owned; rebuilds the affected backend connection pool |
+| Downstream TLS path, Server Name Indication (SNI) mapping, or client-auth policy change | `validate` → `preview` → `activate` → `reload-certs` | Activates the configuration, then reloads its listener TLS material |
+| Upstream client certificate/key for mutual TLS (mTLS) | `validate` → `preview` → `activate` | Generation-owned; rebuilds the affected backend connection pool |
 | Upstream CA bundle (`ca_file`/`ca_dir`) | `validate` → `preview` → `activate` | Generation-owned; same reasoning as client cert/key |
 | Upstream `verify_certificates` or `strict_sni` | `validate` → `preview` → `activate` | Generation-owned backend transport policy |
 | `secrets.providers` registry shape | `validate` → `preview` → `activate` | Generation-owned config, not a listener concern |
@@ -43,7 +45,10 @@ upstream:
         ref: "file://upstream/payments-client.key"
 ```
 
-A `_ref` field and its plaintext sibling (`client_certificate` / `client_certificate_ref`, `client_key` / `client_key_ref`, `secret` / `secret_ref`, `client_secret` / `client_secret_ref`, `auth_token` / `auth_token_ref`, `token` / `token_ref`) are mutually exclusive — setting both fails validation. Supported ref schemes are `literal:<value>` and `file://<path>`.
+A `_ref` field and its plaintext sibling are mutually exclusive. This applies
+to client certificates and keys, authentication secrets, client secrets,
+Control API tokens, and bearer tokens. Supported reference schemes are
+`literal:<value>` and `file://<path>`.
 
 Listener `cert`, `key`, and `client_auth.ca_file` fields are paths and do not
 accept secret-reference objects. See
@@ -52,21 +57,26 @@ upstream mTLS field contract and
 [Authentication and Secrets](/docs/configuration/authentication-and-secrets#secret-providers-and-references)
 for reference resolution.
 
-Secret references resolve **eagerly while a runtime candidate is prepared**, not lazily on first request. A missing file, unreadable file, empty file, or malformed PEM fails `validate`, `preview`, or `activate` before the candidate generation goes live — it never reaches request-serving code.
+Secret references resolve while a runtime candidate is prepared, not on the
+first request. A missing, unreadable, empty, or malformed file rejects
+`validate`, `preview`, or `activate` before the candidate becomes active.
 
 ## Downstream Listener Certificate Rotation
 
-1. Replace the cert/key files on disk. Prefer an atomic rename into place — see [Secret File Replacement Safety](#secret-file-replacement-safety) below.
+1. Replace the certificate and key with an atomic rename. See
+   [Secret File Replacement Safety](#secret-file-replacement-safety).
 2. Call:
 
    ```bash
-   curl -k --http1.1 -X POST https://127.0.0.1:9902/admin/runtime/reload-certs \
+   curl --http1.1 --cacert <path> -X POST https://<control-host>:<port>/admin/runtime/reload-certs \
      -H "Authorization: Bearer <token>"
    ```
 
-   The path is whatever `observability.control_api.reload_certs_path` is configured to (default `/admin/runtime/reload-certs`).
-3. Confirm the new cert in the runtime snapshot: `GET /admin/runtime` → `tls.listeners.<listener>` shows an updated `generation`, `last_loaded_at_unix_ms`, and `default_cert_not_after_unix_seconds`.
-4. Confirm `impulse_control_plane_cert_reload_total{result="success"}` incremented and downstream cert-expiry metrics reflect the new material.
+   Use the configured `observability.control_api.reload_certs_path`; the
+   default is `/admin/runtime/reload-certs`.
+3. Confirm the new certificate under `tls.listeners.<listener>` in
+   `GET /admin/runtime`.
+4. Confirm the successful reload counter and certificate-expiry metrics.
 
 The reload includes all configured default and SNI identities plus downstream
 client-auth CA files. It does not rebuild the runtime generation, mutate
@@ -76,56 +86,64 @@ load, none of the staged listener TLS states is installed.
 
 ## Upstream Client Certificate Rotation (mTLS)
 
-1. Write the new client cert/key to the staged secret path (atomic rename — see below).
-2. Run the staged activation flow against the config, using the same reference (if rotating in place at the same path) or a new reference (if introducing a new path):
+1. Write the new client certificate and key with an atomic rename.
+2. Run the staged activation flow. Keep the same reference for an in-place
+   rotation, or update the reference when the path changes:
 
    ```bash
-   curl -k --http1.1 -X POST https://127.0.0.1:9902/admin/runtime/validate \
+   curl --http1.1 --cacert <path> -X POST https://<control-host>:<port>/admin/runtime/validate \
      -H "Authorization: Bearer <token>" -H "content-type: application/json" \
-     -d '{"requested_by":"ops","reason":"rotate payments client cert"}'
+     -d '{"requested_by":"<actor>","reason":"rotate client certificate"}'
 
-   curl -k --http1.1 -X POST https://127.0.0.1:9902/admin/runtime/preview \
+   curl --http1.1 --cacert <path> -X POST https://<control-host>:<port>/admin/runtime/preview \
      -H "Authorization: Bearer <token>" -H "content-type: application/json" \
-     -d '{"requested_by":"ops","reason":"preview payments client cert rotation"}'
+     -d '{"requested_by":"<actor>","reason":"preview client certificate rotation"}'
 
-   curl -k --http1.1 -X POST https://127.0.0.1:9902/admin/runtime/activate \
+   curl --http1.1 --cacert <path> -X POST https://<control-host>:<port>/admin/runtime/activate \
      -H "Authorization: Bearer <token>" -H "content-type: application/json" \
-     -d '{"expected_generation":<current>,"requested_by":"ops","reason":"rotate payments client cert"}'
+     -d '{"expected_generation":<generation>,"requested_by":"<actor>","reason":"rotate client certificate"}'
    ```
 
-3. Confirm the generation changed: `GET /admin/runtime/history` shows a new `entries` record, and its diff includes a `backend_policies` domain entry with `secret_material_changed: true`.
-4. Confirm the connection pool rebuilt rather than mutated in place — a client identity change always produces a new pool instance for that backend, never a live in-place swap.
-5. Confirm upstream mTLS handshakes succeed against the rotated identity, and `impulse_upstream_tls_failure_total` is not climbing for that upstream/backend pair.
+3. Confirm the new generation and `secret_material_changed: true` in
+   `GET /admin/runtime/history`.
+4. Confirm new upstream mTLS handshakes use the rotated identity and
+   `impulse_upstream_tls_failure_total` remains stable.
 
-**Same-path rotation is detected.** If the file at the same `file://` reference path changes content, activation recomputes the fingerprint and the diff still reports `secret_material_changed: true` even though the reference string itself did not change — you do not need to introduce a new reference to force detection.
+Activation detects a content change at the same `file://` path and reports
+`secret_material_changed: true`; a new reference is not required.
 
 ## Upstream CA Rotation
 
-Upstream CA rotation (`ca_file` / `ca_dir`) follows the exact same `validate` → `preview` → `activate` flow as client certificate rotation, since it is also generation-owned, not `reload-certs`-scoped. Custom CA material augments the built-in WebPKI roots; it does not replace them.
+Upstream CA rotation uses the same `validate → preview → activate` flow because
+it is generation-owned. Custom CA material augments the built-in WebPKI roots;
+it does not replace them.
 
 For safe overlap during a CA transition:
 
-1. Stage the new CA alongside the old one — either append the new CA to the existing `ca_file` bundle, or add it as an additional file in `ca_dir` (all PEM files in the directory are trusted).
+1. Stage the new CA alongside the old one in `ca_file` or `ca_dir`.
 2. Activate with both CAs trusted. Confirm upstream connections still succeed against backends serving certs from either CA.
 3. Once all backends have rotated to certs signed by the new CA, remove the old CA and activate again.
 4. Roll back (see below) if backend handshakes start failing at any step — do not proceed to the next step under active failures.
 
-Do not remove the old CA in the same activation that introduces the new one unless you have already confirmed every backend has rotated — that removes your rollback safety margin.
+Do not remove the old CA until every backend has rotated.
 
 ## Secret File Replacement Safety
 
 Prefer an atomic rename into place over in-place truncate-and-write for any file a `file://` secret reference points at:
 
 ```bash
-# Write to a temp file in the same directory, then rename atomically.
-install -m 0640 payments-client.crt.new /etc/impulse/secrets/upstream/payments-client.crt
+# Run with privileges that can replace the root-owned destination.
+sudo install -o root -g impulse -m 0640 <source-path> <path>
 ```
 
-`install`, `mv` within the same filesystem, or an equivalent atomic rename avoids a window where a reader observes a partially-written file. Truncate-and-write can produce a transient empty or malformed file that activation reads as `EmptySecret` or `MalformedPemCertificate` even though the final content would have been fine — an atomic rename avoids that window entirely.
+`install`, `mv` within the same filesystem, or an equivalent atomic rename
+prevents readers from observing a partially written file. In-place writes can
+make activation read an empty or malformed file.
 
 ## Rollback Expectations
 
-Runtime rollback (`POST /admin/runtime/rollback`) restores a retained **runtime generation view**, including the secret bytes that were already resolved for that generation. It does not re-read or restore external secret files.
+Runtime rollback restores a retained generation and its resolved secret
+material. It does not reread or restore external secret files.
 
 Concretely:
 
@@ -141,8 +159,10 @@ or fresh activation may be required.
 
 When a secret or cert rotation does not behave as expected, inspect in this order:
 
-1. **`GET /admin/runtime`** — check `tls.listeners`, `tls.upstreams`, and `secrets.material` for the affected scope. Secret material reports `scope`, `source_kind`, `last_loaded_at_unix_ms`, `last_reload_status`, and, for certificates, `expiry_not_after_unix_seconds`. References, provider base directories, fingerprints, and raw bytes are omitted.
-2. **`GET /admin/runtime/history`** — confirm whether the activation attempt succeeded, and read the `rejected_changes` detail if it did not. A rejected activation leaves the active generation unchanged.
+1. **`GET /admin/runtime`:** check listener, upstream, and secret state for the
+   affected scope. Runtime views omit secret references and contents.
+2. **`GET /admin/runtime/history`:** confirm the activation result and inspect
+   `rejected_changes`. Rejection leaves the active generation unchanged.
 3. **Audit logs** — look for these action values:
 
    | Action | Meaning |

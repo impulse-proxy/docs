@@ -5,7 +5,7 @@ matching, accepted strategy aliases, request-key extraction, backend fields,
 and validation constraints, use
 [Routing and Upstreams](/docs/configuration/routing-and-upstreams).
 
-## Choose a strategy
+## Choose a Strategy
 
 | Workload | Recommended strategy | Why |
 | -------- | -------------------- | --- |
@@ -19,7 +19,7 @@ and validation constraints, use
 Start with `round-robin` unless the workload has a specific affinity or
 runtime-signal requirement.
 
-## Operational guidance
+## Operational Guidance
 
 - All strategies select only healthy backends.
 - `round-robin`, `random`, `consistent-hash`, and `sticky-cid` honor weights.
@@ -37,7 +37,7 @@ runtime-signal requirement.
 The complete request-key source list and weight matrix are in
 [Routing and Upstreams](/docs/configuration/routing-and-upstreams).
 
-## Configuration shape
+## Configuration Shape
 
 Each upstream owns its strategy. Omitting `load_balancing` selects
 `round-robin`; the top-level `load_balancing` field is not a v0.6 fallback.

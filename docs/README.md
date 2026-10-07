@@ -24,5 +24,5 @@ Impulse is an HTTP/3-first edge proxy that applies one routing, resilience, and 
 | Maturity | Beta |
 
 Impulse v0.6 is intended for controlled production rollout, not an unrestricted
-GA claim. Review [Status and Limitations](/docs/reference/status-and-limitations)
+general-availability (GA) claim. Review [Status and Limitations](/docs/reference/status-and-limitations)
 before choosing a deployment shape.

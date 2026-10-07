@@ -1,8 +1,7 @@
 # Metrics Reference
 
-This page is the authority for metric families emitted by Impulse v0.6. The
-inventory comes from the current Prometheus renderer and records each family's
-exposition type, labels, unit, and meaning.
+This page is the authority for metric families emitted by Impulse v0.6. It
+records each family's Prometheus exposition type, labels, unit, and meaning.
 
 ## Endpoint and Exposition
 
@@ -11,8 +10,8 @@ exposition type, labels, unit, and meaning.
 - default path: `/metrics`
 - format: Prometheus text exposition
 
-The endpoint configuration, bind restrictions, mTLS behavior, and connection
-limits are documented in
+The endpoint configuration, bind restrictions, mutual TLS (mTLS) behavior, and
+connection limits are documented in
 [Observability and Control Configuration](/docs/configuration/observability-and-control#metrics-endpoint).
 
 In the tables below, `—` means the family has no labels or no physical unit.
@@ -153,7 +152,7 @@ degraded local-fallback modes.
 | `impulse_ingress_packets_total` | counter | — | packets | UDP packets processed by ingress. |
 | `impulse_ingress_queue_drops` | counter | — | packets | Packets dropped because an ingress shard queue was full. |
 | `impulse_ingress_queue_drop_bytes` | counter | — | bytes | Datagram bytes dropped because ingress shard queues were full. |
-| `impulse_ingress_queue_bytes` | gauge | — | bytes | Bytes currently buffered in ingress shard queues. |
+| `impulse_ingress_queue_bytes` | gauge | — | bytes | Bytes buffered in ingress shard queues. |
 | `impulse_ingress_bad_header_total` | counter | — | packets | Packets dropped because the QUIC header could not be parsed. |
 | `impulse_ingress_rate_limited_total` | counter | — | packets | Initial packets dropped by the new-connection rate limiter. |
 | `impulse_ingress_unroutable_total` | counter | — | packets | Non-Initial packets received for unknown connections. |
@@ -166,7 +165,7 @@ degraded local-fallback modes.
 
 | Metric | Type | Labels | Unit | Meaning |
 | --- | --- | --- | --- | --- |
-| `impulse_request_buffered_bytes` | gauge | — | bytes | Bytes currently held in request backpressure buffers. |
+| `impulse_request_buffered_bytes` | gauge | — | bytes | Bytes held in request backpressure buffers. |
 | `impulse_request_buffered_high_watermark_bytes` | gauge | — | bytes | Highest request-buffer usage observed since process start. |
 | `impulse_request_buffer_limit_rejects` | counter | — | requests | Requests rejected by request-buffer byte caps. |
 | `impulse_response_prebuffer_limit_rejects` | counter | — | responses | Unknown-length upstream responses rejected by the prebuffer cap. |
@@ -212,7 +211,7 @@ Certificate selection is `exact_sni`, `default_only`, `fallback_no_sni`, or
 | `impulse_upstream_client_certificate_not_after_seconds` | gauge | `upstream` | Unix seconds | Expiration timestamp for the upstream client certificate. |
 | `impulse_upstream_client_certificate_days_remaining` | gauge | `upstream` | days | Non-negative estimated time until the upstream client certificate expires. |
 
-`phase` is currently `bootstrap` or `data_plane`. TLS failure reasons are
+`phase` is `bootstrap` or `data_plane`. TLS failure reasons are
 `unknown_issuer`, `expired_certificate`, `hostname_mismatch`, `alpn`,
 `handshake`, `client_certificate_missing`, `client_key_missing`,
 `client_identity_invalid`, `client_auth_rejected`, and

@@ -62,7 +62,8 @@ not own request parsing, routing precedence, auth, or transport execution.
 ## 3. Selected Policy and Admission
 
 The chosen upstream supplies the request policy. Pre-auth admission evaluates
-local API-key/JWT policy, brownout, and scoped rate limiting. External
+local API-key and JSON Web Token (JWT) policy, brownout, and scoped rate
+limiting. External
 authorization runs next when configured. Post-auth admission applies quota,
 route/global/upstream/backend inflight protection, queueing, circuit state, and
 adaptive admission as applicable.

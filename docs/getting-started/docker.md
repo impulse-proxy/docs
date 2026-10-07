@@ -4,7 +4,7 @@ This page answers one question: **how do I run the Impulse container?**
 
 ## Image Availability
 
-The Impulse v0.6 repository does not currently define a registry-publication
+The Impulse v0.6 repository does not define a registry-publication
 workflow or a public image reference. Do not guess a Docker Hub or GHCR image
 name: an image with the same project name may be unrelated. The supported v0.6
 container artifact is the production Dockerfile under `packaging/docker/`,
@@ -18,6 +18,9 @@ publish both UDP and TCP for the listener port.
 ## Build the Packaged Image
 
 From an existing Impulse source checkout:
+
+Run Docker commands as a user authorized to access the Docker daemon. Do not
+add `sudo` by default; use the host's documented Docker access policy.
 
 ```bash
 ./packaging/docker/scripts/build-image.sh
@@ -44,7 +47,7 @@ match your deployment.
 Requirements:
 
 - the config file is readable at `/etc/impulse/config.yaml`
-- every certificate, key, CA, and file-backed secret path resolves inside the
+- every certificate, key, certificate authority (CA), and file-backed secret path resolves inside the
   container
 - the configured backend is reachable from the container network; container
   loopback refers to the Impulse container itself
@@ -78,7 +81,7 @@ succeed without it, but proxied traffic cannot. Point it at a service on the
 same Docker network or another address reachable from the container before
 testing traffic.
 
-## Run With Compose
+## Run with Compose
 
 The repository Compose file builds the same image, mounts the same packaged
 configuration and certificates, and publishes only the proxy listener:
@@ -94,7 +97,7 @@ Stop it with:
 docker compose -f packaging/docker/docker-compose.yml down
 ```
 
-The Compose service currently overrides the runtime user to root. Review that
+The Compose service overrides the runtime user to root. Review that
 choice before production; the image itself defaults to UID `10001`.
 
 ## Production Boundaries

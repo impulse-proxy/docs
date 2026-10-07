@@ -55,15 +55,15 @@ action and must follow the normal change process.
 ### Read-only diagnostic checks
 
 ```bash
-systemctl status impulse --no-pager
-journalctl -u impulse --since "30 minutes ago" --no-pager
-systemctl cat impulse
-systemctl show impulse -p User -p Group -p LimitNOFILE -p AmbientCapabilities
+sudo systemctl status impulse --no-pager
+sudo journalctl -u impulse --since "30 minutes ago" --no-pager
+sudo systemctl cat impulse
+sudo systemctl show impulse -p User -p Group -p LimitNOFILE -p AmbientCapabilities
 ```
 
 Confirm the service's exact `--config` path, then inspect the path and parent
 permissions with `namei -l <path>` and `ls -l <path>`. Decode certificates with
-`openssl x509 -in <cert.pem> -noout -subject -issuer -dates`; do not print secret
+`openssl x509 -in <path> -noout -subject -issuer -dates`; do not print secret
 or private-key contents. `impulse --config <path>` is not a validation-only
 command: a valid configuration proceeds to listener startup.
 
@@ -98,11 +98,11 @@ changing security boundaries or all production instances at once.
 ### Read-only diagnostic checks
 
 ```bash
-ss -lntup
+sudo ss -lntup
 ip address show
-systemctl show impulse -p User -p Group -p AmbientCapabilities
+sudo systemctl show impulse -p User -p Group -p AmbientCapabilities
 getcap /path/to/impulse
-journalctl -u impulse --since "30 minutes ago" --no-pager
+sudo journalctl -u impulse --since "30 minutes ago" --no-pager
 ```
 
 Compare the owning PID, address family, protocol, address, and port with the
@@ -202,7 +202,7 @@ precedence but does not, or if workers appear to use different generations.
 
 - The backend process, network path, health endpoint, or dependency is unavailable.
 - Health-check path, port, timeout, TLS mode, or backend protocol is wrong.
-- DNS resolution or client rotation produced no currently usable member.
+- DNS resolution or client rotation produced no usable member.
 - Every backend is unhealthy, suppressed, or rejected by an open circuit.
 
 ### Read-only diagnostic checks
@@ -417,7 +417,8 @@ continued impact, or churn cannot be controlled at the DNS/service-discovery lay
 ### Read-only diagnostic checks
 
 - Read `GET /admin/runtime` TLS listener/upstream and secret metadata; it intentionally omits raw values.
-- Query `impulse_secret_reload_total`, `impulse_secret_resolve_total`, `impulse_secret_last_success_unixtime`, certificate-expiry metrics, and `impulse_control_plane_cert_reload_total`.
+- Query secret reload, secret resolution, last-success, certificate-expiry, and
+  control-plane certificate-reload metrics.
 - Inspect audit/log outcomes and file/path permissions with `namei -l` and `ls -l`.
 - Decode certificate metadata and verify certificate/key correspondence without printing or copying secret bytes.
 
@@ -476,11 +477,11 @@ classification. Health/readiness may require the same configured authentication
 as other Control API reads.
 
 ```bash
-curl --http1.1 --cacert <control-ca.pem> https://<control-host>:<port>/health
-curl --http1.1 --cacert <control-ca.pem> https://<control-host>:<port>/ready
-curl --http1.1 --cacert <control-ca.pem> -H "Authorization: Bearer <token>" \
+curl --http1.1 --cacert <path> https://<control-host>:<port>/health
+curl --http1.1 --cacert <path> https://<control-host>:<port>/ready
+curl --http1.1 --cacert <path> -H "Authorization: Bearer <token>" \
   https://<control-host>:<port>/admin/runtime
-curl --http1.1 --cacert <control-ca.pem> -H "Authorization: Bearer <token>" \
+curl --http1.1 --cacert <path> -H "Authorization: Bearer <token>" \
   https://<control-host>:<port>/admin/runtime/history
 curl http://<metrics-host>:<port>/metrics
 ```

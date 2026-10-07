@@ -1,7 +1,7 @@
 # TLS Configuration
 
-This page is the focused Impulse v0.6 reference for downstream listener TLS
-and upstream backend TLS. The general
+This page is the focused Impulse v0.6 reference for downstream and upstream
+Transport Layer Security (TLS). The general
 [Configuration Reference](/docs/configuration/reference) remains the schema
 authority. For rotation procedures, see
 [Secret and Certificate Rotation](/docs/operations/secret-and-cert-rotation).
@@ -13,7 +13,8 @@ authority. For rotation procedures, see
 | Downstream client → Impulse | TLS server | `listen.tls` or `listeners[].tls` | Selects the certificate Impulse presents and optionally verifies client certificates. |
 | Impulse → upstream backend | TLS client | top-level `upstream_tls` or `upstream.<name>.tls` | Verifies backend certificates and optionally presents an Impulse client certificate. |
 
-Downstream certificate settings do not configure backend trust. Upstream CA or
+Downstream certificate settings do not configure backend trust. Upstream
+certificate authority (CA) or
 client-certificate settings do not change the certificates presented to
 downstream clients. Control API mTLS is another admin-plane policy documented
 in the [Control API Reference](/docs/reference/control-api-reference).
@@ -27,7 +28,7 @@ Every effective listener needs a default TLS identity. Configure either the
 | --------- | -------- | ------------ | ----------- | ----------- |
 | `cert` | string | Conditionally | `""` | PEM certificate-chain file for the default identity. Must be paired with `key`. |
 | `key` | string | Conditionally | `""` | PEM private-key file for the default identity. Must be paired with `cert`. |
-| `certificates` | array of objects | No | `[]` | Additional exact-SNI identities. At least one entry is required when `cert`/`key` is absent. |
+| `certificates` | array of objects | No | `[]` | Additional exact Server Name Indication (SNI) identities. At least one entry is required when `cert`/`key` is absent. |
 | `certificates[].server_name` | string | Yes | — | DNS name used as an exact SNI map key. |
 | `certificates[].cert` | string | Yes | — | PEM certificate-chain file for this identity. |
 | `certificates[].key` | string | Yes | — | PEM private-key file for this identity. |
@@ -41,7 +42,7 @@ not accept secret-reference objects. Paths may be absolute or relative to the
 Impulse process working directory. Each PEM file must be a regular readable
 file no larger than 1 MiB.
 
-### Default identity
+### Default Identity
 
 ```yaml
 listen:
@@ -58,7 +59,7 @@ The private key must be a supported PEM private key and must match the leaf
 certificate. Impulse rejects unreadable, empty, malformed, expired, or
 not-yet-valid identities before they become active.
 
-### SNI identities and selection
+### SNI Identities and Selection
 
 ```yaml
 listen:
@@ -93,7 +94,7 @@ The mapped certificate's SANs must cover its `server_name`. A SAN wildcard such
 as `*.example.com` may cover one label, but the configured `server_name` itself
 is always exact; `server_name: "*.example.com"` is invalid.
 
-### Downstream client authentication
+### Downstream Client Authentication
 
 ```yaml
 listen:
@@ -164,7 +165,7 @@ use the TLS policy.
 | `client_key` | string or `null` | Conditionally | `null` | Filesystem path to the PEM client private key. |
 | `client_key_ref` | object or `null` | Conditionally | `null` | Secret reference for the client private key. Mutually exclusive with `client_key`. |
 
-### Server verification and CA behavior
+### Server Verification and CA Behavior
 
 With `verify_certificates: true`, Impulse starts with the built-in WebPKI root
 set and adds certificates from `ca_file` and `ca_dir`. Custom roots augment the
@@ -195,10 +196,10 @@ upstream:
       path_prefix: "/payments"
     backends:
       - id: "payments-1"
-        address: "https://payments.internal:8443"
+        address: "https://payments.internal.example:8443"
 ```
 
-### Upstream client mTLS
+### Upstream Client mTLS
 
 An upstream client identity is a complete certificate/key pair. Either side of
 the pair may use a path or a secret reference independently, but each field and
@@ -220,7 +221,7 @@ upstream:
       client_key: "/etc/impulse/tls/payments-client-key.pem"
     backends:
       - id: "payments-1"
-        address: "https://payments.internal:8443"
+        address: "https://payments.internal.example:8443"
 ```
 
 File-backed secret example:
@@ -246,7 +247,7 @@ upstream:
         ref: "file://payments/client-key.pem"
     backends:
       - id: "payments-1"
-        address: "https://payments.internal:8443"
+        address: "https://payments.internal.example:8443"
 ```
 
 The certificate source must contain at least one PEM certificate; the first is

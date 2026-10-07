@@ -59,7 +59,7 @@ inventory is intentionally not part of the documentation.
 
 ## Core Invariants
 
-### Routing and request policy
+### Routing and Request Policy
 
 - Route selection is deterministic: longer path prefix wins first, followed by
   host-specific over host-agnostic, exact host over wildcard, longer wildcard
@@ -71,7 +71,7 @@ inventory is intentionally not part of the documentation.
 - Transport executes the already-selected backend protocol; it does not own
   routing, admission, retry policy, or durable health state.
 
-### Runtime and resource ownership
+### Runtime and Resource Ownership
 
 - Activation publishes one completely prepared runtime generation or leaves
   the previous generation active; request workers must not observe a partial
@@ -85,7 +85,7 @@ inventory is intentionally not part of the documentation.
 - Drain stops new work while allowing admitted work to finish until the
   configured boundary; forced teardown must remain bounded.
 
-### Backends, control, and secrets
+### Backends, Control, and Secrets
 
 - HTTP health classification treats 2xx/3xx as success, 4xx as neutral, and
   5xx as failure; timeout and transport failures are also unhealthy signals

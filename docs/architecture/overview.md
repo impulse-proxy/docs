@@ -39,7 +39,8 @@ flowchart LR
 
 The data plane accepts, evaluates, routes, and forwards requests. The control
 plane validates and activates configuration, exposes runtime state and metrics,
-runs health/DNS/certificate work, and coordinates drain or restart behavior.
+runs health, Domain Name System (DNS), and certificate work, and coordinates
+drain or restart behavior.
 Control-plane services read the same active generation as request workers.
 
 ## Native QUIC and Bootstrap Boundaries

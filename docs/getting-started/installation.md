@@ -48,7 +48,7 @@ sudo journalctl -u impulse -n 50 --no-pager
 
 Keep private keys owned by `root:impulse`, readable by the group, and not
 world-readable. Use [TLS Configuration](/docs/configuration/tls) for exact
-certificate, SNI, client-authentication, and reload behavior. Use
+certificate, Server Name Indication (SNI), client-authentication, and reload behavior. Use
 [Configuration Examples](/docs/configuration/examples) to replace the packaged
 placeholder configuration.
 

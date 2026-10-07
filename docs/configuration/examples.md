@@ -1,13 +1,14 @@
 # Configuration Examples
 
-This page collects complete deployment-oriented examples. Use it together with the [Configuration Reference](/docs/configuration/reference), which remains the canonical schema and semantics document.
+These deployment examples supplement the canonical
+[Configuration Reference](/docs/configuration/reference).
 
 For distributed quota schema and a complete example, see
 [Resilience, Rate Limits, and Quota](/docs/configuration/resilience#distributed-quota-schema).
 For Redis rollout and migration guidance, see
 [Distributed Quota Operations](/docs/operations/distributed-quota).
 
-## How To Use These Examples
+## How to Use These Examples
 
 Use these examples as starting points, not as copy-paste truth for every environment.
 
@@ -24,7 +25,7 @@ Use these examples as starting points, not as copy-paste truth for every environ
 | multiple upstreams with different routing | Example 3 |
 | multiple listeners with different bind identities | Example 4 |
 | downstream client certificate auth | Example 5 |
-| a private CA for upstream trust | Example 6 |
+| a private certificate authority (CA) for upstream trust | Example 6 |
 | static asymmetric JWT verification | Example 7 |
 | remote JWKS validation | Example 8 |
 
@@ -107,7 +108,8 @@ observability:
     enabled: true
     address: "127.0.0.1"
     port: 9902
-    auth_token: "replace-with-strong-token"
+    auth_token_ref:
+      ref: "file://control-api.token"
 ```
 
 Use this when:
@@ -207,7 +209,8 @@ upstream:
         address: "backend.internal.example:8443"
 ```
 
-The top-level `listen` field is always required by the schema. When `listeners[]` is non-empty, runtime normalization uses `listeners[]` and the top-level `listen` block is superseded.
+The top-level `listen` field is always required. When `listeners[]` is
+non-empty, Impulse uses `listeners[]` and supersedes the top-level block.
 
 Common mistake:
 
@@ -275,7 +278,7 @@ Use this when:
 
 Custom CA material augments the built-in roots; it does not replace them.
 
-## Example 7: Static RS256 And ES256 JWT Keys
+## Example 7: Static RS256 and ES256 JWT Keys
 
 Pin verification to public keys you manage yourself. Do not set `secret` when
 `HS256` is absent from the allowlist; configuring both is rejected at startup.
@@ -325,7 +328,7 @@ upstream:
 Keys may also be supplied as JWK documents with `kind: jwk` and a `jwk` string field
 instead of `public_key_pem`. RSA keys shorter than 2048 bits are rejected.
 
-## Example 8: JWKS-Backed Validation With Strict Policy
+## Example 8: JWKS-Backed Validation with Strict Policy
 
 Fetch signing keys from the issuer and enforce a strict issuer/audience/algorithm
 policy. Multiple issuers and audiences use the plural fields; the singular
@@ -386,7 +389,7 @@ token signed by a trusted key is accepted, so set them in production.
 Both reject tokens while keys are missing; they differ only in whether the process
 starts at all.
 
-## Example 9: Runtime Activation And Reload Posture
+## Example 9: Runtime Activation and Reload Posture
 
 Impulse supports generation-based validation, preview, activation, rollback, and certificate-only reload. When planning operations:
 

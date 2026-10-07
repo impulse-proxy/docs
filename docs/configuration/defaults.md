@@ -1,34 +1,19 @@
 # Configuration Defaults
 
-This page is the central reference for configuration defaults in Impulse.
-
-Use it when you need to answer two questions quickly:
+This page lists the values Impulse applies when configuration fields are
+omitted. Use it to answer two questions:
 
 - which fields may be omitted from the YAML
 - what value or behavior Impulse applies when they are omitted
 
-This page reflects the helper functions and `Default` implementations under
-`crates/config/src/config/` in the Impulse repository.
-
-## When To Use This Page
-
-Use this page when you need to answer:
-
-- what happens if a field is omitted
-- whether a behavior is explicit or inherited by default
-- which defaults are safe enough to keep for an initial rollout
-
-Use [Configuration Reference](/docs/configuration/reference) when you need exact field semantics and validation rules. Use [Configuration Examples](/docs/configuration/examples) when you need working end-to-end templates.
+Use [Configuration Reference](/docs/configuration/reference) for field semantics
+and validation rules. Use
+[Configuration Examples](/docs/configuration/examples) for complete examples.
 
 ## How Defaults Work
 
-Impulse applies defaults in three different ways:
-
-- explicit helper-function defaults such as `get_default_port()` or `perf_default_worker_threads()`
-- struct-level `Default` implementations for nested sections such as `performance`, `observability`, and `resilience`
-- Rust/Serde zero-value defaults for optional or collection fields such as `false`, `[]`, `{}`, empty strings, and `null`
-
-Defaults only apply when a field is omitted. Validation still runs after defaults are applied, so an omitted field may deserialize successfully and still be rejected later if a related feature is enabled.
+Defaults apply only when a field is omitted. Validation runs after defaults, so
+enabling a related feature can make another field required.
 
 Examples:
 
@@ -102,7 +87,7 @@ These defaults apply to the top-level `upstream_tls` block and to per-upstream `
 | `upstream_tls.client_key` | `null` | No file-backed client private key |
 | `upstream_tls.client_key_ref` | `null` | No secret-backed client private key |
 
-## Upstream And Backend Defaults
+## Upstream and Backend Defaults
 
 ### Upstream-Level Defaults
 

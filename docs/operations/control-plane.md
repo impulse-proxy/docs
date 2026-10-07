@@ -1,10 +1,11 @@
 # Control Plane
 
-This document explains the operator-facing control-plane services in Impulse and the boundaries each service is allowed to know about runtime state.
+This page defines the operator-facing control-plane services and their runtime
+state boundaries.
 
 ## Operator Fast Path
 
-Use the control plane to answer four questions quickly:
+Use the control plane to answer four questions:
 
 1. what runtime generation is active now
 2. what changed recently
@@ -35,15 +36,15 @@ Its responsibilities are:
 - listener certificate reload
 - controlled restart requests
 
-### Transport and protocol expectations
+### Transport and Protocol Expectations
 
 - protocol: HTTP/1.1 over TLS
 - audience: operators and automation only
 - security model: a dedicated admin-plane authn/authz layer, separate from request-path auth
 
-### Security and endpoint authorities
+### Security and Endpoint Authorities
 
-Control API configuration—TLS client authentication, bearer credentials, mTLS
+Control API configuration—TLS client authentication, bearer credentials, mutual TLS (mTLS)
 identity extraction, RBAC thresholds, protected probes, IP allowlists, audit
 sinks, and connection limits—is defined only in
 [Observability and Control Configuration](/docs/configuration/observability-and-control).
@@ -54,7 +55,7 @@ semantics are defined only in the
 [Security Model](/docs/concepts/security-model#control-plane) owns the trust
 boundary and production-hardening posture.
 
-### Failure semantics
+### Failure Semantics
 
 Control API authn/authz failures are intentionally split:
 
@@ -68,7 +69,7 @@ Control API mTLS failure is separate:
 - operators should rely on control-plane TLS handshake logs for diagnosis; no
   HTTP audit event exists before a request is established
 
-### Route families
+### Route Families
 
 The current route family includes:
 
@@ -83,7 +84,7 @@ The current route family includes:
 
 Refer to [Control API Reference](/docs/reference/control-api-reference) for concrete endpoints.
 
-### What the control API is allowed to know
+### Control API State Boundary
 
 The control API should read from:
 
@@ -94,9 +95,9 @@ The control API should read from:
 
 It should not depend on listener-local internals that only exist because a particular ingress path happens to hold them.
 
-### Runtime introspection contract
+### Runtime Introspection Contract
 
-For operators, the highest-value reads are:
+The common operator reads are:
 
 - `GET /admin/runtime`
 - `GET /admin/runtime/history`
@@ -124,7 +125,7 @@ Its responsibilities are:
 - validate the configured scrape path
 - stay bound to the current runtime metrics surface
 
-### Operator expectations
+### Operator Expectations
 
 - only the configured metrics path returns metrics
 - wrong paths return `404`
@@ -149,7 +150,7 @@ Its responsibilities are:
 - request controlled restarts
 - coordinate drained worker completion across the runtime
 
-### Important watchdog state
+### Watchdog State
 
 Operators should expect the watchdog to surface:
 
@@ -189,7 +190,7 @@ This ensures:
 - restart and reload actions act on the same authoritative runtime handle
 - backend lifecycle state is rendered from one canonical inventory
 
-### Observability package entry point
+### Observability Package Entry Point
 
 `GET /admin/runtime` and the runtime history reads are also the operator entry point into the
 packaged observability bundle.
@@ -231,7 +232,7 @@ mTLS-only caller needs a certificate attribute mapped to a role before it can
 use privileged routes. See the configuration and endpoint authorities linked
 above for exact behavior.
 
-### Metrics endpoint
+### Metrics Endpoint
 
 The default loopback metrics endpoint is plaintext and unauthenticated. Remote
 exposure is an explicit mTLS mode that reuses the primary listener certificate

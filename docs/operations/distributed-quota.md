@@ -59,20 +59,20 @@ raising the cap during Redis saturation usually amplifies the incident.
 
 Choose the backend-failure policy as a product decision before rollout.
 
-### Fail open
+### Fail Open
 
 Use `fail_open` when temporary over-admission is preferable to application
 unavailability. A backend timeout, unavailable backend, or evaluation error
 admits the request and records a failed-open quota outcome. Local overload
 controls continue to apply.
 
-### Fail closed
+### Fail Closed
 
 Use `fail_closed` when contract strictness is more important than availability.
 A backend failure returns `503 Service Unavailable`, with a quota backend reason
 rather than an overload reason.
 
-### Bounded local fallback
+### Bounded Local Fallback
 
 Local fallback is useful when an outage should retain approximate enforcement
 without blocking all traffic. It is deliberately bounded and process-local:
@@ -128,7 +128,7 @@ blindly.
 
 ## Incident Triage
 
-### Rising 429 responses
+### Rising 429 Responses
 
 1. Check `impulse_quota_policy_outcomes_total` by policy and reason.
 2. Distinguish burst/sustained exhaustion from missing or invalid selectors.
@@ -138,7 +138,7 @@ blindly.
 
 Do not widen adaptive admission or inflight limits to address quota exhaustion.
 
-### Quota-related 503 responses
+### Quota-Related 503 Responses
 
 1. Confirm `decision="failed_closed"` and inspect the backend reason.
 2. Check `impulse_quota_backend_health_total` and the runtime quota backend
@@ -153,7 +153,7 @@ Not every 503 is quota. Brownout, inflight shedding, backend timeout, and other
 overload or transport paths also return 503; use the reason and subsystem
 metrics before acting.
 
-### Fallback is active
+### Fallback Is Active
 
 Fallback keeps traffic moving but is an incident state:
 

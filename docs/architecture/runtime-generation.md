@@ -64,11 +64,11 @@ The safe Control API workflow is `validate → preview → activate`:
 3. `activate` stages again, verifies `expected_generation` when supplied,
    rechecks lifecycle and compatibility gates, starts candidate generation
    tasks, and commits the prepared bundle.
-4. `RuntimeBundleHandle` swaps one complete `Arc<RuntimeBundle>`, archives the
-   previous generation, updates history/metrics, and retires the previous
-   generation's task registry.
-5. Listener-group supervision reconciles active listener topology against the
-   newly published generation.
+4. Impulse atomically publishes the complete generation, retains the previous
+   eligible generation for rollback, updates operator state, and retires work
+   owned by the previous generation.
+5. Listener supervision reconciles the active listener topology with the new
+   generation.
 
 Failures before the swap leave the current generation active. Activation is
 rejected during drain or shutdown. Use the

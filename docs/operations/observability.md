@@ -16,7 +16,7 @@ Use each surface for the job it answers best:
 
 | Surface | Use it for |
 | --- | --- |
-| Metrics | Rates, ratios, latency distributions, capacity trends, alerts, and SLO reporting |
+| Metrics | Rates, ratios, latency distributions, capacity trends, alerts, and service-level objective (SLO) reporting |
 | Structured logs | Event-level diagnosis and request or backend lifecycle detail |
 | OTLP traces | Timing and causal sequencing within one request or administrative action |
 | Control API | Current runtime generation, backend state, quota state, watchdog state, and retained runtime history |
@@ -77,7 +77,7 @@ but preserve each alert's meaning.
 safety is at risk. `ticket` means investigation is required but immediate
 paging is not assumed.
 
-### Page alerts
+### Page Alerts
 
 | Alert | Meaning | First view |
 | --- | --- | --- |
@@ -89,7 +89,7 @@ paging is not assumed.
 | `ImpulseRuntimePanicObserved` | A runtime task panic occurred in the recent window | Control plane and logs |
 | `ImpulseControlPlaneUnavailable` | The packaged control-plane observability view is absent | Scrape health, then Control API |
 
-### Ticket alerts
+### Ticket Alerts
 
 | Alert | Meaning | First view |
 | --- | --- | --- |
@@ -125,7 +125,7 @@ process-wide compatibility counters when localization matters. Preserve source
 labels while filtering; do not create a new label vocabulary in recording
 rules.
 
-## Correlate Metrics With Runtime State
+## Correlate Metrics with Runtime State
 
 Metrics describe trend. The Control API describes the state that produced the
 trend, and audit output describes who changed it.
@@ -158,7 +158,7 @@ metrics; request- and event-specific IDs are diagnostic fields.
 
 ## Incident Interpretation
 
-### Rising 5xx or latency
+### Rising 5xx or Latency
 
 1. Check whether the change is fleet-wide or concentrated by upstream or
    backend.
@@ -170,7 +170,7 @@ metrics; request- and event-specific IDs are diagnostic fields.
    admission state before adding capacity or changing policy.
 5. Check runtime history for a generation change at the start of the event.
 
-### 429, denial, or 503 growth
+### 429, Denial, or 503 Growth
 
 Do not combine scoped rate limiting, quota denial, authentication denial,
 circuit-open rejection, and overload shedding into one error bucket. They have
@@ -185,7 +185,7 @@ different owners and remediation:
 Confirm the policy, decision, reason, and backend mode in metrics and current
 runtime state before changing limits.
 
-### Backend or DNS instability
+### Backend or DNS Instability
 
 Compare active health checks with passive request failures. Healthy probes with
 rising request timeouts can indicate workload-specific latency, saturation, or
@@ -193,21 +193,21 @@ stale pooled connections. DNS refresh failures, address-set changes, and client
 rotation failures together indicate lifecycle churn; inspect resolved addresses
 and last-success state in the runtime snapshot.
 
-### Retry or hedge growth
+### Retry or Hedge Growth
 
 Retry and hedge activity is not success by itself. Read it with latency,
 timeouts, backend errors, and saturation. High hedge waste or sustained retry
 growth means duplicate work may be increasing backend pressure even if some
 requests still complete successfully.
 
-### TLS or certificate incident
+### TLS or Certificate Incident
 
 Separate downstream client-to-Impulse handshakes from upstream
 Impulse-to-backend TLS. Check listener, phase, reason, certificate lifetime,
 and recent reload outcomes. After rotation, confirm both the metric trend and
 the runtime listener or upstream identity before expanding the rollout.
 
-### Runtime or Control API incident
+### Runtime or Control API Incident
 
 Correlate activation, rollback, rejection, watchdog, panic, connection-limit,
 and audit-delivery signals with the active generation. Runtime history explains

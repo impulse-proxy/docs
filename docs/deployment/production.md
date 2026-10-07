@@ -102,7 +102,7 @@ deliberate model:
   configured user and group exist
 
 In both models, the final service identity needs read access to active and
-candidate configs, certificates, keys, CA files, and secret files used during
+candidate configs, certificates, keys, certificate authority (CA) files, and secret files used during
 activation or reload. It needs write access only to configured runtime, log,
 and audit paths. See
 [Observability and Control Configuration](/docs/configuration/observability-and-control#privilege-dropping)
@@ -201,7 +201,7 @@ field can activate live merely because a previous change did.
 
 ## Rollout and Validation
 
-### Safe configuration validation
+### Safe Configuration Validation
 
 `impulse --config` starts the server. A valid config proceeds to runtime
 initialization and listener binding; it does not validate and exit. Use one of
@@ -209,7 +209,7 @@ these workflows:
 
 1. **Controlled startup.** Copy the candidate to an isolated host or change
    every listener, metrics, and Control API binding to non-production addresses
-   and ports. Start it with `impulse --config <isolated-candidate>`, require the
+   and ports. Start it with `impulse --config <path>`, require the
    listening/ready state, then stop it. An unreadable or invalid explicit config
    exits with status `1`; a valid config remains running, so its eventual exit
    status after operator shutdown is not a validation result.
@@ -226,7 +226,7 @@ Startup validation catches schema, normalization, and required startup-resource
 errors. It does not prove backend reachability, certificate freshness, route
 intent, capacity, or behavior under real traffic. Check those separately.
 
-### Pre-rollout verification
+### Pre-Rollout Verification
 
 Before sending traffic to a candidate:
 
@@ -243,7 +243,7 @@ Before sending traffic to a candidate:
 8. Record the active generation and verify the chosen rollback target or
    previous binary.
 
-### Canary rollout
+### Canary Rollout
 
 Use a separate node or isolated listener bindings; never start a second process
 against production bindings merely to validate it.
@@ -261,7 +261,7 @@ Do not use a fixed ten-minute observation period as proof of safety. Set the
 window and thresholds from request volume, error budget, retry behavior,
 certificate/DNS refresh intervals, and the specific risk of the change.
 
-### Activation and rollback
+### Activation and Rollback
 
 For a runtime-managed candidate, pass `expected_generation` to activation so a
 concurrent change fails with `409`. After activation, confirm the returned and
@@ -279,7 +279,7 @@ return it only after health and readiness recover. See
 [Reload and Drain](/docs/operations/reload-and-drain) for exact lifecycle
 semantics.
 
-### After deployment
+### After Deployment
 
 Verify the active generation and watch the shipped dashboards and alerts for
 the complete observation window. If health, readiness, latency, error rate,
@@ -293,7 +293,7 @@ continuing rollout.
 
 ## Production Checklist
 
-### Ownership and rollback
+### Ownership and Rollback
 
 - [ ] A single team owns config, TLS, rollout, and incident decisions.
 - [ ] The candidate diff and change classification were reviewed.
@@ -301,7 +301,7 @@ continuing rollout.
       previous binary are recorded.
 - [ ] Canary acceptance thresholds and rollback authority are explicit.
 
-### Host and service
+### Host and Service
 
 - [ ] Capacity and host tuning were validated with representative traffic.
 - [ ] UDP and TCP reachability is available on the public listener port.
@@ -310,14 +310,14 @@ continuing rollout.
 - [ ] The process ends startup as the intended unprivileged identity with only
       required capabilities.
 
-### Security-model review
+### Security-Model Review
 
 - [ ] Every boundary in the [Security Model](/docs/concepts/security-model#trust-boundary-map)
       was reviewed, and any deviation from its hardening baseline was approved.
 - [ ] The candidate's exact authentication, TLS, control-plane, secret, and
       upstream behavior was verified against the linked configuration authorities.
 
-### Rollout and operations
+### Rollout and Operations
 
 - [ ] Safe validation completed without using production bindings.
 - [ ] Metrics, dashboards, alerts, logs, traces, and audit records are visible.

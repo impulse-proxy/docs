@@ -2,7 +2,7 @@
 
 This page is the canonical Impulse v0.6 reference for release maturity,
 capability status, partial-support boundaries, hard product limitations, and
-current GA blockers. Configuration, endpoint, metric, and protocol references
+current general-availability (GA) blockers. Configuration, endpoint, metric, and protocol references
 remain authoritative for exact behavior inside a supported capability.
 
 ## Release Status
@@ -43,11 +43,11 @@ for full support.
 
 ## Capability Matrix
 
-### Protocol, routing, and traffic management
+### Protocol, Routing, and Traffic Management
 
 | Capability | Status | v0.6 boundary |
 | --- | --- | --- |
-| Native HTTP/3 ingress | `Done` | QUIC/TLS over UDP through the native listener. |
+| Native HTTP/3 ingress | `Done` | QUIC with Transport Layer Security (TLS) over UDP through the native listener. |
 | Bootstrap HTTP/1.1 and HTTP/2 ingress | `Done` | TLS over TCP through the compatibility listener; no cleartext ingress or h2c. |
 | HTTP/1.1 and HTTP/2 backends | `Done` | `http://` selects HTTP/1.1; `https://` or schemeless secure addresses select HTTP/2. Mixed pools are supported. |
 | Upstream HTTP/3 | `Missing` | Backends are not reached over HTTP/3. |
@@ -58,7 +58,7 @@ for full support.
 | Weighted backends | `Partial` | Round-robin, random, consistent-hash, and sticky-CID support custom weights; least-connections and latency-aware reject them. |
 | Release traffic controls | `Missing` | No route-level weighted splitting, request mirroring, or fault injection. |
 
-### Resilience, security, and policy
+### Resilience, Security, and Policy
 
 | Capability | Status | v0.6 boundary |
 | --- | --- | --- |
@@ -66,30 +66,30 @@ for full support.
 | Retry, retry budget, hedging, circuit breaking | `Done` | Implemented within the request replayability, body state, budget, and failure-class rules in the resilience reference. |
 | Admission and overload protection | `Done` | Connection/inflight/body/queue bounds, adaptive admission, and brownout. |
 | Scoped rate limits and distributed quota | `Done` | Local scoped rules plus Redis-backed burst/sustained quota with explicit degraded-mode policy. |
-| API-key, JWT, JWKS, and external auth | `Done` | Per-upstream request authentication with the documented algorithms, claims, key sources, and external-decision contracts. |
+| API-key, JSON Web Token (JWT), JSON Web Key Set (JWKS), and external auth | `Done` | Per-upstream request authentication with the documented algorithms, claims, key sources, and external-decision contracts. |
 | Request-path RBAC/policy engine | `Partial` | Required scopes and roles are enforced for JWT claims; there is no generic policy-expression engine or provider chain. |
-| OIDC/auth gateway | `Partial` | Discovery and token introspection are supported; interactive login, browser SSO, and session-cookie management are not. |
-| Downstream TLS/client authentication | `Done` | Default and exact-SNI identities plus optional/required client certificates on native QUIC and bootstrap TLS. |
-| Upstream TLS and client mTLS | `Done` | Certificate/hostname verification, custom CA material, and optional client identity for secure backends. |
-| WAF, content inspection, and extension filters | `Missing` | No WAF, malware/content inspection, Lua/WASM filter, or plugin model. |
+| OpenID Connect (OIDC)/auth gateway | `Partial` | Discovery and token introspection are supported; interactive login, browser single sign-on (SSO), and session-cookie management are not. |
+| Downstream TLS/client authentication | `Done` | Default and exact Server Name Indication (SNI) identities plus optional/required client certificates on native QUIC and bootstrap TLS. |
+| Upstream TLS and client mutual TLS (mTLS) | `Done` | Certificate/hostname verification, custom certificate authority (CA) material, and optional client identity for secure backends. |
+| Web application firewall (WAF), content inspection, and extension filters | `Missing` | No WAF, malware/content inspection, Lua/WebAssembly (WASM) filter, or plugin model. |
 
-### Configuration, control, and operations
+### Configuration, Control, and Operations
 
 | Capability | Status | v0.6 boundary |
 | --- | --- | --- |
 | Staged runtime generations | `Done` | Validate, preview, and activate operate on whole file-backed candidates; history and rollback manage retained generations. |
 | Restart-free configuration changes | `Partial` | Runtime-managed domains activate atomically; listener removal/bind changes and startup-owned logging sink/format, tracing, and control-plane thread settings still require restart. |
 | Dynamic route changes | `Partial` | Routes change through whole-generation activation; there is no per-route mutation API. |
-| Service discovery | `Partial` | Hostname-based DNS refresh is implemented; there is no xDS, Consul, Kubernetes-native, or general membership API. |
+| Service discovery | `Partial` | Hostname-based Domain Name System (DNS) refresh is implemented; there is no xDS, Consul, Kubernetes-native, or general membership API. |
 | Control API security | `Done` | TLS, bearer tokens, mTLS identity, three fixed roles, source policy, connection bounds, and audit output. |
-| Metrics, logs, tracing, and runtime views | `Done` | Prometheus, plain/JSON logs, optional OTLP tracing, runtime snapshots, audit events, dashboards, alerts, and SLO assets. |
+| Metrics, logs, tracing, and runtime views | `Done` | Prometheus, plain/JSON logs, optional OpenTelemetry Protocol (OTLP) tracing, runtime snapshots, audit events, dashboards, alerts, and service-level objective (SLO) assets. |
 | Debian/systemd packaging | `Done` | Packaging assets and host-service guidance are present. |
 | Container artifact | `Partial` | A production Dockerfile and Compose workflow are present; v0.6 has no registry-publication workflow or canonical public image reference. |
 | Production operations guidance | `Done` | Deployment guide, capacity guidance, observability operations, rotation workflow, and symptom-driven runbook are present. |
 
 ## Product Limitations
 
-### Configuration and control plane
+### Configuration and Control Plane
 
 - Runtime management is whole-file and generation-based, not a granular object
   API or fleet configuration service.
@@ -104,7 +104,7 @@ for full support.
 See [Runtime Generation and Configuration Lifecycle](/docs/architecture/runtime-generation)
 and the [Control API Reference](/docs/reference/control-api-reference).
 
-### Protocol and traffic management
+### Protocol and Traffic Management
 
 - Impulse accepts HTTP/3 over QUIC and TLS bootstrap HTTP/1.1/HTTP/2; it does
   not accept cleartext HTTP/1.1 or h2c ingress.
@@ -120,7 +120,7 @@ and the [Control API Reference](/docs/reference/control-api-reference).
 See [Protocol Support](/docs/protocols/support) and
 [Routing and Upstreams](/docs/configuration/routing-and-upstreams).
 
-### Security and policy limits
+### Security and Policy Limits
 
 - Local JWT verification supports `HS256`, `RS256`, and `ES256` only. It does
   not support `RS384`/`RS512`, `PS*`, `EdDSA`, or ECDSA curves other than P-256.
@@ -147,7 +147,7 @@ See [Security Model](/docs/concepts/security-model),
 [Authentication and Secrets](/docs/configuration/authentication-and-secrets),
 and [Observability and Control Configuration](/docs/configuration/observability-and-control).
 
-### Platform and ecosystem
+### Platform and Ecosystem
 
 - There is no Kubernetes operator, xDS/ADS control plane, Consul integration,
   service-mesh mode, or plugin/extension ecosystem.

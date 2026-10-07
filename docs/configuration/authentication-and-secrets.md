@@ -28,8 +28,8 @@ Each named upstream accepts an optional `auth` object:
 | **Field** | **Type** | **Required** | **Default** | **Meaning** |
 | --------- | -------- | ------------ | ----------- | ----------- |
 | `api_key` | object or `null` | No | `null` | Validates a key in one request header. |
-| `jwt` | object or `null` | No | `null` | Validates a bearer JWT locally. |
-| `external_auth` | object or `null` | No | `null` | Delegates the decision to an HTTP or OIDC introspection service. |
+| `jwt` | object or `null` | No | `null` | Validates a bearer JSON Web Token (JWT) locally. |
+| `external_auth` | object or `null` | No | `null` | Delegates the decision to an HTTP or OpenID Connect (OIDC) introspection service. |
 | `required_scopes` | array of strings | No | `[]` | JWT scopes that must all be present. Requires `jwt`. |
 | `required_roles` | array of strings | No | `[]` | JWT roles that must all be present. Requires `jwt`. |
 
@@ -38,7 +38,7 @@ When both `api_key` and `jwt` are configured, a request must pass both checks.
 `required_scopes` or `required_roles`, in v0.6. Authentication runs before the
 request is dispatched to a backend.
 
-## API Keys
+## Application Programming Interface (API) Keys
 
 ```yaml
 upstream:
@@ -50,10 +50,10 @@ upstream:
       api_key:
         header_name: "x-api-key"
         keys:
-          - "replace-with-a-random-key"
+          - "<api-key>"
     backends:
       - id: "private-1"
-        address: "https://private.internal:8443"
+        address: "https://private.internal.example:8443"
 ```
 
 | **Field** | **Type** | **Required** | **Default** | **Meaning** |
@@ -68,17 +68,17 @@ are omitted from serialized configuration views and redacted from debug output,
 but plaintext values still exist in the source configuration and process
 memory.
 
-API keys do not currently accept secret-reference objects. Protect the
+API keys do not accept secret-reference objects. Protect the
 configuration file accordingly.
 
-## JWT
+## JSON Web Tokens (JWTs)
 
 Impulse reads a bearer token from `Authorization`, checks the token algorithm
 against explicit policy, verifies its signature locally, then validates claims.
-JWKS is refreshed outside the request path; request validation only reads the
-in-memory key cache.
+A remote JSON Web Key Set (JWKS) is refreshed outside the request path;
+request validation only reads the in-memory key cache.
 
-### JWT fields
+### JWT Fields
 
 | **Field** | **Type** | **Required** | **Default** | **Meaning** |
 | --------- | -------- | ------------ | ----------- | ----------- |
@@ -105,7 +105,7 @@ or `secret_ref`, and configuring either secret requires `HS256` in
 in the allowlist. `alg: none` and algorithms outside the three listed above
 are rejected.
 
-### Symmetric-key example
+### Symmetric-Key Example
 
 ```yaml
 secrets:
@@ -131,10 +131,10 @@ upstream:
       required_roles: ["customer"]
     backends:
       - id: "api-1"
-        address: "https://api.internal:8443"
+        address: "https://api.internal.example:8443"
 ```
 
-### Static public-key example
+### Static Public-Key Example
 
 Asymmetric entries are verification keys, not private signing keys. Keep
 private signing keys at the issuer.
@@ -173,7 +173,7 @@ remain; ambiguity is rejected. `require_kid: true` rejects a missing `kid`
 before key selection. Conflicting static entries with the same configured
 `kid` are rejected.
 
-### JWKS example and lifecycle
+### JWKS Example and Lifecycle
 
 ```yaml
 auth:
@@ -204,7 +204,7 @@ auth:
 - An unknown `kid` can hint an asynchronous refresh, subject to a cooldown.
   Impulse does not fetch JWKS synchronously to complete that request.
 
-### Claims, scopes, and roles
+### Claims, Scopes, and Roles
 
 Every JWT must have a numeric `exp` claim. Numeric `nbf` and `iat` claims are
 checked when present. Clock skew extends expiration tolerance and tolerates a
@@ -234,16 +234,16 @@ External authorization is asynchronous and runs before backend dispatch. One
 provider may be configured per upstream. The provider uses a dedicated HTTP
 client and is not a member of the upstream backend pool.
 
-### Generic HTTP authorization
+### Generic HTTP Authorization
 
 ```yaml
 auth:
   external_auth:
     kind: http
-    endpoint: "https://auth.internal/check"
+    endpoint: "https://auth.internal.example/check"
     request_headers:
       - name: "x-auth-service-key"
-        value: "replace-me"
+        value: "<token>"
     response_header_allowlist:
       - "x-authenticated-user"
     timeout_ms: 1000
@@ -280,7 +280,7 @@ to `503 Service Unavailable`. `fail_open` admits only on timeout or provider
 error and applies no auth-response mutations. It does not override an explicit
 deny, challenge, or redirect.
 
-### OIDC introspection
+### OpenID Connect (OIDC) Introspection
 
 ```yaml
 auth:
@@ -313,7 +313,7 @@ auth:
 
 Discovery, issuer, and introspection endpoints must use HTTPS; loopback HTTP is
 accepted for local development. If `discovery_url` is absent, Impulse requests
-`<issuer_url>/.well-known/openid-configuration`. Discovery must return an
+`<issuer-url>/.well-known/openid-configuration`. Discovery must return an
 `introspection_endpoint`.
 
 Discovery metadata is cached for up to five minutes and refreshed after one

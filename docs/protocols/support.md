@@ -22,10 +22,9 @@ Impulse does not provide a cleartext HTTP/1.1 listener or h2c ingress. Opening
 only the UDP port is also insufficient for compatibility clients: production
 network policy should allow both UDP and TCP on the listener port.
 
-## ALPN and HTTP/3 Discovery
+## Application-Layer Protocol Negotiation (ALPN) and HTTP/3 Discovery
 
-The native listener advertises the `h3` ALPN through the current `quiche`
-HTTP/3 application-protocol list. A client must negotiate HTTP/3 over QUIC;
+The native listener advertises `h3`. A client must negotiate HTTP/3 over QUIC;
 arbitrary QUIC application protocols are not accepted.
 
 The bootstrap TLS listener advertises ALPN in this preference order:
@@ -42,7 +41,7 @@ Alt-Svc: h3=":<listener-port>"; ma=86400
 ```
 
 `Alt-Svc` enables a compatible client to discover HTTP/3; it does not redirect
-the current request or guarantee that a client will switch protocols.
+the current request or guarantee that a client switches protocols.
 
 ## QUIC and HTTP/3 Limits
 
@@ -76,7 +75,7 @@ Active QUIC connection migration is disabled. A client must establish a new
 connection after a network-path change rather than relying on Impulse to
 validate and migrate the existing path.
 
-## 0-RTT and Early Data
+## Zero Round Trip Time (0-RTT) and Early Data
 
 Early data is disabled by policy by default:
 
@@ -94,7 +93,7 @@ when `allow_0rtt` is true and the normalized method is in
 rejected with `425 Too Early` and is not routed upstream.
 
 Enabling the policy does not make early data replay-safe and does not guarantee
-that a client session will negotiate 0-RTT. Operators must ensure that every
+that a client session negotiates 0-RTT. Operators must ensure that every
 affected route is safe to replay and should monitor the early-data accepted and
 rejected counters in the [Metrics Reference](/docs/reference/metrics-reference).
 

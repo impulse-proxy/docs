@@ -47,7 +47,7 @@ requests with bodies, and tunnel requests are not retried. A circuit-open
 primary failure may retry without consuming retry budget, but it still needs
 an eligible alternate backend and must satisfy the other retry rules.
 
-### Retry budget
+### Retry Budget
 
 | **Field** | **Type** | **Required** | **Default** | **Meaning** |
 | --------- | -------- | ------------ | ----------- | ----------- |
@@ -95,7 +95,7 @@ them.
 
 ## Adaptive Admission and Brownout
 
-### Adaptive admission
+### Adaptive Admission
 
 | **Field** | **Type** | **Required** | **Default** | **Meaning** |
 | --------- | -------- | ------------ | ----------- | ----------- |
@@ -127,7 +127,7 @@ request receives `503 Service Unavailable` and the route-queue `Retry-After`
 value. Brownout is evaluated after routing and before adaptive admission,
 inflight permits, and backend circuit-breaker execution.
 
-### Route queue
+### Route Queue
 
 | **Field** | **Type** | **Required** | **Default** | **Meaning** |
 | --------- | -------- | ------------ | ----------- | ----------- |
@@ -210,7 +210,7 @@ does not use the scoped limiter's legacy fallback.
 
 ## Distributed Quota Schema
 
-### Quota policy set
+### Quota Policy Set
 
 | **Field** | **Type** | **Required** | **Default** | **Meaning** |
 | --------- | -------- | ------------ | ----------- | ----------- |
@@ -224,7 +224,7 @@ does not use the scoped limiter's legacy fallback.
 Quota configuration is still validated when `enabled: false`; disabling
 evaluation does not make malformed policies or backend settings acceptable.
 
-### Counter backends
+### Counter Backends
 
 | **Field** | **Type** | **Required** | **Default** | **Meaning** |
 | --------- | -------- | ------------ | ----------- | ----------- |
@@ -239,7 +239,7 @@ The in-memory backend is local to one process and has an internal cap of 4,096
 active buckets. Redis evaluates configured windows atomically for one policy
 and composite key.
 
-### Local fallback
+### Local Fallback
 
 | **Field** | **Type** | **Required** | **Default** | **Meaning** |
 | --------- | -------- | ------------ | ----------- | ----------- |
@@ -252,7 +252,7 @@ fallback decision is enforced normally but uses per-instance counters and is
 reported with a degraded backend mode. If fallback also fails, the configured
 backend-failure policy handles the combined failure.
 
-### Policies and windows
+### Policies and Windows
 
 | **Field** | **Type** | **Required** | **Default** | **Meaning** |
 | --------- | -------- | ------------ | ----------- | ----------- |
@@ -283,7 +283,7 @@ Policy names and all `route_allowlist` values must be non-empty. Two policies
 cannot have the same name or the same route-allowlist, selector, and window
 contract, even if their names differ.
 
-### Backend-failure and response behavior
+### Backend-Failure and Response Behavior
 
 | Outcome | Enforcement | HTTP result |
 | --- | --- | --- |
@@ -306,13 +306,13 @@ resilience:
     backend_failure_policy: fail_open
     backend:
       kind: redis
-      url: "redis://redis-quota.service.consul:6379/0"
-      key_prefix: "impulse:quota:prod"
+      url: "redis://<redis-host>:6379/0"
+      key_prefix: "impulse:quota:<environment>"
       connect_timeout_ms: 250
       command_timeout_ms: 100
       max_inflight: 1024
     local_fallback:
-      key_prefix: "impulse:quota:fallback:prod"
+      key_prefix: "impulse:quota:fallback:<environment>"
       max_entries: 50000
     policies:
       - name: "payments-by-tenant"

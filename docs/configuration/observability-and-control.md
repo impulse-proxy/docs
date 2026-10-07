@@ -29,7 +29,7 @@ disabled and loopback-bound by default.
 | `enabled` | boolean | No | `false` | Start the metrics listener. |
 | `required` | boolean | No | `false` | Make initial TLS setup, runtime availability, or bind failure fatal when the endpoint is enabled. When false, Impulse logs the failure and continues without the endpoint. |
 | `address` | string | No | `"127.0.0.1"` | TCP bind address; must be non-empty when enabled. |
-| `allow_non_loopback` | boolean | No | `false` | Permit a non-loopback bind and switch the endpoint to mTLS. |
+| `allow_non_loopback` | boolean | No | `false` | Permit a non-loopback bind and switch the endpoint to mutual TLS (mTLS). |
 | `port` | integer | No | `9901` | TCP port; must be `1..=65535` when enabled. |
 | `path` | string | No | `"/metrics"` | Exact GET path; must begin with `/`. |
 | `max_connections` | integer | No | `512` | Concurrent accepted-connection cap; must be greater than `0`. Excess connections are dropped. |
@@ -38,7 +38,7 @@ disabled and loopback-bound by default.
 The loopback endpoint is unauthenticated plaintext HTTP. A non-loopback
 `address` is rejected unless `allow_non_loopback: true`. Remote mode also
 requires `observability.control_api.tls.client_auth.mode: required`; it serves
-mTLS using the primary listener's server certificate and the Control API
+mutual TLS (mTLS) using the primary listener's server certificate and the Control API
 client-CA configuration. Control API bearer tokens do not authenticate metrics
 scrapes.
 
@@ -59,7 +59,7 @@ observability:
 ## Tracing
 
 `observability.tracing` configures the process-wide OpenTelemetry trace
-pipeline.
+pipeline and its OpenTelemetry Protocol (OTLP) exporter.
 
 | **Field** | **Type** | **Required** | **Default** | **Meaning** |
 | --------- | -------- | ------------ | ----------- | ----------- |
@@ -83,7 +83,7 @@ observability:
   tracing:
     enabled: true
     service_name: "impulse-edge"
-    otlp_endpoint: "http://otel-collector.internal:4317"
+    otlp_endpoint: "http://otel-collector.internal.example:4317"
     sample_ratio: 0.1
 ```
 
@@ -128,7 +128,7 @@ API policy and path fields are installed with an accepted runtime generation.
 
 ## Control API TLS and Authentication
 
-### Client certificates
+### Client Certificates
 
 | **Field** | **Type** | **Required** | **Default** | **Meaning** |
 | --------- | -------- | ------------ | ----------- | ----------- |
@@ -141,7 +141,7 @@ bearer token as well. `required` mTLS may be the sole transport authentication
 mechanism, but privileged HTTP routes also require an mTLS-derived role as
 described below.
 
-### Bearer tokens and mTLS identity
+### Bearer Tokens and mTLS Identity
 
 | **Field** | **Type** | **Required** | **Default** | **Meaning** |
 | --------- | -------- | ------------ | ----------- | ----------- |
@@ -170,7 +170,7 @@ When the Control API is enabled, the configuration must provide at least one
 legacy or role-bearing bearer token, or set client-auth mode to `required`.
 Mode `disabled` or `optional` without a bearer credential is rejected.
 
-## RBAC and Protected Probes
+## Role-Based Access Control (RBAC) and Protected Probes
 
 | **Field** | **Type** | **Required** | **Default** | **Meaning** |
 | --------- | -------- | ------------ | ----------- | ----------- |
@@ -186,7 +186,7 @@ Roles are ordered `viewer < operator < admin`. Validation requires
 and readiness routes; their response semantics remain defined in the
 [Control API Reference](/docs/reference/control-api-reference#endpoints).
 
-## Source IP Allowlist
+## Source Internet Protocol (IP) Allowlist
 
 | **Field** | **Type** | **Required** | **Default** | **Meaning** |
 | --------- | -------- | ------------ | ----------- | ----------- |
