@@ -1,6 +1,6 @@
 # Terminology
 
-This page is the authority for reader-facing product terms in the v0.6
+This page is the authority for reader-facing product terms in the v0.7.0
 documentation. Configuration keys, API fields, metric names, and code
 identifiers retain their exact spelling even when they differ from prose terms.
 
@@ -9,8 +9,8 @@ identifiers retain their exact spelling even when they differ from prose terms.
 | Need | Term |
 | --- | --- |
 | configured downstream ingress identity | `listener` |
-| primary UDP/QUIC and HTTP/3 ingress | `native QUIC listener` |
-| compatibility TCP/TLS ingress for HTTP/1.1 and HTTP/2 | `bootstrap listener` |
+| experimental UDP/QUIC and HTTP/3 ingress | `HTTP/3 ingress` |
+| production TCP/TLS ingress for HTTP/1.1 and HTTP/2 | `Pingora ingress` |
 | named routing target | `upstream` |
 | single origin endpoint inside an upstream | `backend` |
 | request match conditions | `route` |
@@ -30,8 +30,8 @@ Use these definitions and preferred phrases consistently across product-referenc
 | Term | Meaning |
 | --- | --- |
 | Listener | A configured downstream ingress identity. It owns an address, port, protocol settings, and certificate set and provides the settings from which ingress sockets are created. |
-| Native QUIC listener | The primary UDP/QUIC ingress for downstream HTTP/3 traffic. Use this term instead of “QUIC path” when referring to the concrete listener. |
-| Bootstrap listener | The automatically paired TCP/TLS compatibility ingress for downstream HTTP/1.1 and HTTP/2. It uses the configured listener identity and is not a separately configured listener. |
+| HTTP/3 ingress | The experimental UDP/QUIC ingress for downstream HTTP/3 traffic. |
+| Pingora ingress | The production TCP/TLS ingress for downstream HTTP/1.1 and HTTP/2. |
 | Upstream | A named routing target consisting of route rules, optional TLS policy, load-balancing policy, and one or more backends. |
 | Backend | A single origin endpoint inside an upstream. |
 | Route | The match conditions that decide which upstream handles a request. |
@@ -58,8 +58,8 @@ Use these phrases consistently unless a page is quoting a metric name, config ke
 | Prefer | Avoid when possible | Reason |
 | --- | --- | --- |
 | `listener` | `proxy listener`, `socket listener` | `listener` is the canonical runtime term. |
-| `native QUIC listener` | `QUIC path` when the concrete listener is meant | distinguishes the UDP/HTTP/3 ingress from the shared request path. |
-| `bootstrap listener` | `bootstrap TLS listener`, `TCP bootstrap listener` | TLS and TCP are properties of the compatibility listener, not part of its preferred name. |
+| `HTTP/3 ingress` | `QUIC path` when the concrete listener is meant | distinguishes the experimental protocol adapter from the shared request path. |
+| `Pingora ingress` | `bootstrap listener`, `compatibility listener` | Pingora is the production H1/H2 ingress implementation. |
 | `route` | `routing rule` for the main noun | `route` is shorter and already defined. |
 | `upstream` | `upstream pool` as the default term | `upstream` is the canonical routing target; mention its backends when needed. |
 | `backend` | `origin server` unless external comparison requires it | `backend` matches config, metrics, and runtime views. |
@@ -85,8 +85,8 @@ These aliases are common search terms, but they are not the preferred product wo
 | admin API | `Control API` |
 | origin server | `backend` |
 | routing rule | `route` |
-| QUIC path, when referring to ingress | `native QUIC listener` |
-| bootstrap TLS listener | `bootstrap listener` |
+| QUIC path, when referring to ingress | `HTTP/3 ingress` |
+| bootstrap listener | `Pingora ingress` |
 | rate limiting, when the meaning is contract exhaustion | `quota` |
 | degraded mode, when the meaning is selective overload shedding | `brownout` |
 | config version swap | `runtime generation` |
@@ -102,7 +102,7 @@ Use these style rules across product-reference pages:
 - Separate request-path policy concepts from runtime protection concepts.
 - Use `Control API` for the admin HTTP surface and `control plane` for the broader operator layer.
 - Use `upstream` for the named routing target and `backend` for individual endpoints inside it.
-- Use `native QUIC listener` and `bootstrap listener` for the two concrete ingress listeners.
+- Use `HTTP/3 ingress` and `Pingora ingress` for the two concrete ingress listeners.
 - Use `activation`, `reload`, `rollback`, and `drain` only for the distinct lifecycle operations defined above.
 - Avoid mixing code names, config keys, and reader-facing terms in ordinary prose unless needed for precision.
 

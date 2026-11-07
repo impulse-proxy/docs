@@ -216,7 +216,7 @@ Common mistake:
 
 - expecting the top-level `listen` block to stay active alongside `listeners[]`
 
-## Example 5: Bootstrap Listener Client Auth
+## Example 5: Pingora Listener Client Auth
 
 ```yaml
 version: 1
@@ -242,7 +242,7 @@ upstream:
         address: "backend.internal.example:8443"
 ```
 
-This is the right shape when bootstrap TLS clients must authenticate with certificates.
+This is the right shape when Pingora TLS clients must authenticate with certificates.
 
 ## Example 6: Private CA Upstream Trust
 

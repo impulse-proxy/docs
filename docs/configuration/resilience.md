@@ -1,6 +1,6 @@
 # Resilience, Rate Limits, and Quota
 
-This is the focused Impulse v0.6 reference for `resilience`. The general
+This is the focused Impulse v0.7.0 reference for `resilience`. The general
 [Configuration Reference](/docs/configuration/reference) remains the schema
 authority. Redis deployment and incident guidance belongs in
 [Distributed Quota Operations](/docs/operations/distributed-quota); the quota
@@ -58,7 +58,7 @@ an eligible alternate backend and must satisfy the other retry rules.
 The runtime counts primary attempts globally and per selected upstream. Both
 the global allowance and the selected upstream's allowance must admit a retry.
 Each allowance is calculated as `floor(primary_count × ratio / 100) + 1`, so a
-new runtime has one bootstrap retry slot. Counters are in memory and reset when
+new runtime has one initial retry slot. Counters are in memory and reset when
 the resilience runtime is rebuilt or the process restarts.
 
 ## Hedging

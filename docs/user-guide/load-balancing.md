@@ -40,7 +40,7 @@ The complete request-key source list and weight matrix are in
 ## Configuration Shape
 
 Each upstream owns its strategy. Omitting `load_balancing` selects
-`round-robin`; the top-level `load_balancing` field is not a v0.6 fallback.
+`round-robin`; the top-level `load_balancing` field is not a v0.7.0 fallback.
 
 ```yaml
 load_balancing:

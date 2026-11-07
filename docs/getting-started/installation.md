@@ -5,7 +5,7 @@ host?** Use the Debian package when one is available for your release and
 architecture; build from source when you need a development binary or no
 package matches the host.
 
-Impulse v0.6 supports Linux as its production runtime. macOS is suitable for
+Impulse v0.7.0 supports Linux as its production runtime. macOS is suitable for
 local development; Windows is not a supported runtime platform. Use an
 unprivileged service account and a port above `1024`, or grant only
 `CAP_NET_BIND_SERVICE` when binding a privileged port.

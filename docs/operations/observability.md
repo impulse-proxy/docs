@@ -1,8 +1,7 @@
 # Observability Operations
 
-This page is the operator guide for Impulse observability. It explains what to
-watch, which packaged dashboard to open, how to alert, and how to correlate a
-traffic symptom with current runtime state.
+This page explains what to watch and how to correlate a traffic symptom with
+current runtime state.
 
 For the exact emitted metric families, types, labels, units, and meanings, use
 the [Metrics Reference](/docs/reference/metrics-reference). Configuration belongs
@@ -45,65 +44,8 @@ Always add supporting views for:
 - runtime activation, rollback, watchdog, audit, and Control API pressure
 
 The [Metrics Reference](/docs/reference/metrics-reference) is authoritative for
-series names and label values. The repository recording rules are the preferred
-query layer for packaged dashboards and alerts.
-
-## Recommended Dashboards
-
-Impulse ships Grafana definitions under `deploy/observability/grafana/`.
-Preserve their UIDs when importing them so cross-links and runbooks remain
-stable.
-
-| Dashboard | Open it for | Read first |
-| --- | --- | --- |
-| `edge-traffic.json` | Customer-visible error or latency changes | Request rate, success ratio, tail latency, status mix, and concentration by upstream or backend |
-| `admission-overload.json` | Unexpected 429 or 503 responses, brownout, quota, or auth symptoms | Shed reason, rate-limit activity, quota decisions, quota backend health, and auth denial versus dependency failure |
-| `backend-health.json` | Timeouts, backend errors, health-check disagreement, or DNS churn | Active and passive health, timeout pressure, DNS refresh, address-set changes, and client rotation |
-| `retries-hedges.json` | Increasing duplicate work or masked tail latency | Retry reasons, retry denials, hedge triggers, win ratio, waste, and backend failure pressure |
-| `tls-certificates.json` | Handshake failures, certificate rotation, SNI/ALPN issues, or upstream TLS errors | Downstream versus upstream failures, failure reason, certificate lifetime, and selection outcome |
-| `control-plane.json` | Activation, rollback, restart, watchdog, audit, or generation problems | Active generation, runtime outcomes, rejections, watchdog state, audit failures, and Control API pressure |
-
-Use `edge-traffic.json` as the default incident entry point. Move to a
-specialized dashboard only after identifying the dominant failure class.
-
-## Suggested Alerts
-
-Impulse ships Prometheus rules under `deploy/observability/prometheus/`. Load
-`recording-rules.yaml` before `alerts.yaml`; the alerts consume the recording
-layer. Tune thresholds and evaluation windows to your SLOs and normal traffic,
-but preserve each alert's meaning.
-
-`page` means immediate action is expected because user impact or control-plane
-safety is at risk. `ticket` means investigation is required but immediate
-paging is not assumed.
-
-### Page Alerts
-
-| Alert | Meaning | First view |
-| --- | --- | --- |
-| `ImpulseAvailabilityBurnRatePage` | Availability budget is burning in both fast and sustained windows | Edge traffic |
-| `ImpulseP99LatencyBurnPage` | Tail latency is materially above the packaged objective | Edge traffic, then backend health |
-| `ImpulseBackendTimeoutSurgePage` | Backend timeout pressure threatens request reliability | Backend health |
-| `ImpulseTlsCertificateExpiryCritical` | A downstream certificate is inside the critical expiry window | TLS and certificates |
-| `ImpulseWatchdogDegraded` | Watchdog degradation is continuous | Control plane |
-| `ImpulseRuntimePanicObserved` | A runtime task panic occurred in the recent window | Control plane and logs |
-| `ImpulseControlPlaneUnavailable` | The packaged control-plane observability view is absent | Scrape health, then Control API |
-
-### Ticket Alerts
-
-| Alert | Meaning | First view |
-| --- | --- | --- |
-| `ImpulseRetryGrowth` | Retry volume may be amplifying backend trouble | Retries and hedges |
-| `ImpulseHedgeGrowth` | Hedging is becoming routine instead of exceptional | Retries and hedges |
-| `ImpulseBackendDnsRefreshFailures` | Resolution is stale or unstable | Backend health |
-| `ImpulseBrownoutActiveTooLong` | Brownout remains active beyond the tolerated window | Admission and overload |
-| `ImpulseQuotaBackendDegraded` | The distributed quota dependency or fallback path is degraded | Admission and overload, then runtime state |
-| `ImpulseTlsHandshakeFailuresRising` | Downstream handshake failures exceed normal background levels | TLS and certificates |
-
-Add environment-specific alerts for sustained ingress queue growth, ingress
-drops, connection-cap rejection, buffer rejection, audit write failure, audit
-event drop, secret reload failure, and certificate reload failure. Alert on
-rates or sustained state, not on a counter's absolute lifetime value.
+series names and label values. Build deployment-specific dashboards and alerts
+from those emitted metrics.
 
 ## Label Cardinality
 
@@ -134,7 +76,7 @@ Use this sequence:
 
 1. Record the alert window and its bounded labels: listener, route, upstream,
    backend, policy, reason, decision, and backend mode.
-2. Open the matching dashboard and decide whether the symptom is traffic,
+2. Inspect the matching metrics and decide whether the symptom is traffic,
    admission, backend, TLS, or control-plane scoped.
 3. Read `GET /admin/runtime` for the active generation, backend inventory,
    quota backend state, watchdog state, listener TLS inventory, and recent
@@ -147,9 +89,9 @@ Use this sequence:
 6. Use logs or traces for request-level detail, carrying forward the same
    canonical identities and reason value.
 
-For Impulse v0.6, the runtime snapshot reports observability contract version
+For Impulse v0.7.0, the runtime snapshot reports observability contract version
 `v1` and audit schema version `v1`. Treat a version change as a compatibility
-event for dashboards, alerts, runbooks, and audit consumers.
+event for metrics consumers, runbooks, and audit consumers.
 
 Useful cross-surface fields are `request_id`, `trace_id`, `span_id`,
 `event_id`, `generation`, `listener`, `route`, `upstream`, `backend`, `policy`,
@@ -214,36 +156,6 @@ and audit-delivery signals with the active generation. Runtime history explains
 generation movement; audit output establishes the action sequence and actor.
 An unavailable Control API does not by itself prove data-plane failure, but it
 does remove a critical incident-response surface.
-
-## SLO Interpretation
-
-The packaged SLO definitions under `deploy/observability/slo/` intentionally
-keep these contracts separate:
-
-- availability counts customer-visible server failure, not every rejection
-- latency describes successful service and excludes rejected or timed-out work
-- overload measures capacity protection, not quota or authentication policy
-- backend timeout is narrower than all backend failure
-- authentication denial is separate from generic policy rejection
-- quota denial is contract enforcement and must be read with quota backend
-  health and fallback mode
-
-Use the packaged recording series for reporting instead of recreating their
-numerators and denominators in Grafana.
-
-## Package Rollout
-
-1. Load the recording rules and wait for their series to appear.
-2. Load the alert rules and confirm they evaluate without missing inputs.
-3. Import the dashboard JSON while preserving packaged UIDs.
-4. Verify the runtime snapshot's observability contract and audit schema
-   versions.
-5. Exercise one page alert, one ticket alert, and one dashboard query in a
-   staging or canary environment.
-
-Treat repository dashboard JSON, recording rules, alert rules, and SLO
-definitions as one versioned operator package. Review a change to any one of
-them against the others.
 
 ## Related Pages
 

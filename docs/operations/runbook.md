@@ -93,7 +93,7 @@ changing security boundaries or all production instances at once.
 - Another process owns the address and port.
 - A privileged port is configured without the required service privilege or capability.
 - The address is not present on the host, or worker socket reuse is incompatible with the configured worker count.
-- Only one side of a shared HTTP/3/bootstrap deployment is available: native QUIC needs UDP, while the bootstrap compatibility listener uses TCP.
+- Only one ingress protocol is reachable: Pingora needs TCP, while experimental HTTP/3 needs UDP.
 
 ### Read-only diagnostic checks
 
@@ -142,7 +142,7 @@ sockets and network policy are verified.
 - Inspect the active listener and upstream TLS inventory in `GET /admin/runtime`.
 - Query downstream handshake, certificate-selection, ALPN, and expiry metrics; query upstream TLS failures by `upstream`, `backend`, `phase`, and `reason`.
 - Decode local certificate metadata with `openssl x509`; check key correspondence without displaying key material.
-- Use `openssl s_client` for TCP TLS. Use an HTTP/3-capable client for native QUIC and record SNI and negotiated ALPN.
+- Use `openssl s_client` for Pingora TLS. Use an HTTP/3-capable client for QUIC and record SNI and negotiated ALPN.
 
 ### Safe remediation
 

@@ -1,39 +1,41 @@
 # Status and Limitations
 
-This page is the canonical Impulse v0.6 reference for release maturity,
+This page is the canonical Impulse v0.7.0 reference for release maturity,
 capability status, partial-support boundaries, hard product limitations, and
-current general-availability (GA) blockers. Configuration, endpoint, metric, and protocol references
+current support boundaries. Configuration, endpoint, metric, and protocol references
 remain authoritative for exact behavior inside a supported capability.
 
 ## Release Status
 
 | Field | Current value |
 | --- | --- |
-| Documentation and capability baseline | Impulse v0.6 |
-| Release maturity | Beta |
+| Documentation and capability baseline | Impulse v0.7.0 |
+| Release maturity | Pre-GA |
 | Deployment posture | Controlled production rollout |
-| License | GPLv3 |
+| License | Apache 2.0 |
 
-Impulse v0.6 is **beta**. Its core edge path is implemented and suitable for a
+Impulse v0.7.0 is **pre-GA**. Its core edge path is implemented and suitable for a
 controlled production rollout with canaries, monitoring, rehearsed rollback,
-and an accountable operating team. Beta does not mean that interfaces are
+and an accountable operating team. Pre-GA does not mean that interfaces are
 frozen, every deployment shape has equal production history, or Impulse has
 feature parity with general-purpose proxies and API gateways.
 
-Operators can rely on the documented v0.6 contracts for native HTTP/3 ingress,
-bootstrap HTTP/1.1 and HTTP/2 ingress, HTTP/1.1 and HTTP/2 backends,
+Operators can rely on the documented v0.7.0 contracts for Pingora HTTP/1.1 and
+HTTP/2 ingress, HTTP/1.1 and HTTP/2 backends,
 deterministic routing, load balancing, health, resilience, staged runtime
 activation, and operator telemetry. They should still read release notes before
 upgrading and validate each target environment using the
 [Production Deployment](/docs/deployment/production) workflow.
+HTTP/3 ingress remains experimental.
 
 ## Status Definitions
 
 | Status | Definition | Reader rule |
 | --- | --- | --- |
-| `Done` | The capability is implemented and supported for the exact v0.6 contract linked or described. | Do not infer additional protocols, integrations, algorithms, or deployment modes beyond that contract. `Done` does not mean GA or API-frozen. |
+| `Done` | The capability is implemented and supported for the exact v0.7.0 contract linked or described. | Do not infer additional protocols, integrations, algorithms, or deployment modes beyond that contract. `Done` does not mean GA or API-frozen. |
+| `Experimental` | The capability is available for evaluation but is outside the production support contract. | Validate it independently and expect its compatibility boundary to change. |
 | `Partial` | A usable implementation exists, but an important mode, protocol pair, lifecycle path, or policy dimension is intentionally absent or restart-bound. | Read the boundary in the matrix and the linked reference before adopting it. Do not treat an adjacent supported mode as evidence that the omitted mode works. |
-| `Missing` | Impulse has no first-class implementation of the capability in v0.6. | Keep the concern in another component or choose a different product; configuration cannot enable it. |
+| `Missing` | Impulse has no first-class implementation of the capability in v0.7.0. | Keep the concern in another component or choose a different product; configuration cannot enable it. |
 
 A restriction is not automatically `Partial`. A capability is `Done` when its
 documented scope is complete—for example, downstream protocols are done even
@@ -45,13 +47,13 @@ for full support.
 
 ### Protocol, Routing, and Traffic Management
 
-| Capability | Status | v0.6 boundary |
+| Capability | Status | v0.7.0 boundary |
 | --- | --- | --- |
-| Native HTTP/3 ingress | `Done` | QUIC with Transport Layer Security (TLS) over UDP through the native listener. |
-| Bootstrap HTTP/1.1 and HTTP/2 ingress | `Done` | TLS over TCP through the compatibility listener; no cleartext ingress or h2c. |
+| HTTP/3 ingress | `Experimental` | QUIC with TLS over UDP through the independent HTTP/3 adapter. |
+| Pingora HTTP/1.1 and HTTP/2 ingress | `Done` | TLS over TCP; no cleartext ingress or h2c. |
 | HTTP/1.1 and HTTP/2 backends | `Done` | `http://` selects HTTP/1.1; `https://` or schemeless secure addresses select HTTP/2. Mixed pools are supported. |
 | Upstream HTTP/3 | `Missing` | Backends are not reached over HTTP/3. |
-| WebSocket and CONNECT | `Partial` | HTTP/1.1 bootstrap upgrade and HTTP/3 extended CONNECT paths exist, but support depends on the downstream/backend protocol pair and is not general forward proxying. |
+| WebSocket and CONNECT | `Partial` | Pingora HTTP/1.1 upgrade and HTTP/3 extended CONNECT paths exist, but support depends on the downstream/backend protocol pair and is not general forward proxying. |
 | Host, path-prefix, and method routing | `Done` | Exact/wildcard host, segment-aware prefix, normalized method, and deterministic precedence. |
 | Header, query, or cookie route matching | `Missing` | These inputs can be load-balancing/quota keys, but are not route matchers. |
 | Load-balancing strategies | `Done` | Round-robin, random, consistent-hash, least-connections, latency-aware, and sticky-CID. |
@@ -60,7 +62,7 @@ for full support.
 
 ### Resilience, Security, and Policy
 
-| Capability | Status | v0.6 boundary |
+| Capability | Status | v0.7.0 boundary |
 | --- | --- | --- |
 | Health and backend lifecycle | `Done` | Active/passive health, thresholds, cooldowns, DNS refresh, client rotation, and runtime inventory. |
 | Retry, retry budget, hedging, circuit breaking | `Done` | Implemented within the request replayability, body state, budget, and failure-class rules in the resilience reference. |
@@ -69,22 +71,22 @@ for full support.
 | API-key, JSON Web Token (JWT), JSON Web Key Set (JWKS), and external auth | `Done` | Per-upstream request authentication with the documented algorithms, claims, key sources, and external-decision contracts. |
 | Request-path RBAC/policy engine | `Partial` | Required scopes and roles are enforced for JWT claims; there is no generic policy-expression engine or provider chain. |
 | OpenID Connect (OIDC)/auth gateway | `Partial` | Discovery and token introspection are supported; interactive login, browser single sign-on (SSO), and session-cookie management are not. |
-| Downstream TLS/client authentication | `Done` | Default and exact Server Name Indication (SNI) identities plus optional/required client certificates on native QUIC and bootstrap TLS. |
+| Downstream TLS/client authentication | `Done` | Default and exact Server Name Indication (SNI) identities plus optional/required client certificates on Pingora and HTTP/3 ingress. |
 | Upstream TLS and client mutual TLS (mTLS) | `Done` | Certificate/hostname verification, custom certificate authority (CA) material, and optional client identity for secure backends. |
-| Web application firewall (WAF), content inspection, and extension filters | `Missing` | No WAF, malware/content inspection, Lua/WebAssembly (WASM) filter, or plugin model. |
+| Web application firewall (WAF), content inspection, and dynamic extensions | `Missing` | No WAF, malware/content inspection, or runtime-loaded Lua/WebAssembly extension API. Built-in policies use the compiled plugin runtime. |
 
 ### Configuration, Control, and Operations
 
-| Capability | Status | v0.6 boundary |
+| Capability | Status | v0.7.0 boundary |
 | --- | --- | --- |
 | Staged runtime generations | `Done` | Validate, preview, and activate operate on whole file-backed candidates; history and rollback manage retained generations. |
 | Restart-free configuration changes | `Partial` | Runtime-managed domains activate atomically; listener removal/bind changes and startup-owned logging sink/format, tracing, and control-plane thread settings still require restart. |
 | Dynamic route changes | `Partial` | Routes change through whole-generation activation; there is no per-route mutation API. |
 | Service discovery | `Partial` | Hostname-based Domain Name System (DNS) refresh is implemented; there is no xDS, Consul, Kubernetes-native, or general membership API. |
 | Control API security | `Done` | TLS, bearer tokens, mTLS identity, three fixed roles, source policy, connection bounds, and audit output. |
-| Metrics, logs, tracing, and runtime views | `Done` | Prometheus, plain/JSON logs, optional OpenTelemetry Protocol (OTLP) tracing, runtime snapshots, audit events, dashboards, alerts, and service-level objective (SLO) assets. |
+| Metrics, logs, tracing, and runtime views | `Done` | Prometheus, plain/JSON logs, optional OpenTelemetry Protocol (OTLP) tracing, runtime snapshots, and audit events. |
 | Debian/systemd packaging | `Done` | Packaging assets and host-service guidance are present. |
-| Container artifact | `Partial` | A production Dockerfile and Compose workflow are present; v0.6 has no registry-publication workflow or canonical public image reference. |
+| Container artifact | `Partial` | A production Dockerfile and Compose workflow are present; v0.7.0 has no registry-publication workflow or canonical public image reference. |
 | Production operations guidance | `Done` | Deployment guide, capacity guidance, observability operations, rotation workflow, and symptom-driven runbook are present. |
 
 ## Product Limitations
@@ -106,7 +108,8 @@ and the [Control API Reference](/docs/reference/control-api-reference).
 
 ### Protocol and Traffic Management
 
-- Impulse accepts HTTP/3 over QUIC and TLS bootstrap HTTP/1.1/HTTP/2; it does
+- Impulse accepts production HTTP/1.1/HTTP/2 through Pingora and experimental
+  HTTP/3 over QUIC; it does
   not accept cleartext HTTP/1.1 or h2c ingress.
 - Backends use HTTP/1.1 or HTTP/2, not HTTP/3.
 - Active QUIC connection migration, HTTP/3 server push, HTTP datagrams, and
@@ -150,44 +153,18 @@ and [Observability and Control Configuration](/docs/configuration/observability-
 ### Platform and Ecosystem
 
 - There is no Kubernetes operator, xDS/ADS control plane, Consul integration,
-  service-mesh mode, or plugin/extension ecosystem.
-- The repository can build a container, but the v0.6 release process does not
+  service-mesh mode, or dynamically loaded third-party extension ecosystem.
+- The repository can build a container, but the v0.7.0 release process does not
   publish an official registry image.
 - Production evidence is narrower than for mature incumbent proxies; validate
   the exact clients, backends, load profile, churn, and failure modes used by
   your deployment.
 
-## Current GA Blockers
+## Releases
 
-The following are blockers for an Impulse GA claim; they are not promises for a
-specific release date:
-
-1. **Protocol and parser assurance:** sustained fuzzing, deeper malformed-input
-   coverage, and broader interoperability testing across supported clients and
-   backend stacks.
-2. **Production evidence:** longer soak, load, churn, failover, upgrade, and
-   rollback validation across more independent production environments.
-3. **Configuration lifecycle closure:** either remove more restart-only gaps or
-   establish equally strong, well-exercised rolling procedures for every
-   startup-owned change; improve retained-generation and health-regression
-   recovery policy.
-4. **Runtime maintainability:** continue decomposing concentrated edge-runtime
-   ownership so critical-path changes have smaller review and failure domains.
-5. **Release discipline:** establish stable compatibility and upgrade policy,
-   reproducible artifact provenance, and a support boundary appropriate for a
-   GA release.
-
-Upstream HTTP/3, WAF functionality, a plugin ecosystem, service-mesh features,
-and Kubernetes-native control are product-scope choices, not automatic GA
-blockers. They remain missing unless the roadmap explicitly promotes them into
-the GA contract.
-
-## Roadmap and Releases
-
-- [Roadmap](/docs/roadmap) describes planned direction; it is not a current-support contract.
 - [Repository changelog](https://github.com/impulse-proxy/impulse/blob/master/CHANGELOG.md) records version-by-version behavior and compatibility notes.
 - [GitHub Releases](https://github.com/impulse-proxy/impulse/releases) provides tagged release notes and published artifacts.
-- [Production Deployment](/docs/deployment/production) defines the controlled-rollout and readiness workflow for the current beta.
+- [Production Deployment](/docs/deployment/production) defines the controlled-rollout and readiness workflow.
 
 ## Related Pages
 

@@ -1,8 +1,8 @@
 # Architecture Overview
 
-Impulse is an HTTP/3-first edge runtime. A native QUIC listener accepts HTTP/3
-over UDP, while a bootstrap listener on the same configured address and port
-accepts HTTP/1.1 and HTTP/2 over TCP/TLS. Both ingress adapters use the same
+Impulse is a reverse proxy built on Pingora for production HTTP/1.1 and HTTP/2
+ingress. An independent, experimental HTTP/3 adapter accepts QUIC traffic over
+UDP. Both ingress adapters use the same
 runtime generation, policy, routing, backend-selection, transport, and outcome
 contracts.
 
@@ -19,11 +19,11 @@ contracts.
 
 ```mermaid
 flowchart LR
-    h3["HTTP/3 client"] -->|"UDP, QUIC, TLS"| native["Native QUIC adapter"]
-    compat["HTTP/1.1 or HTTP/2 client"] -->|"TCP, TLS"| bootstrap["Bootstrap adapter"]
+    h3["HTTP/3 client"] -->|"UDP, QUIC, TLS"| h3ingress["Experimental HTTP/3 adapter"]
+    compat["HTTP/1.1 or HTTP/2 client"] -->|"TCP, TLS"| pingora["Pingora adapter"]
 
-    native --> pipeline["Shared request policy and routing"]
-    bootstrap --> pipeline
+    h3ingress --> pipeline["Shared request policy and routing"]
+    pingora --> pipeline
     pipeline --> selection["Upstream and backend selection"]
     selection --> bridge["Canonical request shaping"]
     bridge --> transport["H1 or H2 upstream transport"]
@@ -31,8 +31,8 @@ flowchart LR
     transport --> response["Response normalization and outcome recording"]
 
     control["Control API and background services"] -.-> runtime["Active runtime generation"]
-    runtime -.-> native
-    runtime -.-> bootstrap
+    runtime -.-> h3ingress
+    runtime -.-> pingora
     runtime -.-> pipeline
     runtime -.-> transport
 ```
@@ -43,64 +43,35 @@ runs health, Domain Name System (DNS), and certificate work, and coordinates
 drain or restart behavior.
 Control-plane services read the same active generation as request workers.
 
-## Native QUIC and Bootstrap Boundaries
+## Ingress Boundaries
 
-| Concern | Native QUIC listener | Bootstrap listener |
+| Concern | HTTP/3 ingress | Pingora ingress |
 | --- | --- | --- |
 | Downstream wire protocol | HTTP/3 over QUIC on UDP | HTTP/1.1 or HTTP/2 over TCP/TLS |
-| Ingress ownership | QUIC handshake, connection IDs, packets, H3 streams | TCP/TLS accept, Hyper request intake, compatibility parsing |
+| Ingress ownership | QUIC handshake, connection IDs, packets, and H3 streams | Pingora TCP/TLS accept and H1/H2 session handling |
 | Request policy | Shared | Shared |
 | Routing and backend selection | Shared | Shared |
 | Upstream transport | Shared H1/H2 façade | Shared H1/H2 façade |
 | Response egress | H3 stream writes | HTTP/1.1 or HTTP/2 response writes |
 | Upgrade behavior | No HTTP/1.1-style upgrade semantics | HTTP/1.1 WebSocket/upgrade handling where supported |
 
-The bootstrap listener is a compatibility adapter, not a second policy engine.
+Pingora ingress is the production H1/H2 adapter, not a second policy engine.
 Protocol-specific parsing, connection management, and response writeback remain
 local to each adapter; policy meaning and backend execution should not diverge.
 
 ## Workspace Ownership
 
-The current Rust workspace contains these crates:
-
-| Crate | Path | Architectural responsibility |
-| --- | --- | --- |
-| `impulse` | `impulse/` | CLI, startup sequencing, listener-group supervision, signals, drain, and process exit |
-| `impulse-config` | `crates/config/` | YAML model, parsing, validation, secret resolution, and normalized runtime configuration |
-| `impulse-edge` | `crates/edge/` | Ingress adapters, request orchestration, routing, admission, resilience, runtime generations, backend lifecycle, metrics, and watchdog |
-| `impulse-bridge` | `crates/bridge/` | Canonical upstream request construction, header policy, response normalization, and upgrade helpers |
-| `impulse-transport` | `crates/transport/` | Runtime-selected HTTP/1.1 or HTTP/2 backend execution, connection reuse, timeouts, DNS-aware connection establishment, and client rotation |
-| `impulse-lb` | `crates/lb/` | Balancing algorithms, upstream pool selection, health flags, and per-pool request accounting |
-| `impulse-utils` | `crates/utils/` | Shared TLS and logging utilities |
-| `impulse-errors` | `crates/errors/` | Cross-crate error and retry/hedge classification types |
-
-Crate boundaries are intentional: `edge` decides whether and where to send a
-request; `bridge` shapes it; `transport` decides how to execute it; `lb`
-provides selection and accounting primitives.
-
-## Edge Runtime Boundaries
-
-Within `impulse-edge`:
-
-- `quic_listener` owns native and bootstrap adapter mechanics, worker wiring,
-  forwarding orchestration, and control-service integration.
-- `request_pipeline` provides protocol-neutral route and selected-policy
-  contracts used by both adapters.
-- `routing` owns the route index and matching decisions.
-- `resilience` and `quic_listener::admission` own admission and protection
-  policy.
-- `runtime` owns published generations, request state/guardrails/outcomes,
-  backend lifecycle, TLS inventory, shared services, and task ownership.
-- `metrics`, `observability`, and `watchdog` own their process-wide operational
-  contracts.
-
-Listener code may orchestrate these services, but should not reimplement their
-policy or durable state.
+Protocol adapters live in `impulse-pingora-ingress` and
+`impulse-http3-ingress`. `impulse-edge` owns shared request execution;
+`impulse-plugins` and `impulse-policy` own compiled policy; `impulse-runtime`
+owns generation lifecycle; and `impulse-operations` owns administrative
+services. Bridge, transport, and load-balancing crates retain their narrow data
+plane responsibilities.
 
 ## State and Concurrency
 
-The binary starts one managed listener group per configured listener. Native
-QUIC workers use UDP sockets and may use packet shards; bootstrap accepts TCP
+The binary starts one managed listener group per configured listener. HTTP/3
+workers use UDP sockets and may use packet shards; Pingora accepts TCP
 traffic for the same listener identity. Backend I/O and control work run on
 Tokio runtimes.
 
@@ -112,7 +83,7 @@ and process services have explicit generation or process ownership described in
 
 ## Architectural Rules
 
-- Keep ingress-specific wire mechanics in the native or bootstrap adapter.
+- Keep ingress-specific wire mechanics in the Pingora or HTTP/3 adapter.
 - Keep request policy and outcome meaning shared across both adapters.
 - Do not infer upstream protocol in `edge`; consume normalized config and the
   transport façade.

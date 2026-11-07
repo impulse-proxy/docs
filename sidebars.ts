@@ -87,14 +87,13 @@ const sidebars: SidebarsConfig = {
       link: {
         type: 'generated-index',
         title: 'Reference',
-        description: 'Look up Control API behavior, metrics, product status, and future direction.',
+        description: 'Look up Control API behavior, metrics, and product status.',
         slug: '/reference',
       },
       items: [
         'reference/control-api-reference',
         'reference/metrics-reference',
         'reference/status-and-limitations',
-        'roadmap',
       ],
     },
     'development/contributing',

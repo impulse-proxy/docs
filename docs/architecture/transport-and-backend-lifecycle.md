@@ -25,12 +25,12 @@ HTTP/3.
 | Concern | Owner |
 | --- | --- |
 | Parse and normalize endpoint scheme, authority, port, and transport kind | `impulse-config` |
-| Match a request to an upstream | `impulse-edge::routing` through the shared request pipeline |
+| Match a request to an upstream | `impulse-edge` through the shared request service |
 | Select an eligible backend and maintain pool accounting | `impulse-lb` with edge forwarding orchestration |
 | Build the protocol-appropriate upstream request and normalize its response | `impulse-bridge` |
 | Execute HTTP/1.1 or HTTP/2, reuse connections, apply transport timeouts, and rotate clients | `impulse-transport` |
 | Coordinate resolution, health, membership, request feedback, and operator snapshots | `impulse-edge::runtime::backend` |
-| Schedule active checks and Domain Name System (DNS) refresh work | `impulse-edge::quic_listener` control/background services |
+| Schedule active checks and Domain Name System (DNS) refresh work | Generation-owned edge runtime services |
 
 Selection does not choose the wire implementation. It returns a backend;
 transport consumes the normalized transport kind for that backend.
@@ -49,7 +49,7 @@ Transport owns:
 - DNS-aware connection establishment
 - backend-client rotation after effective address changes
 - mapping protocol/pool failures into transport-facing errors
-- HTTP/1.1 upgrade execution for a compatible bootstrap tunnel
+- HTTP/1.1 upgrade execution for a compatible Pingora tunnel
 
 Edge retains request deadlines, admission, circuit/retry/hedge decisions,
 alternate backend selection, body streaming guardrails, downstream writeback,
@@ -70,7 +70,7 @@ flowchart LR
 ```
 
 H1 and H2 are intentionally not identical internally. Their connection and
-pool differences remain behind the façade so native and bootstrap forwarding
+pool differences remain behind the façade so Pingora and HTTP/3 forwarding
 do not branch on protocol mechanics.
 
 ## Backend Lifecycle Model

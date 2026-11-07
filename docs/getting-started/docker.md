@@ -4,9 +4,9 @@ This page answers one question: **how do I run the Impulse container?**
 
 ## Image Availability
 
-The Impulse v0.6 repository does not define a registry-publication
+The Impulse v0.7.0 repository does not define a registry-publication
 workflow or a public image reference. Do not guess a Docker Hub or GHCR image
-name: an image with the same project name may be unrelated. The supported v0.6
+name: an image with the same project name may be unrelated. The supported v0.7.0
 container artifact is the production Dockerfile under `packaging/docker/`,
 which produces the local image `impulse:packaging`.
 
@@ -71,8 +71,8 @@ docker run --rm \
   impulse:packaging
 ```
 
-Publishing both protocols is intentional: UDP serves the native QUIC listener,
-while TCP serves the bootstrap HTTP/1.1 and HTTP/2 listener on the same port.
+Publishing both protocols is intentional: TCP serves production HTTP/1.1 and
+HTTP/2 through Pingora, while UDP serves experimental HTTP/3 on the same port.
 The packaged configuration disables the optional metrics and Control API
 listeners, so ports `9901` and `9902` are not published.
 

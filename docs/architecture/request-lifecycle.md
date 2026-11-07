@@ -1,7 +1,7 @@
 # Request Lifecycle
 
-This page describes the current request path shared by the native QUIC and
-bootstrap ingress adapters. It focuses on decision ownership rather than wire
+This page describes the request path shared by the Pingora and experimental
+HTTP/3 ingress adapters. It focuses on decision ownership rather than wire
 or source-level detail.
 
 ## Flow
@@ -29,24 +29,24 @@ selection accounting is finalized by the outcome path.
 
 | Concern | Owner | Boundary |
 | --- | --- | --- |
-| Downstream parsing and wire validation | `impulse-edge::quic_listener` native or bootstrap adapter | Produces normalized method, path, authority, headers, body mode, peer identity, and timing context |
-| Shared protocol limits and body guardrails | `impulse-edge::runtime::connection` and resilience policy | Returns typed allow, reject, timeout, and size-limit decisions; adapters serialize them |
-| Route resolution | `impulse-edge::request_pipeline` over `edge::routing` | Matches method, path, and authority to one upstream |
+| Downstream parsing and wire validation | `impulse-pingora-ingress` or `impulse-http3-ingress` | Produces normalized method, path, authority, headers, body mode, peer identity, and timing context |
+| Shared protocol limits and body guardrails | `impulse-edge` | Returns typed allow, reject, timeout, and size-limit decisions; adapters serialize them |
+| Route resolution | `impulse-edge` | Matches method, path, and authority to one upstream |
 | Backend selection | Edge forwarding service using `impulse-lb` pools | Selects an eligible backend and starts per-pool accounting |
-| Admission and authentication | `quic_listener::admission`, `edge::resilience`, and shared request-policy services | Evaluates local auth, rate limits, brownout, external auth, quota, and inflight protection in their defined phases |
+| Admission and authentication | `impulse-plugins`, `impulse-policy`, and edge core admission | Evaluates compiled auth and rate policy plus mandatory overload protection in their defined phases |
 | Request construction and response normalization | `impulse-bridge` | Applies host/forwarded-header policy and hides protocol-specific H1/H2 request builders |
 | Retry and hedge orchestration | `impulse-edge` forwarding | Decides whether another attempt is allowed and selects an alternate backend |
 | Backend protocol execution | `impulse-transport` | Executes the chosen backend as HTTP/1.1 or HTTP/2 behind one façade |
-| Terminal outcome and backend feedback | `impulse-edge::runtime::connection::outcome` with adapter observation glue | Records canonical route/backend results and applies typed lifecycle feedback |
+| Terminal outcome and backend feedback | `impulse-edge` with `impulse-observability` recording | Records canonical route/backend results and applies typed lifecycle feedback |
 
 ## 1. Ingress Intake and Validation
 
-The native adapter owns UDP, QUIC/TLS, HTTP/3 connection and stream state. The
-bootstrap adapter owns TCP/TLS, HTTP/1.1 or HTTP/2 request intake, and
+The HTTP/3 adapter owns UDP, QUIC/TLS, HTTP/3 connection and stream state. The
+Pingora adapter owns TCP/TLS, HTTP/1.1 or HTTP/2 request intake, and
 HTTP/1.1-specific upgrade detection.
 
 Each adapter validates its wire contract and produces the HTTP semantics needed
-by shared services. Connection, stream, and Hyper objects remain adapter-local;
+by shared services. Connection, stream, and Pingora session objects remain adapter-local;
 they are not shared request-policy types.
 
 ## 2. Route Resolution and Backend Selection
@@ -68,7 +68,7 @@ authorization runs next when configured. Post-auth admission applies quota,
 route/global/upstream/backend inflight protection, queueing, circuit state, and
 adaptive admission as applicable.
 
-Admission services return typed decisions. Native and bootstrap adapters retain
+Admission services return typed decisions. Pingora and HTTP/3 adapters retain
 only response serialization and protocol lifecycle duties; they should not
 invent different policy semantics.
 
@@ -107,9 +107,9 @@ size, prebuffer, idle, and total-streaming limits.
 
 The adapters then diverge only for writeback:
 
-- native QUIC emits headers, chunks, trailers, and terminal state on the H3
+- HTTP/3 emits headers, chunks, trailers, and terminal state on the H3
   stream
-- bootstrap returns an HTTP/1.1 or HTTP/2 response and handles an accepted
+- Pingora returns an HTTP/1.1 or HTTP/2 response and handles an accepted
   HTTP/1.1 upgrade tunnel where applicable
 
 ## 7. Outcome Recording
@@ -125,7 +125,7 @@ what the terminal result means.
 
 ## Invariants
 
-- Equivalent native and bootstrap requests receive the same route and policy
+- Equivalent Pingora and HTTP/3 requests receive the same route and policy
   decision unless the downstream protocol itself requires different behavior.
 - A route resolves to an upstream before that upstream's policy is evaluated.
 - Backend selection and transport execution remain separate decisions.

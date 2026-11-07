@@ -1,6 +1,6 @@
 # Production Deployment
 
-Impulse v0.6 is beta software intended for controlled production rollout. This
+Impulse v0.7.0 is pre-GA software intended for controlled production rollout. This
 guide owns the production host, service, validation, rollout, and readiness
 workflow. Exact maturity, capability status, and product boundaries remain in
 [Status and Limitations](/docs/reference/status-and-limitations).
@@ -34,8 +34,8 @@ The recommended production shape is an active-active pool behind a traffic
 manager that supports both TCP and UDP on the listener port. Each node should
 have:
 
-- one public listener exposed over UDP for HTTP/3 and TCP for bootstrap
-  HTTP/1.1/HTTP/2
+- one public listener exposed over TCP for production HTTP/1.1/HTTP/2 and,
+  when enabled, UDP for experimental HTTP/3
 - a Control API bound to loopback or an isolated administration network
 - a metrics endpoint reachable only by the monitoring path
 - centralized logs and durable Control API audit output
@@ -281,7 +281,7 @@ semantics.
 
 ### After Deployment
 
-Verify the active generation and watch the shipped dashboards and alerts for
+Verify the active generation and watch your dashboards and alerts for
 the complete observation window. If health, readiness, latency, error rate,
 overload, quota, auth, backend health, TLS, ingress drops, or resource use
 crosses an acceptance threshold, stop expansion and roll back.

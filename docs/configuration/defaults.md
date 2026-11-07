@@ -49,7 +49,7 @@ Every effective listener must still configure a complete TLS identity through
 | --- | --- | --- |
 | `version` | `1` | Current schema version |
 | `listeners` | `[]` | Optional multi-listener override |
-| `load_balancing` | `null` | Accepted and validated, but not applied as a v0.6 runtime fallback |
+| `load_balancing` | `null` | Accepted and validated, but not applied as a v0.7.0 runtime fallback |
 | `upstream_tls` | object defaults | See [Upstream TLS Defaults](#upstream-tls-defaults) |
 | `secrets` | object defaults | No default provider and an empty provider map |
 | `log` | object defaults | See [Log Defaults](#log-defaults) |

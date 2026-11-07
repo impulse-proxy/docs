@@ -1,6 +1,6 @@
 # Configuration Reference
 
-This page is the authority for the Impulse v0.6 configuration schema, allowed
+This page is the authority for the Impulse v0.7.0 configuration schema, allowed
 values, validation rules, and runtime semantics.
 
 Use [Configuration Defaults](/docs/configuration/defaults) for the default
@@ -15,7 +15,7 @@ deployment, rollout, and incident guidance is in
 ## Scope
 
 This page documents the accepted YAML keys, defaults, validation constraints,
-and runtime meaning of Impulse v0.6 configuration. Unknown fields are rejected.
+and runtime meaning of Impulse v0.7.0 configuration. Unknown fields are rejected.
 For the complete default inventory, see
 [Configuration Defaults](/docs/configuration/defaults). For deployment-shaped
 files, see [Configuration Examples](/docs/configuration/examples).
@@ -27,11 +27,11 @@ is omitted, it attempts `/etc/impulse/config.yaml`.
 
 | **Field** | **Type** | **Required** | **Default** | **Meaning** |
 | --------- | -------- | ------------ | ----------- | ----------- |
-| `version` | integer | No | `1` | Configuration schema version. Impulse v0.6 accepts only version `1`. |
+| `version` | integer | No | `1` | Configuration schema version. Impulse v0.7.0 accepts only version `1`. |
 | `listen` | object | Yes | — | Single listener definition. The key is required even when `listeners` is used. |
 | `listeners` | array of objects | No | `[]` | Effective listener set when non-empty; otherwise `listen` is used. |
 | `upstream` | map of objects | Yes | — | Named upstream pools. The map must contain at least one entry. |
-| `load_balancing` | object or `null` | No | `null` | Accepted and validated, but not applied as a v0.6 runtime fallback; configure each upstream instead. |
+| `load_balancing` | object or `null` | No | `null` | Accepted and validated, but not applied as a v0.7.0 runtime fallback; configure each upstream instead. |
 | `upstream_tls` | object | No | `{}` | Global backend TLS policy inherited by upstreams that omit `tls`. See [TLS Configuration](/docs/configuration/tls#upstream-backend-tls). |
 | `secrets` | object | No | `{}` | Literal and file-backed secret-provider configuration. See [Authentication and Secrets](/docs/configuration/authentication-and-secrets). |
 | `log` | object | No | `{}` | Logging level and output configuration. |
@@ -46,7 +46,7 @@ more entries, those entries are the effective listeners and the values inside
 pairs must be unique.
 
 Per-upstream `tls` replaces the global `upstream_tls` policy for that upstream.
-The top-level `load_balancing` field is accepted and validated, but v0.6 does
+The top-level `load_balancing` field is accepted and validated, but v0.7.0 does
 not apply it to upstreams. An upstream that omits its own `load_balancing` uses
 the per-upstream default, `round-robin`.
 
@@ -72,7 +72,7 @@ upstream:
 ## Listener Configuration
 
 The `listen` object and every `listeners[]` entry use the same schema. Each
-effective listener creates a native QUIC listener and its bootstrap listener.
+effective listener creates a HTTP/3 ingress and its Pingora ingress.
 
 | **Field** | **Type** | **Required** | **Default** | **Meaning** |
 | --------- | -------- | ------------ | ----------- | ----------- |
@@ -81,8 +81,8 @@ effective listener creates a native QUIC listener and its bootstrap listener.
 | `port` | integer | No | `9889` | Bind port in the range `1`–`65535`. |
 | `tls` | object | No | `{}` | Listener TLS identities and optional client authentication. A valid effective listener must define a complete TLS identity. |
 
-The bootstrap listener accepts HTTP/1.1 and HTTP/2 traffic and advertises the
-native QUIC listener with `Alt-Svc`. Both listener paths use the same routes,
+The Pingora ingress accepts HTTP/1.1 and HTTP/2 traffic and advertises the
+HTTP/3 ingress with `Alt-Svc`. Both listener paths use the same routes,
 upstreams, load balancing, and backend health state.
 
 ### Listener TLS

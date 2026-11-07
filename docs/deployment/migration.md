@@ -30,8 +30,8 @@ Before either pattern:
 ## Pattern A: Impulse as HTTP/3 Ingress in Front of Your Existing Proxy
 
 The existing proxy remains active and owns its current routing. Impulse accepts
-HTTP/3 on the native QUIC listener and HTTP/1.1 or HTTP/2 on the bootstrap
-listener, then forwards every request to the existing proxy.
+HTTP/1.1 or HTTP/2 through Pingora and experimental HTTP/3 through the QUIC
+adapter, then forwards every request to the existing proxy.
 
 ### 1. Leave the Existing Proxy Running
 
@@ -39,8 +39,8 @@ Do not change its configuration or listener ports.
 
 ### 2. Configure Impulse
 
-One Impulse listener uses the same address and port for UDP/QUIC and TCP
-bootstrap traffic. The following example sends every route to an existing
+One Impulse listener uses the same address and port for TCP and UDP/QUIC
+traffic. The following example sends every route to an existing
 proxy on `127.0.0.1:443`:
 
 ```yaml
@@ -197,7 +197,7 @@ fallback only after it receives no traffic.
 
 ## Features That Do Not Translate Directly
 
-These are current product boundaries, not roadmap statements:
+These are current product boundaries:
 
 - **Dynamic modules and compression filters:** Impulse has no module system or
   body-processing pipeline. Keep a WAF or compression layer elsewhere when a

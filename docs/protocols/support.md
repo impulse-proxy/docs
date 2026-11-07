@@ -1,6 +1,6 @@
 # Protocol Support
 
-This page describes the protocol behavior implemented by Impulse v0.6. It is
+This page describes the protocol behavior implemented by Impulse v0.7.0. It is
 a support contract, not a QUIC or HTTP tutorial. For protocol definitions, use
 the RFC links at the end of the page.
 
@@ -11,8 +11,8 @@ port number:
 
 | Ingress | Network and security | HTTP version | Purpose |
 | --- | --- | --- | --- |
-| Native QUIC listener | UDP, QUIC, and TLS 1.3 | HTTP/3 | Primary data path |
-| Bootstrap listener | TCP and TLS | HTTP/2 or HTTP/1.1 | Compatibility and HTTP/3 discovery path |
+| Pingora ingress | TCP and TLS | HTTP/2 or HTTP/1.1 | Production data path |
+| HTTP/3 ingress | UDP, QUIC, and TLS 1.3 | HTTP/3 | Experimental data path |
 
 Both paths use the same active runtime generation, routing, admission,
 backend-selection, and upstream transport services. Only connection handling,
@@ -24,17 +24,16 @@ network policy should allow both UDP and TCP on the listener port.
 
 ## Application-Layer Protocol Negotiation (ALPN) and HTTP/3 Discovery
 
-The native listener advertises `h3`. A client must negotiate HTTP/3 over QUIC;
+The HTTP/3 ingress advertises `h3`. A client must negotiate HTTP/3 over QUIC;
 arbitrary QUIC application protocols are not accepted.
 
-The bootstrap TLS listener advertises ALPN in this preference order:
+The Pingora TLS ingress advertises ALPN in this preference order:
 
 1. `h2`
 2. `http/1.1`
 
-If `h2` is negotiated, the bootstrap connection uses HTTP/2. Otherwise, the
-accepted bootstrap request path uses HTTP/1.1. Bootstrap responses advertise
-the native listener with:
+If `h2` is negotiated, Pingora uses HTTP/2. Otherwise, it uses HTTP/1.1.
+Responses advertise the experimental HTTP/3 ingress with:
 
 ```http
 Alt-Svc: h3=":<listener-port>"; ma=86400
@@ -47,7 +46,7 @@ the current request or guarantee that a client switches protocols.
 
 The configurable limits below are documented fully in the
 [Configuration Reference](/docs/configuration/reference). Values shown are the
-v0.6 defaults.
+v0.7.0 defaults.
 
 | Configuration field | Default | Effect |
 | --- | ---: | --- |
@@ -111,8 +110,8 @@ Support is deliberately narrower than a general-purpose tunneling proxy:
 | --- | --- |
 | HTTP/3 ordinary CONNECT | Validated against CONNECT policy and routed through the selected upstream; treat it as constrained support, not arbitrary forward-proxy support |
 | HTTP/3 WebSocket | Requires extended CONNECT with `:protocol = websocket`; legacy `Upgrade` headers are rejected on HTTP/3 |
-| Bootstrap HTTP/1.1 WebSocket | Recognizes a `GET` request with `Connection: upgrade` and `Upgrade: websocket` |
-| Bootstrap HTTP/2 WebSocket | Not handled as an HTTP/1.1 upgrade path |
+| Pingora HTTP/1.1 WebSocket | Recognizes a `GET` request with `Connection: upgrade` and `Upgrade: websocket` |
+| Pingora HTTP/2 WebSocket | Not handled as an HTTP/1.1 upgrade path |
 
 The dedicated HTTP/1.1 WebSocket tunnel path requires an explicit
 `http://` backend. HTTP/3 extended CONNECT can be shaped for an HTTP/2 backend,
@@ -146,7 +145,7 @@ transport façade. Impulse does not forward to backends over HTTP/3.
 - HTTP datagrams and WebTransport are not implemented.
 - HTTP/3 rejects HTTP/1.1-style `Upgrade` requests; WebSocket uses extended
   CONNECT instead.
-- Bootstrap HTTP/2 does not provide the bootstrap HTTP/1.1 WebSocket upgrade
+- Pingora HTTP/2 does not provide the HTTP/1.1 WebSocket upgrade
   path.
 - General CONNECT and WebSocket support remains protocol-pair dependent rather
   than a universal tunneling surface.

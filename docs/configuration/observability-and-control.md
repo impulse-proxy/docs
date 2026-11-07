@@ -1,6 +1,6 @@
 # Observability and Control Configuration
 
-This page is the focused Impulse v0.6 schema reference for metrics, tracing,
+This page is the focused Impulse v0.7.0 schema reference for metrics, tracing,
 the Control API, and process privilege dropping. It documents configuration
 fields and validation rules under the canonical
 [Configuration Reference](/docs/configuration/reference). For HTTP methods,

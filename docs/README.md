@@ -5,7 +5,9 @@ slug: /
 sidebar_position: 1
 ---
 
-Impulse is an HTTP/3-first edge proxy that applies one routing, resilience, and operations model across HTTP/3, HTTP/2, and HTTP/1.1 ingress.
+Impulse is a reverse proxy built on Pingora for production HTTP/1.1 and HTTP/2
+traffic. Its experimental HTTP/3 ingress uses the same routing, policy, and
+operations model.
 
 ## Choose Your Path
 
@@ -20,9 +22,9 @@ Impulse is an HTTP/3-first edge proxy that applies one routing, resilience, and 
 
 | Field | Current value |
 | --- | --- |
-| Documentation baseline | Impulse v0.6 |
-| Maturity | Beta |
+| Documentation baseline | Impulse v0.7.0 |
+| Maturity | Pre-GA |
 
-Impulse v0.6 is intended for controlled production rollout, not an unrestricted
-general-availability (GA) claim. Review [Status and Limitations](/docs/reference/status-and-limitations)
-before choosing a deployment shape.
+Impulse v0.7.0 is intended for controlled production rollout. HTTP/3 remains
+experimental. Review [Status and Limitations](/docs/reference/status-and-limitations)
+before deployment.
