@@ -6,7 +6,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'Impulse',
-  tagline: 'A modern edge runtime for high-trust APIs',
+  tagline: 'Open-source reverse proxy and edge runtime',
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
     v4: true, // Improve compatibility with the upcoming Docusaurus v4
@@ -73,18 +73,60 @@ const config: Config = {
           label: 'Docs',
         },
         {
+          to: '/architecture/overview',
+          label: 'Architecture',
+          position: 'left',
+        },
+        {
           href: 'https://impulse-proxy.github.io/',
           label: 'Home',
           position: 'right',
-          className: 'navbar-link--text-only',
+          className: 'navbar-link--quiet',
         },
         {
           href: 'https://github.com/impulse-proxy/impulse',
           label: 'GitHub',
           position: 'right',
+          className: 'navbar-link--quiet',
+        },
+        {
+          to: '/getting-started/quickstart',
+          label: 'Quickstart',
+          position: 'right',
           className: 'navbar-link--text-only',
         },
       ],
+    },
+    footer: {
+      style: 'dark',
+      links: [
+        {
+          title: 'Explore',
+          items: [
+            {label: 'Documentation', to: '/'},
+            {label: 'Architecture', to: '/architecture/overview'},
+            {label: 'Quickstart', to: '/getting-started/quickstart'},
+            {label: 'Production deployment', to: '/deployment/production'},
+          ],
+        },
+        {
+          title: 'Reference',
+          items: [
+            {label: 'Feature matrix', to: '/reference/status-and-limitations'},
+            {label: 'Plugin build profiles', to: '/configuration/plugin-builds'},
+            {label: 'Security model', to: '/concepts/security-model'},
+          ],
+        },
+        {
+          title: 'Project',
+          items: [
+            {label: 'GitHub', href: 'https://github.com/impulse-proxy/impulse'},
+            {label: 'Releases', href: 'https://github.com/impulse-proxy/impulse/releases'},
+            {label: 'Apache 2.0', href: 'https://github.com/impulse-proxy/impulse/blob/master/LICENSE.md'},
+          ],
+        },
+      ],
+      copyright: 'Open source under the Apache License 2.0. Production H1/H2 · Experimental H3.',
     },
     prism: {
       theme: prismThemes.github,
