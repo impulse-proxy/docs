@@ -98,7 +98,9 @@ they do not own bodies, retries, downstream writes, or request completion.
 
 Cargo features determine which plugin kinds exist in a binary. Startup and
 reload reject configuration that requires an unavailable kind before the
-candidate generation is published.
+candidate generation is published. See
+[Plugin Build Profiles](/docs/configuration/plugin-builds) for exact features,
+build commands, and runtime status fields.
 
 ## Runtime Generations
 

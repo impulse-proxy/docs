@@ -32,6 +32,7 @@ const sidebars: SidebarsConfig = {
         'configuration/reference',
         'configuration/examples',
         'configuration/defaults',
+        'configuration/plugin-builds',
         'configuration/routing-and-upstreams',
         'user-guide/load-balancing',
         'configuration/tls',

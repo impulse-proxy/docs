@@ -164,6 +164,7 @@ These apply when a backend provides a `health_check` object and omits individual
 | `performance.backend_dns_refresh_enabled` | `false` | Hostname backend refresh off by default |
 | `performance.backend_dns_refresh_interval_ms` | `30000` | DNS refresh interval |
 | `performance.per_backend_inflight_limit` | `64` | Per-backend concurrency cap |
+| `performance.connection_rate_limit_enabled` | `true` | Compile a connection-rate plugin into the active generation when available |
 | `performance.new_connections_per_sec` | `2000` | Token-bucket steady refill rate |
 | `performance.new_connections_burst` | `500` | Token-bucket burst size |
 | `performance.max_active_connections` | `20000` | Hard active connection cap |

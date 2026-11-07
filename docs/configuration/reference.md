@@ -295,6 +295,7 @@ Controls resource limits, tuning knobs, and connection-flood protection. All fie
 | `h2_pool_idle_timeout_ms` | integer | No | `90000` | How long an idle H2 connection is kept before being closed (ms) |
 | `backend_dns_refresh_enabled` | bool | No | `false` | Enable periodic DNS refresh for hostname-based upstream backends |
 | `backend_dns_refresh_interval_ms` | integer | No | `30000` | Control-plane DNS refresh interval for hostname-based upstream backends (ms) |
+| `connection_rate_limit_enabled` | bool | No | `true` | Enable the compiled connection-rate plugin; startup or reload is rejected if the binary does not contain it |
 | `new_connections_per_sec` | integer | No | `2000` | Steady-state rate at which new QUIC connections are accepted (token-bucket refill, connections/sec) |
 | `new_connections_burst` | integer | No | `500` | Burst capacity above the steady-state rate; the bucket starts full so the first burst of legitimate connections always succeeds |
 | `max_active_connections` | integer | No | `20000` | Hard cap on active QUIC connections per worker; unknown `Initial` packets are dropped once this cap is reached |
@@ -311,17 +312,18 @@ Controls resource limits, tuning knobs, and connection-flood protection. All fie
 
 ### Connection Flood Protection
 
-`new_connections_per_sec` and `new_connections_burst` implement a token-bucket
-rate limiter on new QUIC connection accepts. The bucket starts full and permits
-the configured initial burst. The limit does not affect packets for existing
-connections; it gates only unknown `Initial` packets that create connection
-state.
+When `connection_rate_limit_enabled` is `true`, `new_connections_per_sec` and
+`new_connections_burst` configure the token bucket for new connections. The
+bucket starts full and permits the configured initial burst. When it is
+`false`, the connection-rate plugin is omitted and those two values are not
+validated.
 
 `max_active_connections` separately limits total connection state, including
 when the token bucket permits a temporary burst.
 
 ```yaml
 performance:
+  connection_rate_limit_enabled: true
   new_connections_per_sec: 2000   # refill rate: 2 k new conns/sec
   new_connections_burst: 500      # allow a burst of up to 500 above the rate
   max_active_connections: 20000   # hard ceiling for concurrently tracked connections
@@ -510,6 +512,7 @@ for the canonical routed backend-pool example.
 
 ## Related Pages
 
+- [Plugin Build Profiles](/docs/configuration/plugin-builds)
 - [Configuration Defaults](/docs/configuration/defaults)
 - [Configuration Examples](/docs/configuration/examples)
 - [Routing and Upstreams](/docs/configuration/routing-and-upstreams)
