@@ -117,7 +117,7 @@ production H1/H2 path.
 Replace the development certificate, review the complete configuration, and
 test activation, rollback, draining, backend failure, and monitoring for your
 deployment. Start with [Production Deployment](/docs/deployment/production)
-and [Status and Limitations](/docs/reference/status-and-limitations).
+and the [Feature and Limitation Matrix](/docs/reference/status-and-limitations).
 
 ## Related Pages
 

@@ -151,7 +151,7 @@ transport façade. Impulse does not forward to backends over HTTP/3.
   than a universal tunneling surface.
 
 For broader product status, see
-[Status and Limitations](/docs/reference/status-and-limitations).
+[Feature and Limitation Matrix](/docs/reference/status-and-limitations).
 
 ## Standards
 

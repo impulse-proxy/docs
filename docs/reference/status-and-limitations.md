@@ -12,8 +12,6 @@ HTTP/2 are the production ingress path; HTTP/3 remains experimental.
 | **Build-selected** | Available only when its Cargo feature is compiled into the binary. |
 | **Not available** | No first-class v0.7 implementation. |
 
-## Feature and Limitation Matrix
-
 | Area | Capability | Status | v0.7.0 boundary |
 | --- | --- | --- | --- |
 | Ingress | HTTP/1.1 and HTTP/2 | **Supported** | Pingora over TLS/TCP. Cleartext HTTP/1.1 and h2c ingress are not available. |

@@ -282,5 +282,5 @@ unchanged.
 | Compiled plugin availability | [Plugin Build Profiles](/docs/configuration/plugin-builds) |
 | Capacity and performance settings | [Sizing and Capacity](/docs/operations/sizing-and-capacity) |
 
-For complete deployment-shaped files, use
-[Configuration Examples](/docs/configuration/examples).
+For production-shaped minimal and full configurations, use
+[Production Deployment](/docs/deployment/production#deployment-profiles).

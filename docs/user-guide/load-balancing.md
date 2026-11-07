@@ -56,6 +56,6 @@ instead of copying separate backend lists for each strategy.
 ## Related Pages
 
 - [Routing and Upstreams](/docs/configuration/routing-and-upstreams)
-- [Configuration Examples](/docs/configuration/examples)
+- [Configuration Reference](/docs/configuration/reference#load-balancing-discovery-and-health-checks)
 - [Metrics Reference](/docs/reference/metrics-reference)
 - [Transport and Backend Lifecycle](/docs/architecture/transport-and-backend-lifecycle)

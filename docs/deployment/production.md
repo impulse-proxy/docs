@@ -340,7 +340,7 @@ pool. Expand only while predeclared thresholds remain healthy.
 
 ## Related Pages
 
-- [Status and Limitations](/docs/reference/status-and-limitations)
+- [Feature and Limitation Matrix](/docs/reference/status-and-limitations)
 - [Configuration Reference](/docs/configuration/reference)
 - [Reload and Drain](/docs/operations/reload-and-drain)
 - [Secret and Certificate Rotation](/docs/operations/secret-and-cert-rotation)

@@ -6,9 +6,8 @@ omitted. Use it to answer two questions:
 - which fields may be omitted from the YAML
 - what value or behavior Impulse applies when they are omitted
 
-Use [Configuration Reference](/docs/configuration/reference) for field semantics
-and validation rules. Use
-[Configuration Examples](/docs/configuration/examples) for complete examples.
+Use [Configuration Reference](/docs/configuration/reference) for concise
+examples and links to the page that owns each field's semantics and validation.
 
 ## How Defaults Work
 
@@ -356,5 +355,4 @@ These apply when a backend provides a `health_check` object and omits individual
 ## Related Pages
 
 - [Configuration Reference](/docs/configuration/reference)
-- [Configuration Examples](/docs/configuration/examples)
 - [Production Checklist](/docs/deployment/production#production-checklist)

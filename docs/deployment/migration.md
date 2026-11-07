@@ -9,7 +9,7 @@ incremental replacement pattern.
 Impulse terminates HTTP/3 and sends requests to HTTP/2 (`https://`) or
 HTTP/1.1 (`http://`) backends. It supports named upstream pools, host and path
 routing, health checks, scoped rate limits, and request authentication. Review
-[Status and Limitations](/docs/reference/status-and-limitations) before
+[Feature and Limitation Matrix](/docs/reference/status-and-limitations) before
 migrating workloads that depend on transformation filters, a service-mesh
 control plane, or a web application firewall (WAF).
 
@@ -188,10 +188,10 @@ fallback only after it receives no traffic.
 | `upstream mypool { server 192.0.2.20:8080; }` | A `mypool:` key under the `upstream:` map with a `backends:` list containing `id:` and `address: "http://192.0.2.20:8080"` |
 | `proxy_pass http://mypool` | The `mypool:` pool's own `route:` block (`host`/`path_prefix`); there is no separate name reference — the match lives on the pool |
 | `location /api { ... }` | `route: { path_prefix: "/api" }` inside the relevant upstream pool |
-| `proxy_next_upstream error timeout http_502` | Per-backend `health_check:` config with `failure_threshold` controlling how many consecutive failures remove a backend from rotation; retries on connection error are automatic |
+| `proxy_next_upstream error timeout http_502` | No one-to-one directive. Configure retry policy under `resilience`; configure backend readiness separately with `health_check`. |
 | `least_conn` | `load_balancing: { type: least-connections }` inside the upstream pool |
-| `ip_hash` | `load_balancing: { type: consistent-hash }` (hashes on client address by default) |
-| `keepalive 32` | Impulse maintains a connection pool to upstream backends automatically; the pool size is not separately configurable |
+| `ip_hash` | No implicit client-IP equivalent. Use `consistent-hash` with an explicit stable key such as `header:x-client-id` when the application supplies one. |
+| `keepalive 32` | No one-to-one count. Pingora owns upstream pooling; use the documented HTTP/2 pool limits and idle timeout when tuning is required. |
 | `ssl_certificate /path/cert.pem` | `listen.tls.cert: /path/cert.pem` under the relevant listener |
 | `ssl_certificate_key /path/key.pem` | `listen.tls.key: /path/key.pem` under the relevant listener |
 
@@ -199,9 +199,9 @@ fallback only after it receives no traffic.
 
 These are current product boundaries:
 
-- **Dynamic modules and compression filters:** Impulse has no module system or
-  body-processing pipeline. Keep a WAF or compression layer elsewhere when a
-  route depends on it.
+- **Dynamic modules and filters:** Impulse has no runtime-loaded module system.
+  A compiled plugin provides bounded gzip response compression; keep WAF,
+  scripting, and other body transformations elsewhere.
 - **Envoy xDS:** Impulse uses file-backed runtime generations, not a push-based
   sidecar control plane. Use `validate`, `preview`, `activate`, and `rollback`
   for staged changes. Keep Envoy where Aggregated Discovery Service (ADS) or
@@ -263,7 +263,7 @@ production before retrying it.
 
 ## Related Pages
 
-- [Status and Limitations](/docs/reference/status-and-limitations)
+- [Feature and Limitation Matrix](/docs/reference/status-and-limitations)
 - [Production Deployment](/docs/deployment/production)
 - [Routing and Upstreams](/docs/configuration/routing-and-upstreams)
 - [Operations Runbook](/docs/operations/runbook)

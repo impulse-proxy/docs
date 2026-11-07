@@ -38,7 +38,7 @@ This builds `packaging/docker/Dockerfile` and tags the result
 
 Use `packaging/docker/config.docker.yaml` as the container-specific starting
 point, or mount a configuration prepared from
-[Configuration Examples](/docs/configuration/examples). The single minimal
+[Configuration Reference](/docs/configuration/reference). The single minimal
 learning configuration lives in the
 [Quickstart](/docs/getting-started/quickstart#2-create-the-minimal-configuration);
 it is not duplicated here because container paths and backend reachability must
@@ -118,5 +118,5 @@ choice before production; the image itself defaults to UID `10001`.
 
 - [Quickstart](/docs/getting-started/quickstart)
 - [Installation](/docs/getting-started/installation)
-- [Configuration Examples](/docs/configuration/examples)
+- [Configuration Reference](/docs/configuration/reference)
 - [Production Deployment](/docs/deployment/production)

@@ -27,6 +27,7 @@ expanding traffic.
 | Configure listeners, routes, backends, and policy | [Configuration Reference](/docs/configuration/reference) |
 | Deploy, operate, and troubleshoot | [Production Deployment](/docs/deployment/production) and [Operations Runbook](/docs/operations/runbook) |
 | Understand the runtime or contribute changes | [Architecture Overview](/docs/architecture/overview) and [Contributor Guide](/docs/development/contributing) |
+| Check support boundaries or product vocabulary | [Feature and Limitation Matrix](/docs/reference/status-and-limitations) and [Terminology](/docs/reference/terminology) |
 
-The [Status and Limitations](/docs/reference/status-and-limitations) page is the
+The [Feature and Limitation Matrix](/docs/reference/status-and-limitations) is the
 canonical support boundary for this release.
