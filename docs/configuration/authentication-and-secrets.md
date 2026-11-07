@@ -1,9 +1,9 @@
 # Authentication and Secrets
 
-This page is the Impulse v0.6 reference for downstream request authentication
-and secret-provider configuration. The general
-[Configuration Reference](/docs/configuration/reference) remains the schema
-authority. For trust boundaries and deployment posture, see the
+This page owns the Impulse v0.7.0 fields and validation rules for downstream
+request authentication and secret-provider configuration. For a concise
+composable example, see the [Configuration Reference](/docs/configuration/reference#authentication-and-authorization).
+For trust boundaries and deployment posture, see the
 [Security Model](/docs/concepts/security-model).
 
 ## Two Separate Authentication Planes
@@ -35,7 +35,7 @@ Each named upstream accepts an optional `auth` object:
 
 When both `api_key` and `jwt` are configured, a request must pass both checks.
 `external_auth` cannot be combined with either local mechanism, or with
-`required_scopes` or `required_roles`, in v0.6. Authentication runs before the
+`required_scopes` or `required_roles`, in v0.7.0. Authentication runs before the
 request is dispatched to a backend.
 
 ## Application Programming Interface (API) Keys
@@ -221,7 +221,7 @@ collected from `scope` and `scp`; role values are collected from `roles` and
 strings. Matching is exact and case-sensitive. Empty required values are
 invalid.
 
-Impulse v0.6 has no arbitrary `required_claims` map. The required registered
+Impulse v0.7.0 has no arbitrary `required_claims` map. The required registered
 claim is `exp`; additional enforcement is limited to issuer, audience, scopes,
 and roles.
 
@@ -307,7 +307,7 @@ auth:
 | `audience` | string or `null` | No | `null` | Expected introspection `aud`; a string or any member of an array may match. |
 | `scopes` | array of strings | No | `[]` | Scopes that must all appear in the introspection response's whitespace-separated `scope` string. |
 | `request_headers` | array of `{name, value}` | No | `[]` | Additional valid, uniquely named introspection request headers. |
-| `response_header_allowlist` | array | No | `[]` | Must remain empty; response-header propagation is not supported for OIDC in v0.6. |
+| `response_header_allowlist` | array | No | `[]` | Must remain empty; response-header propagation is not supported for OIDC in v0.7.0. |
 | `timeout_ms` | integer | No | `1000` | Discovery/introspection timeout; must be greater than zero. |
 | `failure_mode` | string | No | `fail_closed` | `fail_closed` or `fail_open`, with the same failure semantics as HTTP external auth. |
 
@@ -331,7 +331,7 @@ keys, use `jwt.jwks_url` instead.
 
 ## Secret Providers and References
 
-Impulse v0.6 has built-in `literal` and `file` reference schemes. The only
+Impulse v0.7.0 has built-in `literal` and `file` reference schemes. The only
 configurable provider kind is `file`:
 
 ```yaml

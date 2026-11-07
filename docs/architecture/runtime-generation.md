@@ -5,14 +5,9 @@ workers and control-plane readers consume that generation as one coherent
 snapshot; live activation replaces the snapshot rather than mutating unrelated
 subsystems piecemeal.
 
-## Ownership
-
-| Layer | Responsibility |
-| --- | --- |
-| `impulse-config` | Parse YAML, validate the public schema, resolve bounded file/secret inputs, and create `RuntimeConfig` with normalized listener, upstream, backend, and policy values |
-| `impulse` binary | Choose the config path, run startup validation, build the first runtime, start listener groups and control services, supervise topology, and coordinate drain/shutdown |
-| `impulse-edge::runtime` | Assemble bundles, classify ownership, plan activation, publish generations, retain history, roll back, and own generation-scoped tasks |
-| Control API adapter | Authenticate/authorize requests, parse candidates, invoke the activation service, and serialize/audit results |
+Subsystem ownership is defined once in
+[Architecture Overview](/docs/architecture/overview). This page defines the
+generation lifecycle and consistency contract.
 
 Configuration validity and live-reload compatibility are different checks. A
 candidate can satisfy the schema but still require restart, conflict with the

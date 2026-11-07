@@ -1,6 +1,6 @@
 # Metrics Reference
 
-This page is the authority for metric families emitted by Impulse v0.6. It
+This page is the authority for metric families emitted by Impulse v0.7.0. It
 records each family's Prometheus exposition type, labels, unit, and meaning.
 
 ## Endpoint and Exposition
@@ -79,7 +79,7 @@ never select a pool use `route="unrouted"`.
 
 The sampling interval comes from `IMPULSE_ROUTE_LATENCY_SAMPLE_EVERY` and
 defaults to `1`. The three percentile series are gauge-like current values, but
-the v0.6 renderer emits no Prometheus `# TYPE` declaration for them; consumers
+the v0.7.0 renderer emits no Prometheus `# TYPE` declaration for them; consumers
 therefore parse them as `untyped`.
 
 ## Worker Metrics
@@ -299,7 +299,7 @@ otherwise it is `failure`. Rejection and failure reasons are `invalid_config`,
 
 ## Compatibility and Deprecation Status
 
-No emitted v0.6 metric family is marked deprecated in the current source.
+No emitted v0.7.0 metric family is marked deprecated in the current source.
 These compatibility surfaces are intentionally retained:
 
 - unlabeled `impulse_requests_total`, `impulse_requests_success`, and

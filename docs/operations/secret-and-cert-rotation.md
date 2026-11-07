@@ -80,8 +80,8 @@ first request. A missing, unreadable, empty, or malformed file rejects
 
 The reload includes all configured default and SNI identities plus downstream
 client-auth CA files. It does not rebuild the runtime generation, mutate
-route/policy state, or affect already-negotiated sessions—only new native QUIC
-and bootstrap TLS handshakes see the new material. If any listener fails to
+route/policy state, or affect already-negotiated sessions—only new HTTP/3 and
+Pingora TLS handshakes see the new material. If any listener fails to
 load, none of the staged listener TLS states is installed.
 
 ## Upstream Client Certificate Rotation (mTLS)

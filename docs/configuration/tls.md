@@ -1,9 +1,9 @@
 # TLS Configuration
 
-This page is the focused Impulse v0.6 reference for downstream and upstream
-Transport Layer Security (TLS). The general
-[Configuration Reference](/docs/configuration/reference) remains the schema
-authority. For rotation procedures, see
+This page owns the Impulse v0.7.0 fields and validation rules for downstream
+and upstream Transport Layer Security (TLS). For a concise complete example,
+see the [Configuration Reference](/docs/configuration/reference#listeners-and-tls).
+For rotation procedures, see
 [Secret and Certificate Rotation](/docs/operations/secret-and-cert-rotation).
 
 ## Keep the Two Directions Separate
@@ -78,7 +78,7 @@ listen:
         key: "/etc/impulse/tls/www-key.pem"
 ```
 
-Selection is identical on the native QUIC listener and bootstrap listener:
+Selection is identical on the HTTP/3 ingress and Pingora ingress:
 
 1. Use an exact normalized match between the client's SNI name and a
    `certificates[].server_name` entry.
@@ -111,7 +111,7 @@ listen:
 ```
 
 When `enabled: true`, Impulse verifies a presented client chain against the
-certificates in `ca_file` on both native QUIC and bootstrap TLS handshakes.
+certificates in `ca_file` on both HTTP/3 and Pingora TLS handshakes.
 
 - `require_client_cert: false` makes presentation optional, but rejects an
   invalid certificate when one is presented.
@@ -130,8 +130,8 @@ certificate chains, private keys, and downstream client-auth CA material.
 
 - Reload is staged across all listeners. If any identity or CA fails to load,
   none of the staged listener TLS states is installed.
-- A successful reload affects new native QUIC handshakes and new bootstrap TLS
-  sessions. Existing QUIC connections, bootstrap TLS sessions, and multiplexed
+- A successful reload affects new HTTP/3 handshakes and new Pingora TLS
+  sessions. Existing QUIC connections, Pingora TLS sessions, and multiplexed
   HTTP/2 streams continue with their negotiated state.
 - Replacing files at the existing paths requires `reload-certs`; file changes
   are not watched automatically.

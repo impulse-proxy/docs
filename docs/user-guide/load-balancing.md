@@ -40,7 +40,7 @@ The complete request-key source list and weight matrix are in
 ## Configuration Shape
 
 Each upstream owns its strategy. Omitting `load_balancing` selects
-`round-robin`; the top-level `load_balancing` field is not a v0.6 fallback.
+`round-robin`; the top-level `load_balancing` field is not a v0.7.0 fallback.
 
 ```yaml
 load_balancing:
@@ -56,6 +56,6 @@ instead of copying separate backend lists for each strategy.
 ## Related Pages
 
 - [Routing and Upstreams](/docs/configuration/routing-and-upstreams)
-- [Configuration Examples](/docs/configuration/examples)
+- [Configuration Reference](/docs/configuration/reference#load-balancing-discovery-and-health-checks)
 - [Metrics Reference](/docs/reference/metrics-reference)
 - [Transport and Backend Lifecycle](/docs/architecture/transport-and-backend-lifecycle)

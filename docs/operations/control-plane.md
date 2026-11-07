@@ -190,10 +190,10 @@ This ensures:
 - restart and reload actions act on the same authoritative runtime handle
 - backend lifecycle state is rendered from one canonical inventory
 
-### Observability Package Entry Point
+### Observability Metadata
 
-`GET /admin/runtime` and the runtime history reads are also the operator entry point into the
-packaged observability bundle.
+`GET /admin/runtime` and the runtime history reads expose bounded operational
+metadata.
 
 The runtime/control-plane views now expose:
 
@@ -203,22 +203,19 @@ The runtime/control-plane views now expose:
 - backend health summary
 - quota backend health summary
 - recent tracked admin/runtime actions when history exists
-- dashboard definition references
+- legacy dashboard identifiers
 - documentation references
 
-This is what lets operators move from:
+This lets operators move from:
 
-- metric
-- to dashboard
-- to runtime snapshot
-- to generation history
-- to audit attribution
+- metric to runtime snapshot
+- runtime snapshot to generation history
+- generation history to audit attribution
 
 without changing vocabulary.
 
-These references are repository asset paths, not UI URLs. Operators and automation should treat
-them as stable package identifiers that can be mapped into Grafana imports, runbooks, or internal
-control-plane tooling without assuming one frontend.
+The dashboard identifiers are compatibility metadata. Impulse v0.7.0 does not
+ship the referenced dashboard files.
 
 ## Authentication and Access Model
 

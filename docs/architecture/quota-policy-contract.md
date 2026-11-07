@@ -1,6 +1,6 @@
 # Distributed Quota Policy Contract
 
-This page defines the behavior that Impulse v0.6 preserves across configuration,
+This page defines the behavior that Impulse v0.7.0 preserves across configuration,
 counter backends, admission responses, metrics, and Control API state. Use
 [Resilience, Rate Limits, and Quota](/docs/configuration/resilience) for the
 exact schema and [Distributed Quota Operations](/docs/operations/distributed-quota)

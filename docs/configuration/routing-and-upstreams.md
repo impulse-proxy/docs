@@ -1,9 +1,8 @@
 # Routing and Upstreams
 
-This page expands the routing, upstream, backend, and load-balancing sections
-of the [Configuration Reference](/docs/configuration/reference). The main
-configuration reference remains authoritative for the schema; this page keeps
-the traffic-selection rules together in one place.
+This page owns the Impulse v0.7.0 fields and validation rules for routes,
+upstreams, backends, health checks, and load balancing. For concise composable
+examples, see the [Configuration Reference](/docs/configuration/reference#routes-and-upstreams).
 
 ## Upstream Schema
 
@@ -22,7 +21,7 @@ name used by routing, metrics, runtime views, and policies such as brownout
 | `tls` | object or `null` | No | `null` | Complete per-upstream TLS override. `null` inherits `upstream_tls`. |
 
 Upstream names must be non-empty. The top-level `load_balancing` field is not
-a fallback in v0.6; each upstream either configures its own policy or uses
+a fallback in v0.7.0; each upstream either configures its own policy or uses
 `round-robin`.
 
 ## Route Matching
@@ -119,7 +118,7 @@ colon.
 | `peer_ip`, `client_ip` | Aliases for the connected client IP when that value is available to the selector. |
 | `bearer_token` | Token from a case-insensitive `Bearer` scheme in the `Authorization` header. |
 
-In the v0.6 backend-selection path, the client socket address is not supplied
+In the v0.7.0 backend-selection path, the client socket address is not supplied
 to the request-key resolver. Consequently, `peer_ip` and `client_ip` are
 accepted configuration values but fall through to the default key during
 backend selection. They remain usable by policy selectors that supply a client

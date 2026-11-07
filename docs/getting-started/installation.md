@@ -5,7 +5,7 @@ host?** Use the Debian package when one is available for your release and
 architecture; build from source when you need a development binary or no
 package matches the host.
 
-Impulse v0.6 supports Linux as its production runtime. macOS is suitable for
+Impulse v0.7.0 supports Linux as its production runtime. macOS is suitable for
 local development; Windows is not a supported runtime platform. Use an
 unprivileged service account and a port above `1024`, or grant only
 `CAP_NET_BIND_SERVICE` when binding a privileged port.
@@ -49,7 +49,7 @@ sudo journalctl -u impulse -n 50 --no-pager
 Keep private keys owned by `root:impulse`, readable by the group, and not
 world-readable. Use [TLS Configuration](/docs/configuration/tls) for exact
 certificate, Server Name Indication (SNI), client-authentication, and reload behavior. Use
-[Configuration Examples](/docs/configuration/examples) to replace the packaged
+[Configuration Reference](/docs/configuration/reference) to replace the packaged
 placeholder configuration.
 
 After provisioning the config and certificates, start the installed unit and

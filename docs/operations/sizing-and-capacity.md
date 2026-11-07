@@ -5,7 +5,7 @@ the result has enough headroom. There is no universal core count, memory size,
 socket-buffer value, or request-rate claim: capacity depends on the traffic,
 policy, backend, kernel, network path, and failure modes being tested.
 
-Use the [Configuration Reference](/docs/configuration/reference#performance-configuration)
+Use the [Configuration Defaults](/docs/configuration/defaults#performance-defaults)
 for exact field defaults and constraints. Use the
 [Metrics Reference](/docs/reference/metrics-reference) for metric types, units,
 and labels.
@@ -16,7 +16,7 @@ Record these inputs before changing limits:
 
 - steady and burst request rates, connection-establishment rates, and packet
   rates
-- concurrent native QUIC and bootstrap connections
+- concurrent Pingora and HTTP/3 connections
 - concurrent streams and requests per connection
 - request/response size distributions, including unknown-length and streaming
   bodies
@@ -49,11 +49,11 @@ orchestrator. Do not infer their values from request counters.
 
 ## File Descriptors
 
-Descriptors are consumed by listener sockets, accepted bootstrap connections,
+Descriptors are consumed by listener sockets, accepted Pingora connections,
 backend TCP/TLS connections, files, audit/log outputs, and other runtime
 resources. QUIC multiplexes connections over UDP sockets, so downstream QUIC
 connection count is not a one-descriptor-per-connection calculation.
-Bootstrap and backend connections do consume socket descriptors.
+Pingora and backend connections do consume socket descriptors.
 
 Set the service FD limit from measurement:
 
@@ -71,7 +71,7 @@ be used to mask leaked or unexpectedly retained sockets.
 ## Socket Buffers and the Network Path
 
 `performance.udp_recv_buffer_bytes` and
-`performance.udp_send_buffer_bytes` request buffer sizes for each native QUIC
+`performance.udp_send_buffer_bytes` request buffer sizes for each HTTP/3
 UDP worker socket. The kernel may cap or adjust the effective sizes. Impulse
 logs the requested and effective values at debug level when it can read them
 back; also inspect the running socket and host limits.
@@ -132,8 +132,8 @@ These controls protect different scopes and should be sized together:
 | Request concurrency | `performance.global_inflight_limit`, `performance.per_upstream_inflight_limit`, `performance.per_backend_inflight_limit` | Admission and transport protection at successively narrower scopes |
 | Route/upstream caps | `resilience.route_queue.global_cap`, `default_cap`, and `caps` | Additional concurrent admission boundaries |
 
-`impulse_active_connections` covers native QUIC connections, not every
-bootstrap TCP connection. Combine it with host TCP/socket/FD measurements when
+`impulse_active_connections` covers both ingress implementations. Combine it
+with host TCP/socket/FD measurements when
 both ingress paths carry traffic.
 
 Use `impulse_connection_cap_rejects`,
@@ -221,7 +221,7 @@ validating UDP, MTU, load balancers, conntrack, or cross-zone behavior.
 ## Related Pages
 
 - [Production Deployment](/docs/deployment/production)
-- [Performance Configuration](/docs/configuration/reference#performance-configuration)
+- [Performance Defaults](/docs/configuration/defaults#performance-defaults)
 - [Resilience Configuration](/docs/configuration/resilience)
 - [Metrics Reference](/docs/reference/metrics-reference)
 - [Observability Operations](/docs/operations/observability)

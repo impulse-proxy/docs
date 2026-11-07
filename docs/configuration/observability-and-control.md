@@ -1,9 +1,10 @@
 # Observability and Control Configuration
 
-This page is the focused Impulse v0.6 schema reference for metrics, tracing,
-the Control API, and process privilege dropping. It documents configuration
-fields and validation rules under the canonical
-[Configuration Reference](/docs/configuration/reference). For HTTP methods,
+This page owns the Impulse v0.7.0 fields and validation rules for metrics,
+tracing, the Control API, routing observations, and process privilege dropping.
+For a concise composable example, see the
+[Configuration Reference](/docs/configuration/reference#control-api-and-metrics).
+For HTTP methods,
 request and response bodies, status codes, and runtime-operation semantics, use the
 [Control API Reference](/docs/reference/control-api-reference).
 
@@ -14,10 +15,19 @@ request and response bodies, status codes, and runtime-operation semantics, use 
 | `observability.metrics` | object | No | object defaults | Prometheus scrape listener. |
 | `observability.control_api` | object | No | object defaults | Administrative HTTPS listener and its security policy. |
 | `observability.tracing` | object | No | object defaults | OpenTelemetry trace export. |
-| `observability.routing` | object | No | object defaults | Route-decision logging; see the [general reference](/docs/configuration/reference#routing-transparency). |
+| `observability.routing` | object | No | object defaults | Route-decision logging and optional response-header exposure. |
 | `security.privileges` | object | No | object defaults | Unix process privilege drop after listeners bind. |
 
 Unknown fields in these objects are rejected.
+
+### Routing Transparency
+
+| **Field** | **Type** | **Default** | **Meaning** |
+| --- | --- | --- | --- |
+| `enabled` | boolean | `false` | Emit route-decision observations. |
+| `include_reason` | boolean | `true` | Include the deterministic selection reason. |
+| `expose_header` | boolean | `false` | Expose the decision in a downstream response header. |
+| `header_name` | string | `x-impulse-route-decision` | Non-empty header name used when exposure is enabled. |
 
 ## Metrics Endpoint
 

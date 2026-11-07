@@ -4,9 +4,9 @@ This page answers one question: **how do I run the Impulse container?**
 
 ## Image Availability
 
-The Impulse v0.6 repository does not define a registry-publication
+The Impulse v0.7.0 repository does not define a registry-publication
 workflow or a public image reference. Do not guess a Docker Hub or GHCR image
-name: an image with the same project name may be unrelated. The supported v0.6
+name: an image with the same project name may be unrelated. The supported v0.7.0
 container artifact is the production Dockerfile under `packaging/docker/`,
 which produces the local image `impulse:packaging`.
 
@@ -38,9 +38,9 @@ This builds `packaging/docker/Dockerfile` and tags the result
 
 Use `packaging/docker/config.docker.yaml` as the container-specific starting
 point, or mount a configuration prepared from
-[Configuration Examples](/docs/configuration/examples). The single minimal
+[Configuration Reference](/docs/configuration/reference). The single minimal
 learning configuration lives in the
-[Quickstart](/docs/getting-started/quickstart#2-create-the-minimal-configuration);
+[Quickstart](/docs/getting-started/quickstart#3-create-the-minimal-configuration);
 it is not duplicated here because container paths and backend reachability must
 match your deployment.
 
@@ -71,8 +71,8 @@ docker run --rm \
   impulse:packaging
 ```
 
-Publishing both protocols is intentional: UDP serves the native QUIC listener,
-while TCP serves the bootstrap HTTP/1.1 and HTTP/2 listener on the same port.
+Publishing both protocols is intentional: TCP serves production HTTP/1.1 and
+HTTP/2 through Pingora, while UDP serves experimental HTTP/3 on the same port.
 The packaged configuration disables the optional metrics and Control API
 listeners, so ports `9901` and `9902` are not published.
 
@@ -118,5 +118,5 @@ choice before production; the image itself defaults to UID `10001`.
 
 - [Quickstart](/docs/getting-started/quickstart)
 - [Installation](/docs/getting-started/installation)
-- [Configuration Examples](/docs/configuration/examples)
+- [Configuration Reference](/docs/configuration/reference)
 - [Production Deployment](/docs/deployment/production)

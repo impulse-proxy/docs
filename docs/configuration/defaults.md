@@ -6,9 +6,8 @@ omitted. Use it to answer two questions:
 - which fields may be omitted from the YAML
 - what value or behavior Impulse applies when they are omitted
 
-Use [Configuration Reference](/docs/configuration/reference) for field semantics
-and validation rules. Use
-[Configuration Examples](/docs/configuration/examples) for complete examples.
+Use [Configuration Reference](/docs/configuration/reference) for concise
+examples and links to the page that owns each field's semantics and validation.
 
 ## How Defaults Work
 
@@ -49,7 +48,7 @@ Every effective listener must still configure a complete TLS identity through
 | --- | --- | --- |
 | `version` | `1` | Current schema version |
 | `listeners` | `[]` | Optional multi-listener override |
-| `load_balancing` | `null` | Accepted and validated, but not applied as a v0.6 runtime fallback |
+| `load_balancing` | `null` | Accepted and validated, but not applied as a v0.7.0 runtime fallback |
 | `upstream_tls` | object defaults | See [Upstream TLS Defaults](#upstream-tls-defaults) |
 | `secrets` | object defaults | No default provider and an empty provider map |
 | `log` | object defaults | See [Log Defaults](#log-defaults) |
@@ -164,6 +163,7 @@ These apply when a backend provides a `health_check` object and omits individual
 | `performance.backend_dns_refresh_enabled` | `false` | Hostname backend refresh off by default |
 | `performance.backend_dns_refresh_interval_ms` | `30000` | DNS refresh interval |
 | `performance.per_backend_inflight_limit` | `64` | Per-backend concurrency cap |
+| `performance.connection_rate_limit_enabled` | `true` | Compile a connection-rate plugin into the active generation when available |
 | `performance.new_connections_per_sec` | `2000` | Token-bucket steady refill rate |
 | `performance.new_connections_burst` | `500` | Token-bucket burst size |
 | `performance.max_active_connections` | `20000` | Hard active connection cap |
@@ -355,5 +355,4 @@ These apply when a backend provides a `health_check` object and omits individual
 ## Related Pages
 
 - [Configuration Reference](/docs/configuration/reference)
-- [Configuration Examples](/docs/configuration/examples)
 - [Production Checklist](/docs/deployment/production#production-checklist)

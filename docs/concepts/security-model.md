@@ -27,14 +27,14 @@ inherited from their network location.
 Impulse is not a web application firewall, malware scanner, general policy
 engine, identity provider, secret manager, or service-mesh control plane. The
 authoritative list of missing and partial protections is in
-[Status and Limitations](/docs/reference/status-and-limitations#security-and-policy-limits).
+[Feature and Limitation Matrix](/docs/reference/status-and-limitations).
 
 ## Trust-Boundary Map
 
 | Boundary | Trust assumption | Primary risk | Required posture |
 | --- | --- | --- | --- |
 | Public data plane | Clients and request data are untrusted | Parser abuse, spoofed identity, resource exhaustion, unauthorized backend access | Authenticate transport and requests where required; validate input; enforce bounded admission and body/stream limits |
-| Bootstrap path | TCP/TLS compatibility clients are as untrusted as native HTTP/3 clients | Treating compatibility ingress as a privileged or weaker-policy path | Apply the same runtime policy as native ingress and secure TCP independently from UDP |
+| Pingora ingress | TCP/TLS clients are as untrusted as HTTP/3 clients | Treating one ingress as a privileged or weaker-policy path | Apply the same runtime policy and secure TCP independently from UDP |
 | Control plane | Callers can observe or mutate privileged runtime state | Unauthorized activation, restart, secret reload, or state disclosure | Isolate the network, authenticate identities, enforce least privilege, and retain audit evidence |
 | Metrics and health endpoints | Operational output is sensitive even when read-only | Topology/state disclosure, probe abuse, scrape saturation | Keep endpoints private; authenticate remote metrics and protect probes when exposure requires it |
 | Upstream network | Backends and supporting services are external trust domains | Server impersonation, plaintext interception, poisoned discovery, dependency failure | Verify TLS identities, constrain egress, and make failure policy explicit |
@@ -42,7 +42,7 @@ authoritative list of missing and partial protections is in
 
 ## Public Data Plane
 
-The native QUIC listener accepts HTTP/3 over UDP. Every packet, connection,
+The HTTP/3 ingress accepts HTTP/3 over UDP. Every packet, connection,
 header, body, authority, and application credential arriving there is
 untrusted. TLS protects the connection and identifies the server; it does not
 by itself authorize the application request. Downstream client certificates or
@@ -66,20 +66,20 @@ Exact controls:
 - [Resilience, Rate Limits, and Quota](/docs/configuration/resilience)
 - [Protocol Support](/docs/protocols/support)
 
-## Bootstrap Path
+## Pingora Ingress
 
-The bootstrap listener is a public compatibility adapter, not an administrative
-bootstrap channel. It accepts HTTP/1.1 or HTTP/2 over TCP/TLS on the configured
+Pingora ingress is the production public H1/H2 adapter, not an administrative
+channel. It accepts HTTP/1.1 or HTTP/2 over TCP/TLS on the configured
 listener port and advertises HTTP/3 availability. It shares the active runtime
 generation, request policy, routing, admission, backend selection, and upstream
-transport with native QUIC ingress.
+transport with experimental HTTP/3 ingress.
 
 Protocol-specific parsing, connection handling, response writeback, and the
 supported HTTP/1.1 WebSocket upgrade path remain separate code paths. That
 separation creates an additional attack surface even though policy meaning is
 shared. Expose and filter TCP and UDP deliberately, monitor both, and validate
 the exact protocol pair used by upgrade or CONNECT traffic. Impulse provides no
-cleartext HTTP bootstrap listener.
+cleartext HTTP ingress.
 
 Exact behavior is defined in [Protocol Support](/docs/protocols/support) and
 [Request Lifecycle](/docs/architecture/request-lifecycle).
@@ -187,7 +187,7 @@ Certificate rotation is in
 ## Cross-Boundary Invariants
 
 - Downstream request identities and Control API identities never authorize one another.
-- Native QUIC and bootstrap ingress share policy meaning; neither is a policy bypass.
+- Pingora and HTTP/3 ingress share policy meaning; neither is a policy bypass.
 - Metrics and probes observe runtime state but do not own or mutate the active generation.
 - Runtime activation publishes a complete prepared generation or leaves the previous generation active.
 - Downstream TLS identity, upstream TLS trust, and Control API client identity are distinct trust decisions.
@@ -217,7 +217,7 @@ in the [Production Checklist](/docs/deployment/production#production-checklist).
 6. **Make changes attributable and reversible.** Use staged activation, retain
    known-good artifacts, enable administrative audit output, and alert on audit
    loss, authentication failure, unexpected restart, and security-control drift.
-7. **Test both ingress paths.** Exercise UDP/HTTP/3 and TCP bootstrap behavior,
+7. **Test enabled ingress paths.** Exercise production TCP and experimental UDP behavior,
    including TLS, routing, auth, limits, and failure responses, before rollout.
 
 ## Configuration Authority
@@ -229,8 +229,8 @@ in the [Production Checklist](/docs/deployment/production#production-checklist).
 | Control API TLS, bearer identities, RBAC, source policy, audit, metrics/probes, and privilege drop | [Observability and Control Configuration](/docs/configuration/observability-and-control) |
 | Control API methods, access results, and payloads | [Control API Reference](/docs/reference/control-api-reference) |
 | Admission, rate limits, quota, CONNECT constraints, and body/header limits | [Resilience, Rate Limits, and Quota](/docs/configuration/resilience) |
-| Current and partial security feature status | [Status and Limitations](/docs/reference/status-and-limitations#resilience-security-and-policy) |
-| Unsupported security behavior | [Status and Limitations](/docs/reference/status-and-limitations#security-and-policy-limits) |
+| Current and partial security feature status | [Feature and Limitation Matrix](/docs/reference/status-and-limitations) |
+| Unsupported security behavior | [Feature and Limitation Matrix](/docs/reference/status-and-limitations) |
 
 ## Related Pages
 

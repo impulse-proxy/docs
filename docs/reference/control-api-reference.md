@@ -1,6 +1,6 @@
 # Control API Reference
 
-This page is the authority for Impulse v0.6 Control API endpoints, roles,
+This page is the authority for Impulse v0.7.0 Control API endpoints, roles,
 request fields, response fields, and HTTP status semantics.
 
 ## Open These First
@@ -218,7 +218,7 @@ Typical contents include:
 - quota backend health summary
 - observability package metadata
 - recent admin actions when available
-- dashboard and documentation references for the shipped operator bundle
+- legacy dashboard identifiers and documentation references
 
 Expected use:
 
@@ -226,7 +226,7 @@ Expected use:
 - rollout validation
 - incident response
 
-The `observability` block is the packaged runtime-introspection entry point for operators. The high-signal fields are:
+The `observability` block is the runtime-introspection entry point for operators. The high-signal fields are:
 
 - `contract_version`
 - `audit_schema_version`
@@ -236,6 +236,10 @@ The `observability` block is the packaged runtime-introspection entry point for 
 - `backend_health_summary`
 - `quota_backend_health_summary`
 - `recent_admin_actions`
+
+`dashboard_packages` is retained as a compatibility field. Impulse v0.7.0 does
+not ship the referenced Grafana files; treat these values as legacy identifiers,
+not resolvable assets.
 
 Example:
 
