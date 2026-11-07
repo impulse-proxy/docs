@@ -1,9 +1,9 @@
 # TLS Configuration
 
-This page is the focused Impulse v0.7.0 reference for downstream and upstream
-Transport Layer Security (TLS). The general
-[Configuration Reference](/docs/configuration/reference) remains the schema
-authority. For rotation procedures, see
+This page owns the Impulse v0.7.0 fields and validation rules for downstream
+and upstream Transport Layer Security (TLS). For a concise complete example,
+see the [Configuration Reference](/docs/configuration/reference#listeners-and-tls).
+For rotation procedures, see
 [Secret and Certificate Rotation](/docs/operations/secret-and-cert-rotation).
 
 ## Keep the Two Directions Separate

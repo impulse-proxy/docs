@@ -5,7 +5,7 @@ the result has enough headroom. There is no universal core count, memory size,
 socket-buffer value, or request-rate claim: capacity depends on the traffic,
 policy, backend, kernel, network path, and failure modes being tested.
 
-Use the [Configuration Reference](/docs/configuration/reference#performance-configuration)
+Use the [Configuration Defaults](/docs/configuration/defaults#performance-defaults)
 for exact field defaults and constraints. Use the
 [Metrics Reference](/docs/reference/metrics-reference) for metric types, units,
 and labels.
@@ -221,7 +221,7 @@ validating UDP, MTU, load balancers, conntrack, or cross-zone behavior.
 ## Related Pages
 
 - [Production Deployment](/docs/deployment/production)
-- [Performance Configuration](/docs/configuration/reference#performance-configuration)
+- [Performance Defaults](/docs/configuration/defaults#performance-defaults)
 - [Resilience Configuration](/docs/configuration/resilience)
 - [Metrics Reference](/docs/reference/metrics-reference)
 - [Observability Operations](/docs/operations/observability)

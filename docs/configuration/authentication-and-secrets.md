@@ -1,9 +1,9 @@
 # Authentication and Secrets
 
-This page is the Impulse v0.7.0 reference for downstream request authentication
-and secret-provider configuration. The general
-[Configuration Reference](/docs/configuration/reference) remains the schema
-authority. For trust boundaries and deployment posture, see the
+This page owns the Impulse v0.7.0 fields and validation rules for downstream
+request authentication and secret-provider configuration. For a concise
+composable example, see the [Configuration Reference](/docs/configuration/reference#authentication-and-authorization).
+For trust boundaries and deployment posture, see the
 [Security Model](/docs/concepts/security-model).
 
 ## Two Separate Authentication Planes

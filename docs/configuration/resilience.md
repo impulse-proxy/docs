@@ -1,8 +1,9 @@
 # Resilience, Rate Limits, and Quota
 
-This is the focused Impulse v0.7.0 reference for `resilience`. The general
-[Configuration Reference](/docs/configuration/reference) remains the schema
-authority. Redis deployment and incident guidance belongs in
+This page owns the Impulse v0.7.0 fields and validation rules for `resilience`.
+For a concise composable example, see the
+[Configuration Reference](/docs/configuration/reference#rate-limiting-and-quota).
+Redis deployment and incident guidance belongs in
 [Distributed Quota Operations](/docs/operations/distributed-quota); the quota
 semantics that implementations must preserve are in the
 [Quota Policy Contract](/docs/architecture/quota-policy-contract).

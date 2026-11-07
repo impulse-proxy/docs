@@ -1,9 +1,8 @@
 # Routing and Upstreams
 
-This page expands the routing, upstream, backend, and load-balancing sections
-of the [Configuration Reference](/docs/configuration/reference). The main
-configuration reference remains authoritative for the schema; this page keeps
-the traffic-selection rules together in one place.
+This page owns the Impulse v0.7.0 fields and validation rules for routes,
+upstreams, backends, health checks, and load balancing. For concise composable
+examples, see the [Configuration Reference](/docs/configuration/reference#routes-and-upstreams).
 
 ## Upstream Schema
 
