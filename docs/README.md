@@ -5,9 +5,19 @@ slug: /
 sidebar_position: 1
 ---
 
-Impulse is a reverse proxy built on Pingora for production HTTP/1.1 and HTTP/2
-traffic. Its experimental HTTP/3 ingress uses the same routing, policy, and
-operations model.
+Impulse v0.7.0 is a pre-GA reverse proxy for controlled production rollout.
+Pingora serves production HTTP/1.1 and HTTP/2 traffic. An independent HTTP/3
+ingress is available experimentally. All three protocols share routing, policy,
+load balancing, runtime generations, and observability.
+
+| Ingress | Status | Runtime |
+| --- | --- | --- |
+| HTTP/1.1 and HTTP/2 | Production | Pingora |
+| HTTP/3 | Experimental | QUIC/HTTP3 adapter |
+
+Impulse is not yet generally available. Validate the exact protocols,
+policies, backends, reloads, and failure modes used by your deployment before
+expanding traffic.
 
 ## Choose Your Path
 
@@ -15,16 +25,8 @@ operations model.
 | --- | --- |
 | Evaluate Impulse and proxy a first request | [Quickstart](/docs/getting-started/quickstart) |
 | Configure listeners, routes, backends, and policy | [Configuration Reference](/docs/configuration/reference) |
-| Deploy, operate, and troubleshoot production instances | [Production Deployment](/docs/deployment/production) and [Operations Runbook](/docs/operations/runbook) |
+| Deploy, operate, and troubleshoot | [Production Deployment](/docs/deployment/production) and [Operations Runbook](/docs/operations/runbook) |
 | Understand the runtime or contribute changes | [Architecture Overview](/docs/architecture/overview) and [Contributor Guide](/docs/development/contributing) |
 
-## Current Release
-
-| Field | Current value |
-| --- | --- |
-| Documentation baseline | Impulse v0.7.0 |
-| Maturity | Pre-GA |
-
-Impulse v0.7.0 is intended for controlled production rollout. HTTP/3 remains
-experimental. Review [Status and Limitations](/docs/reference/status-and-limitations)
-before deployment.
+The [Status and Limitations](/docs/reference/status-and-limitations) page is the
+canonical support boundary for this release.
