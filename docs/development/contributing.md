@@ -25,44 +25,11 @@ differs from this orientation page. Do not reproduce the contribution workflow
 in the docs repository; update the Impulse repository's `CONTRIBUTING.md`
 instead.
 
-## Current Crate Map
+## Architecture
 
-| Impulse path | Responsibility |
-| --- | --- |
-| `impulse/` | CLI, startup sequencing, listener-group supervision, signals, drain, and process exit |
-| `crates/contracts/` | Protocol-neutral identities, decisions, outcomes, plugins, and tunnel contracts |
-| `crates/config/` | Public YAML model, loading, validation, bounded secret/file resolution, and normalized runtime configuration |
-| `crates/plugins/`, `crates/policy/` | Compiled plugin plans and policy implementations |
-| `crates/edge/` | Shared request execution, routing, admission, response processing, and runtime integration |
-| `crates/pingora-ingress/`, `crates/http3-ingress/` | Protocol-specific ingress adapters |
-| `crates/runtime/` | Shared generation and lifecycle contracts |
-| `crates/operations/` | Control API, metrics service, administrative security, and watchdog coordination |
-| `crates/observability/` | Bounded metrics, snapshots, rendering, and operational events |
-| `crates/bridge/` | Canonical upstream request shaping, forwarded-header policy, response normalization, and WebSocket/upgrade helpers |
-| `crates/transport/` | Runtime-selected HTTP/1.1 and HTTP/2 backend clients, pooling, TLS, DNS-aware connection establishment, and client rotation |
-| `crates/lb/` | Balancing algorithms, upstream-pool selection, health flags, and per-pool request accounting |
-| `crates/utils/` | Shared TLS and logging utilities |
-| `crates/errors/` | Cross-crate error and retry/hedge classification types |
-| `packaging/` | Container, Debian, and systemd packaging assets |
-
-Use the narrowest owner that can implement a change:
-
-- raw configuration structs live under `crates/config/src/config/`
-- validation lives under `crates/config/src/validator/`
-- normalized runtime projection lives under `crates/config/src/runtime/`
-- protocol-neutral request contracts live under `crates/contracts/`
-- compiled policy lives under `crates/plugins/` and `crates/policy/`
-- ingress mechanics live under `crates/pingora-ingress/` and `crates/http3-ingress/`
-- shared request execution and routing live under `crates/edge/src/edge_core/`
-- generations and backend lifecycle live under `crates/edge/src/runtime/`
-- request/response translation belongs to `crates/bridge/`
-- backend protocol execution belongs to `crates/transport/`
-- selection algorithms belong to `crates/lb/`
-
-The [Architecture Overview](/docs/architecture/overview) and its focused pages
-describe request flow and runtime ownership. Inspect current crate façades and
-call sites before changing visibility; a manually maintained public-API
-inventory is intentionally not part of the documentation.
+Use the [Architecture Overview](/docs/architecture/overview) as the single
+crate and subsystem ownership map. Inspect the current crate façade and its
+callers before changing a boundary.
 
 ## Core Invariants
 
