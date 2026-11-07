@@ -40,7 +40,7 @@ Use `packaging/docker/config.docker.yaml` as the container-specific starting
 point, or mount a configuration prepared from
 [Configuration Reference](/docs/configuration/reference). The single minimal
 learning configuration lives in the
-[Quickstart](/docs/getting-started/quickstart#2-create-the-minimal-configuration);
+[Quickstart](/docs/getting-started/quickstart#3-create-the-minimal-configuration);
 it is not duplicated here because container paths and backend reachability must
 match your deployment.
 
